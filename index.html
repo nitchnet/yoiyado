@@ -250,6 +250,7 @@ async function go(){
     const cid = Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
     const r = await call('cmpRequest', {date, checkout, adults, cid});
     if (r.error) throw new Error(r.error);
+    saveLast({id: r.id, date, checkout, nights, adults, started, done: false});
     poll(r.id);
   } catch(e) { if (e.fatal) { cur = null; finish(); return showSetup(e.message); } cur.fatal = e.message || String(e); finish(); }
 }
@@ -265,7 +266,39 @@ async function poll(id){
   timer = setTimeout(() => poll(id), 1200);
 }
 
-function finish(){ setLoading(false); render(); }
+function finish(){
+  setLoading(false); render();
+  // 完了した検索は所要秒数とともに保存し、エラーで終わった検索は復元しない
+  const last = loadLast();
+  if (last && cur && !cur.fatal && !cur.invalid && cur.id === last.id) saveLast(Object.assign(last, {done: true, sec: finishedSec}));
+  else if (cur && (cur.fatal || cur.invalid)) saveLast(null);
+}
+
+// 別ページ（会員ステータス）へ移動して戻っても、直前の検索を続きから表示する。
+// 保存するのは受付番号と条件だけ。結果は Apps Script 側に6時間残っているので、ホテルへの取り直しは発生しない
+const LAST_KEY = 'yoiyado_last';
+function saveLast(o){ try { if (o) sessionStorage.setItem(LAST_KEY, JSON.stringify(o)); else sessionStorage.removeItem(LAST_KEY); } catch(e) {} }
+function loadLast(){ try { return JSON.parse(sessionStorage.getItem(LAST_KEY) || 'null'); } catch(e) { return null; } }
+async function restoreLast(){
+  const last = loadLast();
+  if (!K) return;  // 合言葉の設定前は復元しない（公開版）
+  if (!last || !last.id || Date.now() - last.started > 6 * 3600e3) return saveLast(null);
+  document.getElementById('date').value = last.date; lastIn = last.date;
+  document.getElementById('checkout').value = last.checkout; showNights();
+  document.getElementById('adults').value = last.adults;
+  started = last.started;
+  cur = {id: last.id, date: last.date, checkout: last.checkout, nights: last.nights, adults: last.adults, results: {}};
+  if (last.done) {
+    finishedSec = last.sec || 0;
+    try {
+      const r = await call('cmpResult', {id: last.id});
+      if (r.error) { cur = null; saveLast(null); } else cur = r;
+    } catch(e) { cur = null; }
+    render();
+  } else {
+    setLoading(true); render(); poll(last.id);
+  }
+}
 
 // 取得中はボタンを「取得中…」にし、経過秒数を1秒ごとに更新する
 let loading = false, ticker = null, finishedSec = 0;
@@ -360,6 +393,7 @@ function render(){
   syncOut();
   try { const a = localStorage.getItem('cmp_adults'); if (a) document.getElementById('adults').value = a; } catch(e) {}
   try { document.getElementById('showAlt').checked = localStorage.getItem('cmp_show_nr') === '1'; } catch(e) {}
+  restoreLast();
 })();
 
 function showSetup(msg){
