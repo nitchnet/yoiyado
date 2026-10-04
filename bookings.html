@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow, noarchive">
+<meta name="referrer" content="no-referrer">
+<title>予約｜宵宿</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="theme-color" content="#1f2a44">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="宵宿">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@600;700&text=%E5%AE%B5%E5%AE%BF%E4%BA%88%E7%B4%84%E4%B8%80%E8%A6%A70123456789%C2%A5%2C&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f4f1ea;--bg2:#ece7dc;--card:#fffdf9;--ink:#1c2233;--sub:#6d6a64;--line:#e4ddcf;
+  --night:#1f2a44;--night2:#2d3b5e;--gold:#b8893a;--gold-soft:#f3e7cf;
+  --ok:#2f7d5b;--ok-bg:#e5f2ea;--warn:#b0462f;--warn-bg:#fbebe5;
+  --shadow:0 1px 2px rgba(28,34,51,.05),0 6px 20px rgba(28,34,51,.06);
+}
+@media (prefers-color-scheme: dark){:root{
+  --bg:#0f1422;--bg2:#141b2d;--card:#182033;--ink:#ece8df;--sub:#9aa0ae;--line:#2a3349;
+  --night:#0b1020;--night2:#1d2742;--gold:#d8b06a;--gold-soft:#3a3221;
+  --ok:#6cc79c;--ok-bg:#183126;--warn:#f0957a;--warn-bg:#3a231d;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.25);
+}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 -apple-system,BlinkMacSystemFont,"Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic UI",Meiryo,sans-serif;-webkit-font-smoothing:antialiased}
+.serif{font-family:"Shippori Mincho","Hiragino Mincho ProN","Yu Mincho",serif}
+.num{font-variant-numeric:tabular-nums}
+.hero{background:radial-gradient(120% 140% at 85% -20%,#3b4c78 0%,var(--night2) 38%,var(--night) 100%);color:#f3eee3;padding:22px 16px 74px;position:relative;overflow:hidden}
+.ttl{max-width:720px;margin:14px auto 0;position:relative;z-index:1}
+.ttl h1{margin:0;font-size:26px;letter-spacing:.1em;font-weight:700}
+.ttl p{margin:6px 0 0;font-size:12.5px;color:#c9cbd6;letter-spacing:.03em}
+main{max-width:720px;margin:-56px auto 0;padding:0 14px 36px;position:relative;z-index:2}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;margin-bottom:14px;box-shadow:var(--shadow)}
+.sum{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.sum .k{font-size:11.5px;color:var(--sub);letter-spacing:.04em}
+.sum .v{font-size:22px;font-weight:700;line-height:1.2}
+.sum .v small{font-size:12px;font-weight:600;color:var(--sub);margin-left:2px}
+.sum > div{min-width:0}
+.sum .v.money{font-size:clamp(15px,4.6vw,22px);white-space:nowrap}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:12px;padding:3px 10px 3px 8px;border-radius:999px;border:1px solid var(--line);background:var(--bg)}
+.dot{width:8px;height:8px;border-radius:50%;flex:none;display:inline-block}
+.filters{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}
+.filters button{font:inherit;font-size:12.5px;padding:5px 12px;border-radius:999px;border:1px solid var(--line);background:var(--bg);color:var(--sub);cursor:pointer}
+.filters button[aria-pressed="true"]{background:var(--night2);color:#fff;border-color:var(--night2)}
+@media (prefers-color-scheme: dark){.filters button[aria-pressed="true"]{background:var(--gold);color:#1a1f2e;border-color:var(--gold)}}
+.updated{font-size:11.5px;color:var(--sub);margin-top:10px}
+.month{display:flex;justify-content:space-between;align-items:baseline;margin:18px 4px 8px;font-weight:700}
+.month .s{font-size:12px;color:var(--sub);font-weight:500}
+.bk{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:11px 12px;margin-bottom:8px;display:grid;grid-template-columns:62px minmax(0,1fr) auto;gap:2px 10px;align-items:start}
+.bk.cx{opacity:.55}
+.bk .d{font-weight:700;line-height:1.25}
+.bk .d small{display:block;font-size:11px;color:var(--sub);font-weight:500}
+.bk .h{font-size:12px;color:var(--sub);display:flex;align-items:center;gap:6px;min-width:0}
+.bk .r{font-weight:600;font-size:14px;line-height:1.4;overflow-wrap:anywhere}
+.bk .p{font-size:12px;color:var(--sub);overflow-wrap:anywhere}
+.bk .pay{text-align:right;font-weight:700;font-size:16px;white-space:nowrap}
+.bk .pay small{display:block;font-size:11px;color:var(--sub);font-weight:500}
+.tag{display:inline-block;font-size:10.5px;padding:0 6px;border-radius:6px;font-weight:700;margin-left:4px;vertical-align:1px}
+.tag.ok{color:var(--ok);background:var(--ok-bg)}
+.tag.nr{color:var(--warn);background:var(--warn-bg)}
+.tag.cx{color:var(--sub);background:var(--bg2)}
+.err{background:var(--warn-bg);color:var(--warn);border-radius:10px;padding:9px 12px;font-size:13px}
+.empty{color:var(--sub);font-size:13px;text-align:center;padding:10px}
+footer{max-width:720px;margin:0 auto;padding:0 16px 28px;text-align:center;font-size:11px;color:var(--sub);letter-spacing:.06em}
+@media (max-width:380px){.bk{grid-template-columns:54px minmax(0,1fr) auto}.sum .v{font-size:19px}}
+.hero{background:radial-gradient(120% 140% at 85% -20%,#3b4c78 0%,var(--night2) 38%,var(--night) 100%);color:#f3eee3;padding:22px 16px 74px;position:relative;overflow:hidden}
+.hero::after{content:"";position:absolute;inset:0;background-image:radial-gradient(1px 1px at 12% 30%,#fff8 50%,transparent 51%),radial-gradient(1px 1px at 72% 18%,#fff6 50%,transparent 51%),radial-gradient(1.5px 1.5px at 88% 62%,#fff5 50%,transparent 51%),radial-gradient(1px 1px at 40% 70%,#fff4 50%,transparent 51%),radial-gradient(1px 1px at 58% 40%,#fff5 50%,transparent 51%);pointer-events:none}
+.brand{max-width:720px;margin:0 auto;display:flex;align-items:center;gap:12px;position:relative;z-index:1}
+.brand svg{flex:none;filter:drop-shadow(0 2px 6px rgba(0,0,0,.25))}
+.brand .wm{display:flex;flex-direction:column;line-height:1.1}
+.brand .jp{font-size:28px;font-weight:700;letter-spacing:.12em}
+.brand .en{font-size:10.5px;letter-spacing:.42em;color:#d8b06a;margin-top:4px;font-weight:600}
+.tagline{max-width:720px;margin:14px auto 0;font-size:13px;color:#c9cbd6;position:relative;z-index:1;letter-spacing:.04em}
+
+.hero .tagline{line-height:1.6}
+.tabs{max-width:720px;margin:14px auto 0;position:relative;z-index:1}
+.tabs nav{display:inline-flex;gap:4px;padding:4px;border-radius:999px;background:#ffffff14;border:1px solid #ffffff2e}
+.tabs a{font-size:13px;font-weight:700;letter-spacing:.05em;padding:7px 16px;border-radius:999px;text-decoration:none;color:#d9dbe5;white-space:nowrap}
+.tabs a:hover{color:#fff}
+.tabs a[aria-current]{background:#f3eee3;color:#1f2a44}
+.tabs a:focus-visible{outline:2px solid #d8b06a;outline-offset:2px}
+</style>
+</head>
+<body>
+<header class="hero">
+    <div class="brand">
+    <!-- ロゴ：宵の三日月が宿の屋根にかかる -->
+    <svg width="46" height="46" viewBox="0 0 64 64" aria-hidden="true">
+      <defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f1d9a3"/><stop offset="1" stop-color="#c8963f"/></linearGradient></defs>
+      <rect x="2" y="2" width="60" height="60" rx="16" fill="#ffffff14" stroke="#ffffff30"/>
+      <path d="M41 13a12 12 0 1 0 11 16.5A10 10 0 0 1 41 13z" fill="url(#lg)"/>
+      <path d="M12 37 L30 25 L48 37" fill="none" stroke="#f3eee3" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M17 35 V50 H43 V35" fill="none" stroke="#f3eee3" stroke-width="3.2" stroke-linejoin="round"/>
+      <rect x="26.5" y="40" width="7" height="10" rx="1.5" fill="url(#lg)"/>
+    </svg>
+    <div class="wm"><span class="jp serif">宵宿</span><span class="en">YOIYADO</span></div>
+  </div>
+  <div class="tagline">今夜の一泊を、いちばん賢く。会員価格をその場で比べる。</div>
+<div class="tabs"><nav aria-label="ページ切り替え"><a href="./">料金比較</a><a href="bookings.html" aria-current="page">予約</a><a href="status.html">会員ステータス</a></nav></div>
+
+  <div class="ttl">
+    <h1 class="serif">予約一覧</h1>
+    <p>個人のGmailに届いた予約メールから、毎朝自動でまとめています。</p>
+  </div>
+</header>
+<main>
+  <section class="card" id="summary"><div class="empty">読み込み中…</div></section>
+  <div id="list"></div>
+</main>
+<footer>YOIYADO · 金額は税・サービス料・宿泊税込みの滞在合計</footer>
+<script>
+const GAS = "https://script.google.com/macros/s/AKfycbyXS4tQgx8U95EG5EUJd3H47_saO_Ny35XWZBWxyNY-2ck8QBLOmgAzSm6HtN7twnRXaFGf/exec";
+const NAMES = {keio:'京王プラザ', iprefer:'京王プラザ（I Prefer）', newotani:'ニューオータニ ザ・メイン（I Prefer）', groove:'ホテルグルーヴ', hilton:'ヒルトン東京', hyatt:'ハイアット リージェンシー', kimpton:'キンプトン新宿'};
+const COLORS = {keio:'#7a5c9e', iprefer:'#a07cc5', newotani:'#9b6b3f', groove:'#d0603c', hilton:'#2f5fa8', hyatt:'#5b8c9c', kimpton:'#3f8a5f'};
+const yen = n => '¥' + Number(n).toLocaleString('ja-JP');
+const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const wd = s => '日月火水木金土'[new Date(s + 'T00:00:00').getDay()];
+const md = s => Number(s.slice(5,7)) + '/' + Number(s.slice(8,10));
+let K = '', data = null, view = 'future';
+try { K = localStorage.getItem('yoiyado_k') || ''; } catch(e) {}
+
+async function load(){
+  if (!K) { document.getElementById('summary').innerHTML = '<div class="err">合言葉が設定されていません。料金比較のページで合言葉を設定してから開いてください。</div>'; return; }
+  for (let i = 0; i < 3; i++) {
+    try {
+      const r = await fetch(GAS + '?api=ledger&k=' + encodeURIComponent(K), {credentials: 'omit', cache: 'no-store'});
+      const t = await r.text();
+      if (t.trim().startsWith('{')) { data = JSON.parse(t); if (data.error) break; render(); return; }
+    } catch(e) {}
+    await new Promise(res => setTimeout(res, 1200 * (i + 1)));
+  }
+  document.getElementById('summary').innerHTML = '<div class="err">予約一覧を読み込めませんでした。少し時間をおいて開き直してください。</div>';
+}
+
+function setView(v){ view = v; try { localStorage.setItem('yoiyado_bk_view', v); } catch(e) {} render(); }
+
+function render(){
+  const today = new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 10);
+  const all = (data.rows || []).filter(r => r.checkin || r.status === 'booked');
+  const future = all.filter(r => r.status === 'booked' && r.checkout > today);
+  // 集計（今後の有効な予約）
+  const nights = future.reduce((a, r) => a + r.nights, 0), total = future.reduce((a, r) => a + (r.pay || 0), 0);
+  const byHotel = {};
+  future.forEach(r => { byHotel[r.hotel] = byHotel[r.hotel] || [0, 0]; byHotel[r.hotel][0]++; byHotel[r.hotel][1] += r.nights; });
+  const built = data.built ? new Date(data.built) : null;
+  let h = `<div class="sum">
+      <div><div class="k">今後の予約</div><div class="v num">${future.length}<small>件</small></div></div>
+      <div><div class="k">泊数</div><div class="v num">${nights}<small>泊</small></div></div>
+      <div><div class="k">合計</div><div class="v money num serif">${yen(total)}</div></div></div>
+    <div class="chips">${Object.entries(byHotel).sort((a, b) => b[1][1] - a[1][1]).map(([k, v]) =>
+      `<span class="chip"><span class="dot" style="background:${COLORS[k] || '#999'}"></span>${esc(NAMES[k] || k)} ${v[0]}件・${v[1]}泊</span>`).join('')}</div>
+    <div class="filters" role="group" aria-label="表示する予約">
+      ${[['future','今後の予約'],['past','過去も含む'],['cx','キャンセルも含む']].map(([v, l]) =>
+        `<button type="button" aria-pressed="${view === v}" onclick="setView('${v}')">${l}</button>`).join('')}</div>
+    <div class="updated">台帳の更新：${built ? (built.getMonth() + 1) + '/' + built.getDate() + ' ' + String(built.getHours()).padStart(2,'0') + ':' + String(built.getMinutes()).padStart(2,'0') : '—'}</div>`;
+  document.getElementById('summary').innerHTML = h;
+
+  const rows = all.filter(r => view === 'cx' ? true : view === 'past' ? r.status === 'booked' : (r.status === 'booked' && r.checkout > today))
+                  .filter(r => r.checkin).sort((a, b) => a.checkin < b.checkin ? -1 : 1);
+  if (!rows.length) { document.getElementById('list').innerHTML = '<div class="card empty">該当する予約はありません。</div>'; return; }
+  const groups = {};
+  rows.forEach(r => { const m = r.checkin.slice(0, 7); (groups[m] = groups[m] || []).push(r); });
+  let l = '';
+  Object.keys(groups).sort().forEach(m => {
+    const g = groups[m], gn = g.filter(r => r.status === 'booked').reduce((a, r) => a + r.nights, 0);
+    l += `<div class="month"><span>${Number(m.slice(0,4))}年${Number(m.slice(5))}月</span><span class="s">${g.length}件・${gn}泊</span></div>`;
+    g.forEach(r => {
+      const cx = r.status !== 'booked';
+      l += `<div class="bk${cx ? ' cx' : ''}">
+        <div class="d num">${md(r.checkin)}<small>（${wd(r.checkin)}）${r.nights}泊・${r.adults}名</small></div>
+        <div><div class="h"><span class="dot" style="background:${COLORS[r.hotel] || '#999'}"></span>${esc(NAMES[r.hotel] || r.hotel_name)}</div>
+          <div class="r">${esc(r.room)}${cx ? '<span class="tag cx">キャンセル</span>' : r.refundable ? '<span class="tag ok">返金可</span>' : '<span class="tag nr">返金不可</span>'}</div>
+          <div class="p">${esc(r.plan)}</div></div>
+        <div class="pay num">${r.pay ? yen(r.pay) : '—'}${r.nights > 1 && r.pay ? `<small>1泊 ${yen(Math.round(r.pay / r.nights))}</small>` : ''}</div>
+      </div>`;
+    });
+  });
+  document.getElementById('list').innerHTML = l;
+}
+
+try { view = localStorage.getItem('yoiyado_bk_view') || 'future'; } catch(e) {}
+load();
+</script>
+</body>
+</html>
