@@ -56,10 +56,10 @@ main{max-width:720px;margin:-56px auto 0;padding:0 14px 36px;position:relative;z
 .updated{font-size:11.5px;color:var(--sub);margin-top:10px}
 .month{display:flex;justify-content:space-between;align-items:baseline;margin:18px 4px 8px;font-weight:700}
 .month .s{font-size:12px;color:var(--sub);font-weight:500}
-.bk{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:11px 12px;margin-bottom:8px;display:grid;grid-template-columns:62px minmax(0,1fr) auto;gap:2px 10px;align-items:start}
+.bk{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:11px 12px;margin-bottom:8px;display:grid;grid-template-columns:70px minmax(0,1fr) auto;gap:2px 10px;align-items:start}
 .bk.cx{opacity:.55}
 .bk .d{font-weight:700;line-height:1.25}
-.bk .d small{display:block;font-size:11px;color:var(--sub);font-weight:500}
+.bk .d small{display:block;font-size:11px;color:var(--sub);font-weight:500;white-space:nowrap}
 .bk .h{font-size:12px;color:var(--sub);display:flex;align-items:center;gap:6px;min-width:0}
 .bk .r{font-weight:600;font-size:14px;line-height:1.4;overflow-wrap:anywhere}
 .bk .p{font-size:12px;color:var(--sub);overflow-wrap:anywhere}
@@ -69,10 +69,18 @@ main{max-width:720px;margin:-56px auto 0;padding:0 14px 36px;position:relative;z
 .tag.ok{color:var(--ok);background:var(--ok-bg)}
 .tag.nr{color:var(--warn);background:var(--warn-bg)}
 .tag.cx{color:var(--sub);background:var(--bg2)}
+.tag.ch{color:var(--sub);background:var(--bg2);font-weight:600}
+.bk .w{grid-column:2/4;font-size:12px;color:var(--sub);margin-top:4px;display:flex;flex-wrap:wrap;gap:4px 10px}
+.bk.save{border:1.5px solid var(--gold);background:linear-gradient(180deg,var(--gold-soft),var(--card) 75%)}
+.bk .sv{grid-column:1/4;margin-top:6px;padding:7px 10px;border-radius:10px;background:var(--card);border:1px dashed var(--gold);font-size:12.5px;line-height:1.5}
+.bk .sv b{color:var(--gold)}
+.bk .sv a{color:inherit;font-weight:700}
+.sum2{margin-top:10px;font-size:13px;padding:8px 10px;border-radius:10px;background:var(--gold-soft)}
+.sum2 b{color:var(--gold)}
 .err{background:var(--warn-bg);color:var(--warn);border-radius:10px;padding:9px 12px;font-size:13px}
 .empty{color:var(--sub);font-size:13px;text-align:center;padding:10px}
 footer{max-width:720px;margin:0 auto;padding:0 16px 28px;text-align:center;font-size:11px;color:var(--sub);letter-spacing:.06em}
-@media (max-width:380px){.bk{grid-template-columns:54px minmax(0,1fr) auto}.sum .v{font-size:19px}}
+@media (max-width:380px){.bk{grid-template-columns:64px minmax(0,1fr) auto}.sum .v{font-size:19px}}
 .hero{background:radial-gradient(120% 140% at 85% -20%,#3b4c78 0%,var(--night2) 38%,var(--night) 100%);color:#f3eee3;padding:22px 16px 74px;position:relative;overflow:hidden}
 .hero::after{content:"";position:absolute;inset:0;background-image:radial-gradient(1px 1px at 12% 30%,#fff8 50%,transparent 51%),radial-gradient(1px 1px at 72% 18%,#fff6 50%,transparent 51%),radial-gradient(1.5px 1.5px at 88% 62%,#fff5 50%,transparent 51%),radial-gradient(1px 1px at 40% 70%,#fff4 50%,transparent 51%),radial-gradient(1px 1px at 58% 40%,#fff5 50%,transparent 51%);pointer-events:none}
 .brand{max-width:720px;margin:0 auto;display:flex;align-items:center;gap:12px;position:relative;z-index:1}
@@ -153,6 +161,11 @@ function render(){
   const byHotel = {};
   future.forEach(r => { byHotel[r.hotel] = byHotel[r.hotel] || [0, 0]; byHotel[r.hotel][0]++; byHotel[r.hotel][1] += r.nights; });
   const built = data.built ? new Date(data.built) : null;
+  const W = data.watch || {};
+  // 取り直し候補：差額が2,000円以上または3%以上（値下がりメールと同じ基準）
+  const isSave = r => { const w = W[r.key]; return w && w.best_pay && w.save >= Math.max(2000, r.pay * 0.03); };
+  const saves = future.filter(isSave), saveTotal = saves.reduce((a, r) => a + W[r.key].save, 0);
+  const fmtT = s => { if (!s) return '—'; const d = new Date(s); return (d.getMonth() + 1) + '/' + d.getDate() + ' ' + String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0'); };
   let h = `<div class="sum">
       <div><div class="k">今後の予約</div><div class="v num">${future.length}<small>件</small></div></div>
       <div><div class="k">泊数</div><div class="v num">${nights}<small>泊</small></div></div>
@@ -162,7 +175,9 @@ function render(){
     <div class="filters" role="group" aria-label="表示する予約">
       ${[['future','今後の予約'],['past','過去も含む'],['cx','キャンセルも含む']].map(([v, l]) =>
         `<button type="button" aria-pressed="${view === v}" onclick="setView('${v}')">${l}</button>`).join('')}</div>
-    <div class="updated">台帳の更新：${built ? (built.getMonth() + 1) + '/' + built.getDate() + ' ' + String(built.getHours()).padStart(2,'0') + ':' + String(built.getMinutes()).padStart(2,'0') : '—'}</div>`;
+    ${saves.length ? `<div class="sum2">取り直すと安くなる予約：<b>${saves.length}件・合計 ${yen(saveTotal)}</b></div>` :
+      (Object.keys(W).length ? `<div class="sum2">取り直すと安くなる予約はありません（返金可の予約を毎朝確認しています）</div>` : '')}
+    <div class="updated">台帳の更新：${fmtT(data.built)}　値下がりチェック：${fmtT(data.watch_checked)}</div>`;
   document.getElementById('summary').innerHTML = h;
 
   const rows = all.filter(r => view === 'cx' ? true : view === 'past' ? r.status === 'booked' : (r.status === 'booked' && r.checkout > today))
@@ -175,13 +190,19 @@ function render(){
     const g = groups[m], gn = g.filter(r => r.status === 'booked').reduce((a, r) => a + r.nights, 0);
     l += `<div class="month"><span>${Number(m.slice(0,4))}年${Number(m.slice(5))}月</span><span class="s">${g.length}件・${gn}泊</span></div>`;
     g.forEach(r => {
-      const cx = r.status !== 'booked';
-      l += `<div class="bk${cx ? ' cx' : ''}">
+      const cx = r.status !== 'booked', w = W[r.key], sv = !cx && isSave(r) && r.checkout > today;
+      const ch = r.channel && r.channel !== '公式' ? `<span class="tag ch">${esc(r.channel)}</span>` : '';
+      const free = !cx && r.free_cancel_until ? `<span>無料キャンセル ${md(r.free_cancel_until)}（${wd(r.free_cancel_until)}）まで</span>` : '';
+      const wl = !cx && w && w.best_pay && !sv ? `<span>今の最安 ${yen(w.best_pay)}（${esc(w.best_channel)}）</span>` : '';
+      l += `<div class="bk${cx ? ' cx' : ''}${sv ? ' save' : ''}">
         <div class="d num">${md(r.checkin)}<small>（${wd(r.checkin)}）${r.nights}泊・${r.adults}名</small></div>
         <div><div class="h"><span class="dot" style="background:${COLORS[r.hotel] || '#999'}"></span>${esc(NAMES[r.hotel] || r.hotel_name)}</div>
-          <div class="r">${esc(r.room)}${cx ? '<span class="tag cx">キャンセル</span>' : r.refundable ? '<span class="tag ok">返金可</span>' : '<span class="tag nr">返金不可</span>'}</div>
+          <div class="r">${esc(r.room)}${cx ? '<span class="tag cx">キャンセル</span>' : r.refundable ? '<span class="tag ok">返金可</span>' : '<span class="tag nr">返金不可</span>'}${ch}</div>
           <div class="p">${esc(r.plan)}</div></div>
         <div class="pay num">${r.pay ? yen(r.pay) : '—'}${r.nights > 1 && r.pay ? `<small>1泊 ${yen(Math.round(r.pay / r.nights))}</small>` : ''}</div>
+        ${free || wl ? `<div class="w">${free}${wl}</div>` : ''}
+        ${sv ? `<div class="sv">▼ <b>${yen(w.save)}安く</b>取り直せます：${esc(w.best_channel)}［${esc(w.best_kind)}］${esc(w.best_room)} ${yen(w.best_pay)}<br>
+          ${esc(w.best_plan)}　<a href="${esc(w.best_url)}" target="_blank" rel="noopener">予約ページへ →</a></div>` : ''}
       </div>`;
     });
   });
