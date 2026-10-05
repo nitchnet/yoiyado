@@ -131,6 +131,23 @@ details.cond p{margin:6px 0 0;line-height:1.7}
 .offer.alt{margin-left:26px;box-shadow:none;border-style:dashed;background:transparent}
 .offer.alt .rk{font-size:14px}
 .empty{text-align:center;color:var(--sub);font-size:13px;padding:8px 0 2px}
+
+/* ---------- 検索履歴 ---------- */
+.hist h2{font-size:13px;letter-spacing:.08em;color:var(--sub);margin:0 0 8px;font-weight:700}
+.hist ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.hist button.h{width:100%;font:inherit;color:var(--ink);text-align:left;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:9px 12px;cursor:pointer;
+  display:grid;grid-template-columns:minmax(0,1fr) auto;gap:1px 10px;align-items:baseline}
+.hist button.h:hover{border-color:var(--gold)}
+.hist button.h.on{border-color:var(--gold);background:var(--gold-soft)}
+.hist .stay{font-weight:700;font-size:14px}
+.hist .ht{white-space:nowrap}
+.hist .pr{font-weight:700;font-size:15px;text-align:right}
+.hist .at{font-size:11.5px;color:var(--sub)}
+.hist .ht{font-size:11.5px;color:var(--sub);text-align:right;display:flex;align-items:center;gap:5px;justify-content:flex-end;min-width:0}
+.hist .ht .dot{width:7px;height:7px;border-radius:50%;flex:none}
+.histnote{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;background:var(--gold-soft);border-radius:10px;padding:8px 12px;margin-top:10px;font-size:12.5px}
+.histnote button{font:inherit;font-size:12.5px;font-weight:700;border:0;border-radius:999px;padding:5px 12px;cursor:pointer;background:var(--night2);color:#fff}
+@media (prefers-color-scheme: dark){.histnote button{background:var(--gold);color:#1a1f2e}}
 footer{max-width:720px;margin:0 auto;padding:0 16px 28px;text-align:center;font-size:11px;color:var(--sub);letter-spacing:.08em}
 @media (max-width:380px){.offer .price .p{font-size:19px}.brand .jp{font-size:25px}}
 
@@ -181,6 +198,7 @@ footer{max-width:720px;margin:0 auto;padding:0 16px 28px;text-align:center;font-
     </details>
   </section>
   <div id="out"></div>
+  <section class="card hist" id="hist" hidden aria-label="最近の検索"></section>
 </main>
 <footer>YOIYADO · 自宅PCで取得・各ホテル公式の価格 · <a href="#" onclick="showSetup();return false" style="color:inherit">合言葉</a></footer>
 
@@ -245,7 +263,7 @@ async function go(){
   try { localStorage.setItem('cmp_adults', adults); } catch(e) {}
   clearTimeout(timer);
   setLoading(true);
-  cur = {date, checkout, nights, adults, results:{}}; started = Date.now(); render();
+  cur = {date, checkout, nights, adults, results:{}}; started = Date.now(); render(); renderHist();
   try {
     const cid = Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
     const r = await call('cmpRequest', {date, checkout, adults, cid});
@@ -272,6 +290,65 @@ function finish(){
   const last = loadLast();
   if (last && cur && !cur.fatal && !cur.invalid && cur.id === last.id) saveLast(Object.assign(last, {done: true, sec: finishedSec}));
   else if (cur && (cur.fatal || cur.invalid)) saveLast(null);
+  if (cur && cur.id && !cur.fatal) loadHist();  // 完了した検索はサーバー側で履歴に入っているので一覧を更新
+}
+
+// 検索履歴：直近5回。検索した結果を丸ごと保存してあるので、後日開いてもホテルへの再問い合わせはしない
+let HIST = [];
+const wdOf = s => '日月火水木金土'[new Date(s + 'T00:00:00').getDay()];
+const mdOf = s => Number(s.slice(5,7)) + '/' + Number(s.slice(8,10)) + '（' + wdOf(s) + '）';
+const atOf = iso => { const d = new Date(iso); return (d.getMonth() + 1) + '/' + d.getDate() + ' ' + d.getHours() + ':' + String(d.getMinutes()).padStart(2, '0'); };
+// 一覧と開いた詳細はこの端末にも控えておき、次に開いたときはまず控えを即座に出す（Apps Script の応答は数秒かかるため）
+const memo = {
+  get: (k, s) => { try { return JSON.parse((s ? sessionStorage : localStorage).getItem(k) || 'null'); } catch(e) { return null; } },
+  set: (k, v, s) => { try { (s ? sessionStorage : localStorage).setItem(k, JSON.stringify(v)); } catch(e) {} },
+};
+async function loadHist(tries){
+  if (!K) return;
+  tries = tries || 0;
+  const m = memo.get('yoiyado_hist');
+  if (m && !HIST.length) { HIST = m; renderHist(); }
+  try { const r = await call('history', {}); HIST = r.items || []; memo.set('yoiyado_hist', HIST); }
+  catch(e) { if (tries < 4) setTimeout(() => loadHist(tries + 1), 5000); return; }  // 応答が続けて失われたときは少し置いて取り直す
+  renderHist();
+}
+function renderHist(){
+  const el = document.getElementById('hist');
+  if (!HIST.length) { el.hidden = true; return; }
+  el.hidden = false;
+  el.innerHTML = '<h2>最近の検索</h2><ul>' + HIST.map(x => `<li><button type="button" class="h${cur && cur.history && String(cur.id) === x.id ? ' on' : ''}" onclick="openHist('${esc(x.id)}')">
+      <span class="stay num">${mdOf(x.date)} → ${mdOf(x.checkout)}</span>
+      <span class="pr serif num">${yen(x.best_pay)}</span>
+      <span class="at num">${x.nights}泊・${x.adults}名 ／ ${atOf(x.searched_at)} に検索</span>
+      <span class="ht"><span class="dot" style="background:${COLORS[x.best_hotel] || 'var(--sub)'}"></span>${esc(SHORT[x.best_hotel] || x.best_hotel)}が最安</span>
+    </button></li>`).join('') + '</ul>';
+}
+async function openHist(id){
+  if (loading) return;  // 検索中は今の検索を優先する
+  // 検索条件の欄も履歴の条件に合わせる（「最新の価格で検索」でそのまま再検索できるように）
+  const setForm = x => {
+    document.getElementById('date').value = x.date; lastIn = x.date;
+    document.getElementById('checkout').value = x.checkout; showNights();
+    document.getElementById('adults').value = String(x.adults);
+  };
+  const x = HIST.find(h => h.id === id);
+  if (x) setForm(x);
+  clearTimeout(timer);
+  const opening = document.getElementById('out');
+  try {
+    let r = memo.get('yoiyado_hd_' + id, true);
+    if (!r) {
+      opening.innerHTML = '<section class="card"><div class="prog"><div class="msg"><span><span class="spin" style="color:var(--gold)"></span>履歴を開いています…</span></div></div></section>';
+      r = await call('historyGet', {id});
+      if (r.error) { cur = {invalid: r.error}; saveLast(null); render(); return; }
+      memo.set('yoiyado_hd_' + id, r, true);
+    }
+    cur = r; setForm(r);
+    finishedSec = r.finished && r.created ? Math.round((r.finished - r.created) / 1000) : 0;
+    saveLast({hist: id, started: Date.now()});
+  } catch(e) { cur = {invalid: '履歴を読み込めませんでした。少し時間をおいてもう一度お試しください。'}; }
+  render(); renderHist();
+  document.getElementById('out').scrollIntoView({behavior: 'smooth', block: 'start'});
 }
 
 // 別ページ（会員ステータス）へ移動して戻っても、直前の検索を続きから表示する。
@@ -282,6 +359,7 @@ function loadLast(){ try { return JSON.parse(sessionStorage.getItem(LAST_KEY) ||
 async function restoreLast(){
   const last = loadLast();
   if (!K) return;  // 合言葉の設定前は復元しない（公開版）
+  if (last && last.hist) return openHist(last.hist);  // 履歴を開いていた場合はその履歴を開き直す
   if (!last || !last.id || Date.now() - last.started > 6 * 3600e3) return saveLast(null);
   document.getElementById('date').value = last.date; lastIn = last.date;
   document.getElementById('checkout').value = last.checkout; showNights();
@@ -331,7 +409,7 @@ function render(){
       <div class="bar"><div class="fill run" style="width:${pct}%"></div></div>
       <div class="hint">各ホテルの公式サイトに問い合わせています。その日最初の検索は30秒ほどかかります。</div></div>`;
   } else if (doneN && !cur.fatal) {
-    h += `<div class="prog"><div class="msg"><span>✓ ${doneN} / ${ORDER.length} ホテルを比較</span><span class="t num">${finishedSec}秒</span></div>
+    h += `<div class="prog"><div class="msg"><span>✓ ${doneN} / ${ORDER.length} ホテルを比較</span><span class="t num">${cur.history ? '' : finishedSec + '秒'}</span></div>
       <div class="bar"><div class="fill" style="width:100%"></div></div></div>`;
   }
   h += '<div class="chips">';
@@ -342,6 +420,7 @@ function render(){
     else h += `<span class="chip ok">${dot}${SHORT[k]} <span class="s num">${r.sec}s</span></span>`;
   });
   h += '</div>';
+  if (cur.history) h += `<div class="histnote"><span>${atOf(cur.searched_at)} に検索した結果です。今の価格とは違う場合があります。</span><button type="button" onclick="go()">最新の価格で検索</button></div>`;
   if (cur.fatal) h += `<div class="err">${esc(cur.fatal)}</div>`;
   if (cur.worker_alive === false && !cur.done) h += `<div class="err">自宅PCの取得プログラムが応答していません（PCの電源・ネット接続を確認してください）。</div>`;
   h += '</section>';
@@ -394,6 +473,7 @@ function render(){
   try { const a = localStorage.getItem('cmp_adults'); if (a) document.getElementById('adults').value = a; } catch(e) {}
   try { document.getElementById('showAlt').checked = localStorage.getItem('cmp_show_nr') === '1'; } catch(e) {}
   restoreLast();
+  loadHist();
 })();
 
 function showSetup(msg){
