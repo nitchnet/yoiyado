@@ -74,6 +74,26 @@ ul.b li{margin:2px 0}
 .note{font-size:12px;color:var(--sub);margin-top:8px}
 footer{max-width:720px;margin:0 auto;padding:0 16px 28px;text-align:center;font-size:11px;color:var(--sub);letter-spacing:.06em}
 footer a{color:inherit}
+/* 進捗（予約台帳から自動計算） */
+.yrs{margin-left:auto;display:inline-flex;gap:4px}
+.yrs button{font:inherit;font-size:12px;padding:3px 10px;border-radius:999px;border:1px solid var(--line);background:var(--bg);color:var(--sub);cursor:pointer}
+.yrs button[aria-pressed="true"]{background:var(--night2);color:#fff;border-color:var(--night2)}
+@media (prefers-color-scheme: dark){.yrs button[aria-pressed="true"],.pg button.sv{background:var(--gold);color:#1a1f2e;border-color:var(--gold)}}
+.pg{border:1px solid var(--line);border-radius:12px;padding:11px 12px;margin-top:10px;background:var(--bg)}
+.pg .t{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}
+.pg .t b{font-size:14.5px}
+.pg .t .v{font-weight:700;font-variant-numeric:tabular-nums}
+.pg .t .v small{font-weight:500;color:var(--sub);font-size:12px}
+.pg .bar{position:relative;height:8px;border-radius:999px;background:var(--bg2);overflow:hidden;margin:8px 0 6px}
+.pg .bar i{position:absolute;left:0;top:0;bottom:0;border-radius:999px}
+.pg .bar i.done{background:var(--gold)}
+.pg .bar i.plan{background:var(--gold);opacity:.35}
+.pg .s{font-size:12px;color:var(--sub);line-height:1.6}
+.pg .s b{color:var(--ink)}
+.pg.ok{border-color:var(--gold)}
+.pg input{font:inherit;font-size:14px;width:9em;padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink)}
+.pg button.sv{font:inherit;font-size:12.5px;padding:6px 12px;border-radius:8px;border:0;background:var(--night2);color:#fff;cursor:pointer;margin-left:4px}
+.pg-empty{color:var(--sub);font-size:13px}
 .hero{background:radial-gradient(120% 140% at 85% -20%,#3b4c78 0%,var(--night2) 38%,var(--night) 100%);color:#f3eee3;padding:22px 16px 74px;position:relative;overflow:hidden}
 .hero::after{content:"";position:absolute;inset:0;background-image:radial-gradient(1px 1px at 12% 30%,#fff8 50%,transparent 51%),radial-gradient(1px 1px at 72% 18%,#fff6 50%,transparent 51%),radial-gradient(1.5px 1.5px at 88% 62%,#fff5 50%,transparent 51%),radial-gradient(1px 1px at 40% 70%,#fff4 50%,transparent 51%),radial-gradient(1px 1px at 58% 40%,#fff5 50%,transparent 51%);pointer-events:none}
 .brand{max-width:720px;margin:0 auto;display:flex;align-items:center;gap:12px;position:relative;z-index:1}
@@ -115,6 +135,11 @@ footer a{color:inherit}
   </div>
 </header>
 <main>
+
+<section class="card" id="progress">
+  <h2>進捗<span class="yrs" id="yrs"></span></h2>
+  <div id="prog-body" class="pg-empty">読み込み中…</div>
+</section>
 
 <section class="card">
   <h2><span class="n">1</span>泊まり方のルール</h2>
@@ -189,5 +214,92 @@ footer a{color:inherit}
 
 </main>
 <footer>YOIYADO · 各社公式・比較記事より（2026-10-05時点）。制度は変わることがあります · <a href="./">料金比較へ</a></footer>
+<script>
+// 進捗：予約台帳（個人Gmailの予約メールから毎朝作成）を年ごとに集計する。
+// ステータスの泊数・金額に数えるのはホテル公式の予約だけ（一休・Expedia など第三者サイト経由は対象外）。
+const GAS = "https://script.google.com/macros/s/AKfycbyXS4tQgx8U95EG5EUJd3H47_saO_Ny35XWZBWxyNY-2ck8QBLOmgAzSm6HtN7twnRXaFGf/exec";
+let K = '', D = null, YEAR = new Date().getFullYear();
+try { K = localStorage.getItem('yoiyado_k') || ''; } catch(e) {}
+const yen = n => '¥' + Math.round(n).toLocaleString('ja-JP');
+const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+async function api(params){
+  for (let i = 0; i < 3; i++) {
+    try {
+      const r = await fetch(GAS + '?' + new URLSearchParams(Object.assign({k: K}, params)), {credentials: 'omit', cache: 'no-store'});
+      const t = await r.text();
+      if (t.trim().startsWith('{')) return JSON.parse(t);
+    } catch(e) {}
+    await new Promise(res => setTimeout(res, 1200 * (i + 1)));
+  }
+  throw new Error('通信に失敗しました');
+}
+
+function bar(done, plan, goal){
+  const d = Math.min(100, done / goal * 100), p = Math.min(100 - d, plan / goal * 100);
+  return `<div class="bar"><i class="done" style="width:${d}%"></i><i class="plan" style="left:${d}%;width:${p}%"></i></div>`;
+}
+
+function render(){
+  const today = new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 10);
+  const rows = (D.rows || []).filter(r => r.status === 'booked' && r.checkin && r.checkin.slice(0, 4) === String(YEAR));
+  const direct = r => r.channel === '公式';
+  const stayed = r => r.checkout <= today;
+  const sum = (list, f) => list.reduce((a, r) => a + f(r), 0);
+  const cy = new Date().getFullYear();
+  const monthsLeft = YEAR > cy ? 12 : YEAR < cy ? 1 : 12 - new Date().getMonth();   // 今月を含む残り月数
+  let h = '';
+
+  // ハイアット グローバリスト：公式予約の宿泊数 60泊
+  const hy = rows.filter(r => r.hotel === 'hyatt'), hyD = hy.filter(direct), hyX = hy.filter(r => !direct(r));
+  const hyDone = sum(hyD.filter(stayed), r => r.nights), hyPlan = sum(hyD.filter(r => !stayed(r)), r => r.nights);
+  const hyRest = Math.max(0, 60 - hyDone - hyPlan);
+  h += `<div class="pg${hyDone + hyPlan >= 60 ? ' ok' : ''}"><div class="t"><b>ハイアット グローバリスト</b><span class="v">${hyDone}<small>泊済み</small> ＋ ${hyPlan}<small>泊予約</small> ／ 60泊</span></div>
+    ${bar(hyDone, hyPlan, 60)}<div class="s">${hyRest ? `あと <b>${hyRest}泊</b>（残り月で割ると月 <b>${Math.ceil(hyRest / monthsLeft)}泊</b>）` : '<b>予約分を含めて達成見込み</b>'}
+    ${hyX.length ? `・一休／Expedia経由の${sum(hyX, r => r.nights)}泊は対象外` : ''}</div></div>`;
+
+  // ヒルトン ダイヤモンド：ヒルトン・アメックス・プレミアムの年間利用額 200万円（暦年）
+  const m = ((D.manual || {})[YEAR] || {}), spend = m.hilton_card_spend || 0;
+  const hl = rows.filter(r => r.hotel === 'hilton' && direct(r));
+  h += `<div class="pg${spend >= 2e6 ? ' ok' : ''}"><div class="t"><b>ヒルトン ダイヤモンド</b><span class="v">${yen(spend)} <small>／ ${yen(2e6)}</small></span></div>
+    ${bar(spend, 0, 2e6)}<div class="s">ヒルトン・アメックス・プレミアムの${YEAR}年の利用額（1〜12月）。${spend < 2e6 ? `あと <b>${yen(2e6 - spend)}</b>` : '<b>達成</b>'}
+    ・公式予約のヒルトン宿泊 ${sum(hl, r => r.nights)}泊<br>
+    <span>利用額を更新：<input id="hsp" inputmode="numeric" placeholder="例 350000" value="${spend || ''}"><button class="sv" onclick="saveSpend()">保存</button></span>
+    ${m.hilton_card_spend_at ? `<span>（${new Date(m.hilton_card_spend_at).toLocaleDateString('ja-JP')} 更新）</span>` : ''}</div></div>`;
+
+  // 京王プラザ ロイヤル：年間利用金額 30万円以上（税別）。公式予約の宿泊のみ（代理店経由は対象外）
+  const ke = rows.filter(r => r.hotel === 'keio' && direct(r));
+  const net = r => Math.max(0, (r.pay || 0) - 200 * r.adults * r.nights) / 1.1;   // 宿泊税と消費税を除いた概算
+  const keDone = sum(ke.filter(stayed), net), kePlan = sum(ke.filter(r => !stayed(r)), net);
+  h += `<div class="pg${keDone + kePlan >= 3e5 ? ' ok' : ''}"><div class="t"><b>京王プラザ ロイヤル</b><span class="v">${yen(keDone)}<small>利用済み</small> ＋ ${yen(kePlan)}<small>予約</small> ／ ${yen(3e5)}</span></div>
+    ${bar(keDone, kePlan, 3e5)}<div class="s">公式予約の宿泊額（税別の概算）。レストラン・バーの利用は含みません。集計期間は暦年として計算（公式に記載なし）</div></div>`;
+
+  // GHA DISCOVERY プラチナ：年内に異なる2ブランドに宿泊（公式予約）
+  const brands = new Set(rows.filter(r => r.hotel === 'groove' && direct(r) && stayed(r)).map(() => 'PARKROYAL'));
+  const grX = rows.filter(r => r.hotel === 'groove' && !direct(r));
+  h += `<div class="pg${brands.size >= 2 ? ' ok' : ''}"><div class="t"><b>GHA DISCOVERY プラチナ</b><span class="v">${brands.size}<small>ブランド</small> ／ 2ブランド</span></div>
+    ${bar(brands.size, 0, 2)}<div class="s">GROOVE（PARKROYAL）とBELLUSTAR（Pan Pacific）に公式予約で1泊ずつ。${grX.length ? `Expedia経由のGROOVE ${grX.length}件は対象外` : ''}</div></div>`;
+
+  h += `<div class="s" style="margin-top:8px;font-size:11.5px;color:var(--sub)">泊数・金額は予約台帳（毎朝更新）から計算。濃い色は宿泊済み、薄い色は予約済み。</div>`;
+  document.getElementById('prog-body').innerHTML = h;
+  document.getElementById('prog-body').className = '';
+  const ys = [new Date().getFullYear(), new Date().getFullYear() + 1];
+  document.getElementById('yrs').innerHTML = ys.map(y => `<button type="button" aria-pressed="${y === YEAR}" onclick="YEAR=${y};render()">${y}</button>`).join('');
+}
+
+async function saveSpend(){
+  const v = Number(String(document.getElementById('hsp').value).replace(/[^\d]/g, ''));
+  try {
+    const r = await api({api: 'statusSet', year: YEAR, field: 'hilton_card_spend', value: v});
+    if (r.ok) { D.manual = r.manual; render(); }
+  } catch(e) { alert('保存できませんでした。'); }
+}
+
+(async function(){
+  if (!K) { document.getElementById('prog-body').textContent = '料金比較のページで合言葉を設定すると、ここに進捗が出ます。'; return; }
+  try { D = await api({api: 'ledger'}); render(); }
+  catch(e) { document.getElementById('prog-body').textContent = '進捗を読み込めませんでした。少し時間をおいて開き直してください。'; }
+})();
+</script>
 </body>
 </html>
