@@ -336,12 +336,16 @@ async function openHist(id){
   clearTimeout(timer);
   const opening = document.getElementById('out');
   try {
-    let r = memo.get('yoiyado_hd_' + id, true);
+    // 履歴の中身は後から変わらないので、開いたものは直近5件分をこの端末に残しておく
+    const hd = memo.get('yoiyado_hd') || {};
+    let r = hd[id];
     if (!r) {
       opening.innerHTML = '<section class="card"><div class="prog"><div class="msg"><span><span class="spin" style="color:var(--gold)"></span>履歴を開いています…</span></div></div></section>';
       r = await call('historyGet', {id});
       if (r.error) { cur = {invalid: r.error}; saveLast(null); render(); return; }
-      memo.set('yoiyado_hd_' + id, r, true);
+      hd[id] = r;
+      Object.keys(hd).sort((a, b) => (hd[b].created || 0) - (hd[a].created || 0)).slice(5).forEach(k => delete hd[k]);  // 古い検索から消す
+      memo.set('yoiyado_hd', hd);
     }
     cur = r; setForm(r);
     finishedSec = r.finished && r.created ? Math.round((r.finished - r.created) / 1000) : 0;

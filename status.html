@@ -291,14 +291,25 @@ async function saveSpend(){
   const v = Number(String(document.getElementById('hsp').value).replace(/[^\d]/g, ''));
   try {
     const r = await api({api: 'statusSet', year: YEAR, field: 'hilton_card_spend', value: v});
-    if (r.ok) { D.manual = r.manual; render(); }
+    if (r.ok) { D.manual = r.manual; try { localStorage.setItem(LEDGER_MEMO, JSON.stringify(D)); } catch(e) {} render(); }
   } catch(e) { alert('保存できませんでした。'); }
 }
 
+// 予約台帳は毎朝1回しか変わらないので、この端末の控え（予約ページと共用）をまず即座に表示し、裏で最新に差し替える
+const LEDGER_MEMO = 'yoiyado_ledger';
 (async function(){
   if (!K) { document.getElementById('prog-body').textContent = '料金比較のページで合言葉を設定すると、ここに進捗が出ます。'; return; }
-  try { D = await api({api: 'ledger'}); render(); }
-  catch(e) { document.getElementById('prog-body').textContent = '進捗を読み込めませんでした。少し時間をおいて開き直してください。'; }
+  let memo = null;
+  try { memo = localStorage.getItem(LEDGER_MEMO); } catch(e) {}
+  if (memo) { try { D = JSON.parse(memo); render(); } catch(e) { memo = null; } }
+  try {
+    const j = await api({api: 'ledger'});
+    const t = JSON.stringify(j);
+    try { localStorage.setItem(LEDGER_MEMO, t); } catch(e) {}
+    if (!D || t !== JSON.stringify(D)) { D = j; render(); }
+  } catch(e) {
+    if (!D) document.getElementById('prog-body').textContent = '進捗を読み込めませんでした。少し時間をおいて開き直してください。';
+  }
 })();
 </script>
 </body>
