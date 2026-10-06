@@ -478,6 +478,11 @@ function render(){
   try { document.getElementById('showAlt').checked = localStorage.getItem('cmp_show_nr') === '1'; } catch(e) {}
   restoreLast();
   loadHist();
+  // ホーム画面から開いた宵宿は裏で開いたままになるので、画面に戻ったら検索履歴を取り直す
+  let lastLoad = Date.now();
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && Date.now() - lastLoad > 30000) { lastLoad = Date.now(); loadHist(); }
+  });
 })();
 
 function showSetup(msg){

@@ -94,6 +94,16 @@ footer a{color:inherit}
 .pg input{font:inherit;font-size:14px;width:9em;padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink)}
 .pg button.sv{font:inherit;font-size:12.5px;padding:6px 12px;border-radius:8px;border:0;background:var(--night2);color:#fff;cursor:pointer;margin-left:4px}
 .pg-empty{color:var(--sub);font-size:13px}
+.pg .br{display:flex;gap:9px;align-items:flex-start;font-size:13px;line-height:1.55;padding:7px 0;border-top:1px dashed var(--line)}
+.pg .br:first-of-type{border-top:0}
+.pg .br .ic{flex:none;width:20px;height:20px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;margin-top:1px;border:1.5px solid var(--line);color:var(--sub)}
+.pg .br.done .ic{background:var(--gold);border-color:var(--gold);color:#fff}
+.pg .br.plan .ic{border-color:var(--gold);color:var(--gold)}
+.pg .br b{font-size:13.5px}
+.pg .br small{color:var(--sub);font-size:11.5px;margin-left:6px}
+.pg .br.plan{color:var(--ink)}
+.pg .br.none{color:var(--sub)}
+.pg .br .xx{color:var(--sub);font-size:11.5px}
 .hero{background:radial-gradient(120% 140% at 85% -20%,#3b4c78 0%,var(--night2) 38%,var(--night) 100%);color:#f3eee3;padding:22px 16px 74px;position:relative;overflow:hidden}
 .hero::after{content:"";position:absolute;inset:0;background-image:radial-gradient(1px 1px at 12% 30%,#fff8 50%,transparent 51%),radial-gradient(1px 1px at 72% 18%,#fff6 50%,transparent 51%),radial-gradient(1.5px 1.5px at 88% 62%,#fff5 50%,transparent 51%),radial-gradient(1px 1px at 40% 70%,#fff4 50%,transparent 51%),radial-gradient(1px 1px at 58% 40%,#fff5 50%,transparent 51%);pointer-events:none}
 .brand{max-width:720px;margin:0 auto;display:flex;align-items:center;gap:12px;position:relative;z-index:1}
@@ -221,6 +231,7 @@ const GAS = "https://script.google.com/macros/s/AKfycbyXS4tQgx8U95EG5EUJd3H47_sa
 let K = '', D = null, YEAR = new Date().getFullYear();
 try { K = localStorage.getItem('yoiyado_k') || ''; } catch(e) {}
 const yen = n => '¥' + Math.round(n).toLocaleString('ja-JP');
+const md = s => Number(s.slice(5,7)) + '/' + Number(s.slice(8,10));
 const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 
 async function api(params){
@@ -275,10 +286,21 @@ function render(){
     ${bar(keDone, kePlan, 3e5)}<div class="s">公式予約の宿泊額（税別の概算）。レストラン・バーの利用は含みません。集計期間は暦年として計算（公式に記載なし）</div></div>`;
 
   // GHA DISCOVERY プラチナ：年内に異なる2ブランドに宿泊（公式予約）
-  const brands = new Set(rows.filter(r => r.hotel === 'groove' && direct(r) && stayed(r)).map(() => 'PARKROYAL'));
-  const grX = rows.filter(r => r.hotel === 'groove' && !direct(r));
-  h += `<div class="pg${brands.size >= 2 ? ' ok' : ''}"><div class="t"><b>GHA DISCOVERY プラチナ</b><span class="v">${brands.size}<small>ブランド</small> ／ 2ブランド</span></div>
-    ${bar(brands.size, 0, 2)}<div class="s">GROOVE（PARKROYAL）とBELLUSTAR（Pan Pacific）に公式予約で1泊ずつ。${grX.length ? `Expedia経由のGROOVE ${grX.length}件は対象外` : ''}</div></div>`;
+  // ブランドごとに「宿泊済み／予約済み（泊まれば達成）／未予約」を出し、同じブランドを重ねて予約しなくて済むようにする
+  const GHA = [{key: 'groove', brand: 'PARKROYAL', hotel: 'ホテルグルーヴ新宿'}, {key: 'bellustar', brand: 'Pan Pacific', hotel: 'BELLUSTAR'}];
+  const ds = list => list.map(r => md(r.checkin)).join('・');
+  let gDone = 0, gPlan = 0, rest = [];
+  const lines = GHA.map(b => {
+    const d = rows.filter(r => r.hotel === b.key && direct(r)), x = rows.filter(r => r.hotel === b.key && !direct(r));
+    const st = d.filter(stayed), bk = d.filter(r => !stayed(r));
+    let mark, txt;
+    if (st.length) { gDone++; mark = 'done'; txt = `宿泊済み（${ds(st)}）`; }
+    else if (bk.length) { gPlan++; mark = 'plan'; txt = `公式で予約済み（${ds(bk)}）。泊まれば達成`; }
+    else { rest.push(b.hotel); mark = 'none'; txt = '未予約'; }
+    return `<div class="br ${mark}"><span class="ic">${mark === 'done' ? '✓' : mark === 'plan' ? '◐' : '○'}</span><span><b>${b.hotel}</b><small>${b.brand}</small><br>${txt}${x.length ? `<span class="xx">（${[...new Set(x.map(r => r.channel))].join('・')}経由の${x.length}件は対象外）</span>` : ''}</span></div>`;
+  }).join('');
+  h += `<div class="pg${gDone + gPlan >= 2 ? ' ok' : ''}"><div class="t"><b>GHA DISCOVERY プラチナ</b><span class="v">${gDone}<small>ブランド宿泊</small> ＋ ${gPlan}<small>予約</small> ／ 2ブランド</span></div>
+    ${bar(gDone, gPlan, 2)}${lines}<div class="s">${rest.length ? `あとは <b>${rest.join('・')}</b> を公式で1泊予約すれば、予約分を含めて達成見込み` : '<b>予約分を含めて達成見込み</b>。これ以上の予約は不要です'}</div></div>`;
 
   h += `<div class="s" style="margin-top:8px;font-size:11.5px;color:var(--sub)">泊数・金額は予約台帳（毎朝更新）から計算。濃い色は宿泊済み、薄い色は予約済み。</div>`;
   document.getElementById('prog-body').innerHTML = h;
@@ -297,7 +319,7 @@ async function saveSpend(){
 
 // 予約台帳は毎朝1回しか変わらないので、この端末の控え（予約ページと共用）をまず即座に表示し、裏で最新に差し替える
 const LEDGER_MEMO = 'yoiyado_ledger';
-(async function(){
+async function loadLedger(){
   if (!K) { document.getElementById('prog-body').textContent = '料金比較のページで合言葉を設定すると、ここに進捗が出ます。'; return; }
   let memo = null;
   try { memo = localStorage.getItem(LEDGER_MEMO); } catch(e) {}
@@ -310,7 +332,13 @@ const LEDGER_MEMO = 'yoiyado_ledger';
   } catch(e) {
     if (!D) document.getElementById('prog-body').textContent = '進捗を読み込めませんでした。少し時間をおいて開き直してください。';
   }
-})();
+}
+loadLedger();
+// ホーム画面から開いた宵宿は裏で開いたままになり、戻っても再読み込みされない。画面に戻ったら最新を取り直す
+let lastLoad = Date.now();
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && Date.now() - lastLoad > 30000) { lastLoad = Date.now(); loadLedger(); }
+});
 </script>
 </body>
 </html>

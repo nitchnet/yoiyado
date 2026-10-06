@@ -128,8 +128,8 @@ footer{max-width:720px;margin:0 auto;padding:0 16px 28px;text-align:center;font-
 <footer>YOIYADO · 金額は税・サービス料・宿泊税込みの滞在合計</footer>
 <script>
 const GAS = "https://script.google.com/macros/s/AKfycbyXS4tQgx8U95EG5EUJd3H47_saO_Ny35XWZBWxyNY-2ck8QBLOmgAzSm6HtN7twnRXaFGf/exec";
-const NAMES = {keio:'京王プラザ', iprefer:'京王プラザ（I Prefer）', newotani:'ニューオータニ ザ・メイン（I Prefer）', groove:'ホテルグルーヴ', hilton:'ヒルトン東京', hyatt:'ハイアット リージェンシー', kimpton:'キンプトン新宿'};
-const COLORS = {keio:'#7a5c9e', iprefer:'#a07cc5', newotani:'#9b6b3f', groove:'#d0603c', hilton:'#2f5fa8', hyatt:'#5b8c9c', kimpton:'#3f8a5f'};
+const NAMES = {keio:'京王プラザ', iprefer:'京王プラザ（I Prefer）', newotani:'ニューオータニ ザ・メイン（I Prefer）', groove:'ホテルグルーヴ', hilton:'ヒルトン東京', hyatt:'ハイアット リージェンシー', kimpton:'キンプトン新宿', bellustar:'パンパシフィック東京ベルスター'};
+const COLORS = {keio:'#7a5c9e', iprefer:'#a07cc5', newotani:'#9b6b3f', groove:'#d0603c', hilton:'#2f5fa8', hyatt:'#5b8c9c', kimpton:'#3f8a5f', bellustar:'#8a7a3a'};
 const yen = n => '¥' + Number(n).toLocaleString('ja-JP');
 const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const wd = s => '日月火水木金土'[new Date(s + 'T00:00:00').getDay()];
@@ -222,6 +222,11 @@ function render(){
 
 try { view = localStorage.getItem('yoiyado_bk_view') || 'future'; } catch(e) {}
 load();
+// ホーム画面から開いた宵宿は裏で開いたままになり、戻っても再読み込みされない。画面に戻ったら最新を取り直す
+let lastLoad = Date.now();
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && Date.now() - lastLoad > 30000) { lastLoad = Date.now(); load(); }
+});
 </script>
 </body>
 </html>
