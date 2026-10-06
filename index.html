@@ -227,10 +227,10 @@ const call = async (action, a) => {
   }
   throw new Error('通信に失敗しました。電波の良い場所で、もう一度お試しください。');
 };
-const NAMES = {keio:'京王プラザ', iprefer:'京王プラザ（I Prefer）', newotani:'ニューオータニ ザ・メイン（I Prefer）', groove:'ホテルグルーヴ', hilton:'ヒルトン東京', hyatt:'ハイアット リージェンシー', kimpton:'キンプトン新宿'};
-const SHORT = {keio:'京王', iprefer:'京王 I Prefer', newotani:'ニューオータニ', groove:'グルーヴ', hilton:'ヒルトン', hyatt:'ハイアット', kimpton:'キンプトン'};
-const COLORS = {keio:'#7a5c9e', iprefer:'#a07cc5', newotani:'#9b6b3f', groove:'#d0603c', hilton:'#2f5fa8', hyatt:'#5b8c9c', kimpton:'#3f8a5f'};
-const ORDER = ['keio','iprefer','newotani','groove','hilton','hyatt','kimpton'];
+const NAMES = {keio:'京王プラザ', iprefer:'京王プラザ（I Prefer）', newotani:'ニューオータニ ザ・メイン（I Prefer）', groove:'ホテルグルーヴ', bellustar:'BELLUSTAR TOKYO', hilton:'ヒルトン東京', hyatt:'ハイアット リージェンシー', kimpton:'キンプトン新宿'};
+const SHORT = {keio:'京王', iprefer:'京王 I Prefer', newotani:'ニューオータニ', groove:'グルーヴ', bellustar:'ベルスター', hilton:'ヒルトン', hyatt:'ハイアット', kimpton:'キンプトン'};
+const COLORS = {keio:'#7a5c9e', iprefer:'#a07cc5', newotani:'#9b6b3f', groove:'#d0603c', bellustar:'#8a7a3a', hilton:'#2f5fa8', hyatt:'#5b8c9c', kimpton:'#3f8a5f'};
+const ORDER = ['keio','iprefer','newotani','groove','bellustar','hilton','hyatt','kimpton'];
 const yen = n => '¥' + Number(n).toLocaleString('ja-JP');
 const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const BTN_IDLE = '<span class="moon">☾</span>空室と会員価格を探す';
