@@ -101,6 +101,8 @@ details.cond p{margin:6px 0 0;line-height:1.7}
 .chip.ok .s{color:var(--sub)}
 .chip.ng{color:var(--warn);border-color:color-mix(in srgb,var(--warn) 35%,transparent);background:var(--warn-bg)}
 .chip.wait{border-style:dashed}
+.chip.wn{border-color:color-mix(in srgb,var(--warn) 35%,transparent)}
+.chip.wn .s:last-child{color:var(--warn)}
 .chip .spin{width:10px;height:10px;border-width:1.5px}
 .err{background:var(--warn-bg);color:var(--warn);border-radius:10px;padding:9px 12px;margin-top:10px;font-size:13px}
 
@@ -479,7 +481,7 @@ function render(){
     const r = (cur.results || {})[k], dot = `<span class="dot" style="background:${COLORS[k]}"></span>`;
     if (!r) h += `<span class="chip wait">${loading ? '<span class="spin"></span>' : dot}${SHORT[k]}</span>`;
     else if (r.error && !r.offers.length) h += `<span class="chip ng">${dot}${SHORT[k]}・${esc(r.error)}</span>`;
-    else h += `<span class="chip ok">${dot}${SHORT[k]} <span class="s num">${r.sec}s</span></span>`;
+    else h += `<span class="chip ok${r.warn ? ' wn' : ''}">${dot}${SHORT[k]} <span class="s num">${r.sec}s</span>${r.warn ? `<span class="s">・${esc(r.warn)}</span>` : ''}</span>`;
   });
   h += '</div>';
   if (cur.history) h += `<div class="histnote"><span>${atOf(cur.searched_at)} に検索した結果です。今の価格とは違う場合があります。</span><button type="button" onclick="go()">最新の価格で検索</button></div>`;
