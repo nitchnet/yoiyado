@@ -132,6 +132,20 @@ details.cond p{margin:6px 0 0;line-height:1.7}
 .offer.alt .rk{font-size:14px}
 .empty{text-align:center;color:var(--sub);font-size:13px;padding:8px 0 2px}
 
+/* ---------- いまの予約との比較 ---------- */
+.card.mine{border:1.5px solid var(--gold);padding:12px 14px}
+.mine .mh{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.mine .lb{font-size:12px;font-weight:700;color:var(--gold);letter-spacing:.08em}
+.mine .mp{font-size:19px;font-weight:700}
+.mine .mn{font-size:13px;margin-top:2px;display:flex;flex-wrap:wrap;gap:4px 8px;align-items:baseline}
+.mine .mc{font-size:11.5px;color:var(--sub)}
+.mine .mr{font-size:13px;margin-top:8px;padding:7px 10px;border-radius:10px;background:var(--bg)}
+.mine .mr.down{background:var(--gold-soft);color:var(--ink)}
+.mine .mr.ok{background:var(--ok-bg);color:var(--ok)}
+.mine .mr.ng{background:var(--warn-bg);color:var(--warn);font-size:12px}
+.offer .price .vs{font-size:11px;color:var(--sub);margin-top:2px}
+.offer .price .vs.down{color:var(--ok);font-weight:700}
+
 /* ---------- 検索履歴 ---------- */
 .hist h2{font-size:13px;letter-spacing:.08em;color:var(--sub);margin:0 0 8px;font-weight:700}
 .hist ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
@@ -293,6 +307,50 @@ function finish(){
   if (cur && cur.id && !cur.fatal) loadHist();  // 完了した検索はサーバー側で履歴に入っているので一覧を更新
 }
 
+// いまの予約：予約台帳（毎朝Gmailから作成）から、検索した日程の予約を取り出して比べる。
+// 台帳はこの端末に控え（会員ステータス・予約ページと共用）を置き、まず控えで表示してから最新に差し替える
+let BK = null;
+async function loadBookings(tries){
+  if (!K) return;
+  tries = tries || 0;
+  try { const m = JSON.parse(localStorage.getItem('yoiyado_ledger') || 'null'); if (m && !BK) { BK = m; if (cur) render(); } } catch(e) {}
+  try {
+    const r = await call('ledger', {});
+    if (r && r.rows) { BK = r; try { localStorage.setItem('yoiyado_ledger', JSON.stringify(r)); } catch(e) {} if (cur) render(); }
+  } catch(e) { if (tries < 4) setTimeout(() => loadBookings(tries + 1), 5000); }  // 応答が続けて失われたときは少し置いて取り直す
+}
+const todayJst = () => new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 10);
+// 検索の泊数をちょうど覆う有効な予約（1泊予約の連続も合算）。一部だけ重なる場合は比べない
+function myBooking(c){
+  if (!BK || !c || !c.date || !c.checkout) return null;
+  const rows = (BK.rows || []).filter(r => r.status === 'booked' && r.checkin && r.checkin < c.checkout && r.checkout > c.date);
+  if (!rows.length) return null;
+  if (rows.some(r => r.checkin < c.date || r.checkout > c.checkout || !r.pay)) return null;
+  const nightsSum = rows.reduce((a, r) => a + r.nights, 0);
+  if (nightsSum !== nightsOf(c.date, c.checkout)) return null;
+  const free = rows.map(r => r.free_cancel_until || '').filter(Boolean).sort()[0] || '';
+  const refundable = rows.every(r => r.refundable);
+  return {rows, pay: rows.reduce((a, r) => a + r.pay, 0), refundable, free,
+          canRebook: refundable && (!free || todayJst() <= free)};
+}
+function mineCard(mb, main, loading){
+  const names = [...new Set(mb.rows.map(r => (NAMES[r.hotel] || r.hotel_name) + (r.channel && r.channel !== '公式' ? `（${r.channel}）` : '')))].join('・');
+  const cond = !mb.refundable ? '返金不可' : mb.free ? `${mdOf(mb.free)}まで無料キャンセル` : '';
+  let h = `<section class="card mine"><div class="mh"><span class="lb">いまの予約</span><span class="mp serif num">${yen(mb.pay)}</span></div>
+    <div class="mn">${esc(names)}${cond ? `<span class="mc">${esc(cond)}</span>` : ''}</div>`;
+  if (loading && !main.length) h += '<div class="mr">比べています…</div>';
+  else if (main.length) {
+    const b = main[0];
+    if (b.pay < mb.pay) {
+      h += `<div class="mr down">▼ <b>${yen(mb.pay - b.pay)}安く</b>取り直せます：${esc(NAMES[b.hotel])} ${esc(b.label)} ${yen(b.pay)}</div>`;
+      if (!mb.canRebook) h += `<div class="mr ng">ただし、いまの予約は${mb.refundable ? '無料キャンセルの期限を過ぎています' : '返金不可'}（取り直すとキャンセル料がかかります）</div>`;
+    } else {
+      h += `<div class="mr ok">✓ いまの予約が最安です${b.pay > mb.pay ? `（次に安い ${esc(NAMES[b.hotel])} より${yen(b.pay - mb.pay)}安い）` : ''}</div>`;
+    }
+  }
+  return h + '</section>';
+}
+
 // 検索履歴：直近5回。検索した結果を丸ごと保存してあるので、後日開いてもホテルへの再問い合わせはしない
 let HIST = [];
 const wdOf = s => '日月火水木金土'[new Date(s + 'T00:00:00').getDay()];
@@ -434,6 +492,8 @@ function render(){
   offers.sort((a,b) => a.pay - b.pay);
   const main = offers.filter(o => !o.alt);
   const min = main.length ? main[0].pay : 0;
+  const mb = myBooking(cur);
+  if (mb) h += mineCard(mb, main, loading);
   // 順位は返金可（基本）で付け、返金不可の安いプランは同じ部屋の直下に添える
   const list = [];
   main.forEach(m => {
@@ -454,7 +514,8 @@ function render(){
         <div class="hotel"><span class="dot" style="background:${COLORS[o.hotel]}"></span>${esc(NAMES[o.hotel])}</div>
         <div class="price"><div class="p serif num">${yen(o.pay)}</div>
           ${nights > 1 ? `<div class="per num">1泊 ${yen(Math.round(o.pay / nights))}</div>` : ''}
-          ${sub ? `<div class="diff num">${sub}</div>` : ''}</div>
+          ${sub ? `<div class="diff num">${sub}</div>` : ''}
+          ${mb ? `<div class="vs num ${o.pay < mb.pay ? 'down' : ''}">いまの予約より ${o.pay < mb.pay ? '−' + yen(mb.pay - o.pay) : o.pay > mb.pay ? '+' + yen(o.pay - mb.pay) : '同額'}</div>` : ''}</div>
         <div class="room">${esc(o.label)}</div>
         <div class="tags">${o.refundable === false ? '<span class="tag nr">返金不可</span>' : '<span class="tag ok">返金可</span>'}${o.meal ? '<span class="tag meal">朝食付き</span>' : ''}</div>
         <div class="plan">${esc(o.plan)}${o.note ? '<br>' + esc(o.note) : ''}</div>
@@ -478,10 +539,11 @@ function render(){
   try { document.getElementById('showAlt').checked = localStorage.getItem('cmp_show_nr') === '1'; } catch(e) {}
   restoreLast();
   loadHist();
+  loadBookings();
   // ホーム画面から開いた宵宿は裏で開いたままになるので、画面に戻ったら検索履歴を取り直す
   let lastLoad = Date.now();
   document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible' && Date.now() - lastLoad > 30000) { lastLoad = Date.now(); loadHist(); }
+    if (document.visibilityState === 'visible' && Date.now() - lastLoad > 30000) { lastLoad = Date.now(); loadHist(); loadBookings(); }
   });
 })();
 
