@@ -208,8 +208,10 @@ function render(){
   let l = '';
   const tiers = currentTiers(data.manual), proj = ghaProjection(data.rows || []);
   Object.keys(groups).sort().forEach(m => {
-    const g = groups[m], gn = g.filter(r => r.status === 'booked').reduce((a, r) => a + r.nights, 0);
-    l += `<div class="month"><span>${Number(m.slice(0,4))}年${Number(m.slice(5))}月</span><span class="s">${g.length}件・${gn}泊</span></div>`;
+    const g = groups[m], bk = g.filter(r => r.status === 'booked'), gn = bk.reduce((a, r) => a + r.nights, 0);
+    // 月の総額（有効な予約の宿泊税込み合計。ポイント宿泊など金額のない予約は除く）
+    const gp = bk.reduce((a, r) => a + (r.pay || 0), 0), np = bk.filter(r => !r.pay).length;
+    l += `<div class="month"><span>${Number(m.slice(0,4))}年${Number(m.slice(5))}月</span><span class="s">${g.length}件・${gn}泊${gp ? `・${yen(gp)}` : ''}${np ? `（ほか${np}件はポイント等）` : ''}</span></div>`;
     g.forEach(r => {
       const cx = r.status !== 'booked', w = W[r.key], sv = !cx && isSave(r) && r.checkout > today;
       const ch = r.channel && r.channel !== '公式' ? `<span class="tag ch">${esc(r.channel)}</span>` : '';
