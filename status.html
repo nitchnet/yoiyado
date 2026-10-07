@@ -105,6 +105,13 @@ footer a{color:inherit}
 .pg .br.none{color:var(--sub)}
 .pg .br .xx{color:var(--sub);font-size:11.5px}
 .tag.now{color:#fff;background:var(--gold)}
+.pg .t .lv{font-size:12.5px;color:var(--sub);margin-left:6px;font-weight:500}
+.pg .t .lv b{font-size:12.5px;color:var(--ink);background:var(--gold-soft);border:1px solid var(--gold);border-radius:999px;padding:0 7px}
+.pg .t .lv b.un{border-style:dashed}
+.pg .t .lv small{margin-left:4px;color:var(--gold);font-weight:700}
+.pg .t .nm2{display:flex;align-items:baseline;flex-wrap:wrap;gap:2px 0;flex-basis:100%}
+.oth{font-size:12.5px;color:var(--sub);margin-top:10px;padding:8px 12px;border:1px dashed var(--line);border-radius:12px}
+.oth b{color:var(--ink)}
 .tr{border-top:1px dashed var(--line);padding:9px 0}
 .tr:first-child{border-top:0;padding-top:2px}
 .tr .tn{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
@@ -157,13 +164,8 @@ footer a{color:inherit}
 </header>
 <main>
 
-<section class="card" id="now">
-  <h2>いまの資格</h2>
-  <div id="tiers-body" class="pg-empty">読み込み中…</div>
-</section>
-
 <section class="card" id="progress">
-  <h2>進捗<span class="yrs" id="yrs"></span></h2>
+  <h2>資格と進捗<span class="yrs" id="yrs"></span></h2>
   <div id="prog-body" class="pg-empty">読み込み中…</div>
 </section>
 
@@ -302,35 +304,22 @@ async function api(params){
   throw new Error('通信に失敗しました');
 }
 
-// いまの資格：制度ごとに「いま → 次」と、いま効く特典。資格は選んで保存（サーバーに保存し、予約ページのチェックアウト表示にも使う）
+// 資格の表示：見出し用の「いま → 目標」と、下の表・資格カードへの「いま」印
+function lv(key, goal, note){
+  const t = currentTiers(D.manual)[key], src = tierSource(D.manual, key);
+  const cur = `<b class="${src ? '' : 'un'}">${esc(t)}</b>`;
+  return `<span class="lv">${t === goal ? `${cur} 維持` : `${cur} → ${esc(goal)}`}${note ? `<small>${esc(note)}</small>` : ''}</span>`;
+}
+
+function ghaNote(){
+  const t = currentTiers(D.manual).gha, pr = ghaProjection(D.rows || [])[String(new Date().getFullYear())] || {};
+  if (pr.titanium && t !== 'チタニウム') return `${md(pr.titanium)}〜チタニウム見込み`;
+  if (pr.platinum && (t === 'シルバー' || t === 'ゴールド')) return `${md(pr.platinum)}〜見込み`;
+  return '';
+}
+
 function renderTiers(){
-  const tiers = currentTiers(D.manual), proj = ghaProjection(D.rows || []);
-  const cy = String(new Date().getFullYear());
-  let h = '';
-  PROGRAMS.forEach(p => {
-    const t = tiers[p.key];
-    const src = tierSource(D.manual, p.key);
-    const srcTxt = src ? `${md(src.date)}・${esc(src.source)}で確認` : '未確認（メールで資格が見つからないため仮の値）';
-    let hint = '';
-    if (p.key === 'gha') {
-      const pr = proj[cy] || {};
-      if (pr.titanium && t !== 'チタニウム') hint = `${md(pr.titanium)}（3ブランド目のチェックアウト後）からチタニウム見込み`;
-      else if (pr.platinum && ['シルバー', 'ゴールド'].indexOf(t) >= 0) hint = `${md(pr.platinum)}（2ブランド目のチェックアウト後）からプラチナ見込み。3ブランド目でチタニウム`;
-    }
-    if (p.key === 'hilton') {
-      const sp = (((D.manual || {})[cy]) || {}).hilton_card_spend || 0;
-      if (sp >= 2e6 && t !== 'ダイヤモンド' && t !== 'ダイヤモンド・リザーブ') hint = 'カード利用が200万円に達したのでダイヤモンドになる見込み';
-    }
-    const nx = (p.next || {})[t], pk = (p.perks || {})[t];
-    h += `<div class="tr"><div class="tn"><b>${esc(p.name)}</b><span class="tb${src ? '' : ' un'}">${esc(t)}</span></div>
-      <div class="ts">${srcTxt}</div>
-      ${hint ? `<div class="th">◐ ${esc(hint)}</div>` : ''}
-      ${pk ? `<div class="tp">いま：${esc(pk)}</div>` : ''}
-      ${nx ? `<div class="tx">次：${esc(nx)}</div>` : ''}</div>`;
-  });
-  h += '<p class="note" style="margin:8px 0 0">資格は毎朝6時に個人Gmailのメールから読み取ります（京王は会員メールに記載がないため、会員ページで確認した値）。予約ページのチェックアウト時刻もこの資格で表示します。一休・Expediaは予約サイト側の特典で、ホテルの延長などには効きません。</p>';
-  document.getElementById('tiers-body').innerHTML = h;
-  document.getElementById('tiers-body').className = '';
+  const tiers = currentTiers(D.manual);
   // 下の表・資格カードに「いま」の印を付ける
   document.querySelectorAll('[data-p]').forEach(el => {
     const k = el.dataset.p === 'hyatt_ph' ? 'hyatt' : el.dataset.p;
@@ -366,14 +355,14 @@ function render(){
   const hy = rows.filter(r => r.hotel === 'hyatt'), hyD = hy.filter(direct), hyX = hy.filter(r => !direct(r));
   const hyDone = sum(hyD.filter(stayed), r => r.nights), hyPlan = sum(hyD.filter(r => !stayed(r)), r => r.nights);
   const hyRest = Math.max(0, 60 - hyDone - hyPlan);
-  h += `<div class="pg${hyDone + hyPlan >= 60 ? ' ok' : ''}"><div class="t"><b>ハイアット グローバリスト</b><span class="v">${hyDone}<small>泊済み</small> ＋ ${hyPlan}<small>泊予約</small> ／ 60泊</span></div>
+  h += `<div class="pg${hyDone + hyPlan >= 60 ? ' ok' : ''}"><div class="t"><span class="nm2"><b>ハイアット</b>${lv('hyatt', 'グローバリスト')}</span><span class="v">${hyDone}<small>泊済み</small> ＋ ${hyPlan}<small>泊予約</small> ／ 60泊</span></div>
     ${bar(hyDone, hyPlan, 60)}<div class="s">${hyRest ? `あと <b>${hyRest}泊</b>（残り月で割ると月 <b>${Math.ceil(hyRest / monthsLeft)}泊</b>）` : '<b>予約分を含めて達成見込み</b>'}
     ${hyX.length ? `・一休／Expedia経由の${sum(hyX, r => r.nights)}泊は対象外` : ''}</div></div>`;
 
   // ヒルトン ダイヤモンド：ヒルトン・アメックス・プレミアムの年間利用額 200万円（暦年）
   const m = ((D.manual || {})[YEAR] || {}), spend = m.hilton_card_spend || 0;
   const hl = rows.filter(r => r.hotel === 'hilton' && direct(r));
-  h += `<div class="pg${spend >= 2e6 ? ' ok' : ''}"><div class="t"><b>ヒルトン ダイヤモンド</b><span class="v">${yen(spend)} <small>／ ${yen(2e6)}</small></span></div>
+  h += `<div class="pg${spend >= 2e6 ? ' ok' : ''}"><div class="t"><span class="nm2"><b>ヒルトン</b>${lv('hilton', 'ダイヤモンド')}</span><span class="v">${yen(spend)} <small>／ ${yen(2e6)}</small></span></div>
     ${bar(spend, 0, 2e6)}<div class="s">ヒルトン・アメックス・プレミアムの${YEAR}年の利用額（1〜12月）。${spend < 2e6 ? `あと <b>${yen(2e6 - spend)}</b>` : '<b>達成</b>'}
     ・公式予約のヒルトン宿泊 ${sum(hl, r => r.nights)}泊<br>
     <span>利用額を更新：<input id="hsp" inputmode="numeric" placeholder="例 350000" value="${spend || ''}"><button class="sv" onclick="saveSpend()">保存</button></span>
@@ -385,7 +374,7 @@ function render(){
     && r.checkin >= `${YEAR}-03-01` && r.checkin < `${YEAR + 1}-03-01`);
   const net = r => Math.max(0, (r.pay || 0) - 200 * r.adults * r.nights) / 1.1;   // 宿泊税と消費税を除いた概算
   const keDone = sum(ke.filter(stayed), net), kePlan = sum(ke.filter(r => !stayed(r)), net);
-  h += `<div class="pg${keDone + kePlan >= 3e5 ? ' ok' : ''}"><div class="t"><b>京王プラザ ロイヤル</b><span class="v">${yen(keDone)}<small>利用済み</small> ＋ ${yen(kePlan)}<small>予約</small> ／ ${yen(3e5)}</span></div>
+  h += `<div class="pg${keDone + kePlan >= 3e5 ? ' ok' : ''}"><div class="t"><span class="nm2"><b>京王プラザ</b>${lv('keio', 'ロイヤル')}</span><span class="v">${yen(keDone)}<small>利用済み</small> ＋ ${yen(kePlan)}<small>予約</small> ／ ${yen(3e5)}</span></div>
     ${bar(keDone, kePlan, 3e5)}<div class="s">${YEAR}年3月〜${YEAR + 1}年2月の公式予約の宿泊額（税別の概算）。レストラン・バーの利用は含みません</div></div>`;
 
   // GHA DISCOVERY プラチナ：年内に異なる2ブランドに宿泊（公式予約）
@@ -402,10 +391,13 @@ function render(){
     else { rest.push(b.hotel); mark = 'none'; txt = '未予約'; }
     return `<div class="br ${mark}"><span class="ic">${mark === 'done' ? '✓' : mark === 'plan' ? '◐' : '○'}</span><span><b>${b.hotel}</b><small>${b.brand}</small><br>${txt}${x.length ? `<span class="xx">（${[...new Set(x.map(r => r.channel))].join('・')}経由の${x.length}件は対象外）</span>` : ''}</span></div>`;
   }).join('');
-  h += `<div class="pg${gDone + gPlan >= 2 ? ' ok' : ''}"><div class="t"><b>GHA DISCOVERY プラチナ</b><span class="v">${gDone}<small>ブランド宿泊</small> ＋ ${gPlan}<small>予約</small> ／ 2ブランド</span></div>
+  h += `<div class="pg${gDone + gPlan >= 2 ? ' ok' : ''}"><div class="t"><span class="nm2"><b>GHA DISCOVERY</b>${lv('gha', 'プラチナ', ghaNote())}</span><span class="v">${gDone}<small>ブランド宿泊</small> ＋ ${gPlan}<small>予約</small> ／ 2ブランド</span></div>
     ${bar(gDone, gPlan, 2)}${lines}<div class="s">${rest.length ? `あとは <b>${rest.join('・')}</b> を公式で1泊予約すれば、予約分を含めて達成見込み` : '<b>予約分を含めて達成見込み</b>。これ以上の予約は不要です'}</div></div>`;
 
-  h += `<div class="s" style="margin-top:8px;font-size:11.5px;color:var(--sub)">泊数・金額は予約台帳（毎朝更新）から計算。濃い色は宿泊済み、薄い色は予約済み。</div>`;
+  const tiers = currentTiers(D.manual);
+  h += `<div class="oth">ほかの資格：I Prefer <b>${esc(tiers.iprefer)}</b>・一休 <b>${esc(tiers.ikyu)}</b>・Expedia <b>${esc(tiers.expedia)}</b></div>`;
+  const un = PROGRAMS.filter(p => !tierSource(D.manual, p.key)).map(p => p.name.replace(/（.*）/, ''));
+  h += `<div class="s" style="margin-top:8px;font-size:11.5px;color:var(--sub)">資格は毎朝6時にメールから確認（京王は会員ページ・10/7確認）${un.length ? `。未確認：${esc(un.join('・'))}` : ''}。泊数・金額は予約台帳から計算。濃い色は宿泊済み、薄い色は予約済み。</div>`;
   document.getElementById('prog-body').innerHTML = h;
   renderTiers();
   document.getElementById('prog-body').className = '';
