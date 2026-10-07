@@ -517,7 +517,7 @@ function render(){
         <div class="price"><div class="p serif num">${yen(o.pay)}</div>
           ${nights > 1 ? `<div class="per num">1泊 ${yen(Math.round(o.pay / nights))}</div>` : ''}
           ${sub ? `<div class="diff num">${sub}</div>` : ''}
-          ${mb ? `<div class="vs num ${o.pay < mb.pay ? 'down' : ''}">いまの予約より ${o.pay < mb.pay ? '−' + yen(mb.pay - o.pay) : o.pay > mb.pay ? '+' + yen(o.pay - mb.pay) : '同額'}</div>` : ''}</div>
+          ${mb ? `<div class="vs num ${o.pay < mb.pay ? 'down' : ''}">${o.pay < mb.pay ? `いまの予約より${yen(mb.pay - o.pay)}安い` : o.pay > mb.pay ? `いまの予約より${yen(o.pay - mb.pay)}高い` : 'いまの予約と同額'}</div>` : ''}</div>
         <div class="room">${esc(o.label)}</div>
         <div class="tags">${o.refundable === false ? '<span class="tag nr">返金不可</span>' : '<span class="tag ok">返金可</span>'}${o.meal ? '<span class="tag meal">朝食付き</span>' : ''}</div>
         <div class="plan">${esc(o.plan)}${o.note ? '<br>' + esc(o.note) : ''}</div>
