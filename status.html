@@ -109,7 +109,9 @@ footer a{color:inherit}
 .tr:first-child{border-top:0;padding-top:2px}
 .tr .tn{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
 .tr .tn b{font-size:13.5px}
-.tr select{font:inherit;font-size:13px;font-weight:700;padding:4px 8px;border-radius:8px;border:1px solid var(--gold);background:var(--gold-soft);color:var(--ink);max-width:100%}
+.tr .tb{font-size:13px;font-weight:700;padding:2px 10px;border-radius:999px;border:1px solid var(--gold);background:var(--gold-soft);color:var(--ink);white-space:nowrap}
+.tr .tb.un{border-style:dashed;color:var(--sub)}
+.tr .ts{font-size:11.5px;color:var(--sub);margin-top:1px}
 .tr .th{font-size:12.5px;color:var(--gold);font-weight:700;margin-top:4px}
 .tr .tp{font-size:12.5px;margin-top:3px}
 .tr .tx{font-size:12px;color:var(--sub);margin-top:2px}
@@ -307,7 +309,8 @@ function renderTiers(){
   let h = '';
   PROGRAMS.forEach(p => {
     const t = tiers[p.key];
-    const opts = p.tiers.map(x => `<option${x === t ? ' selected' : ''}>${x}</option>`).join('');
+    const src = tierSource(D.manual, p.key);
+    const srcTxt = src ? `${md(src.date)}・${esc(src.source)}で確認` : '未確認（メールで資格が見つからないため仮の値）';
     let hint = '';
     if (p.key === 'gha') {
       const pr = proj[cy] || {};
@@ -319,12 +322,13 @@ function renderTiers(){
       if (sp >= 2e6 && t !== 'ダイヤモンド' && t !== 'ダイヤモンド・リザーブ') hint = 'カード利用が200万円に達したのでダイヤモンドになる見込み';
     }
     const nx = (p.next || {})[t], pk = (p.perks || {})[t];
-    h += `<div class="tr"><div class="tn"><b>${esc(p.name)}</b><select aria-label="${esc(p.name)}の今の資格" onchange="saveTier('${p.key}', this.value)">${opts}</select></div>
+    h += `<div class="tr"><div class="tn"><b>${esc(p.name)}</b><span class="tb${src ? '' : ' un'}">${esc(t)}</span></div>
+      <div class="ts">${srcTxt}</div>
       ${hint ? `<div class="th">◐ ${esc(hint)}</div>` : ''}
       ${pk ? `<div class="tp">いま：${esc(pk)}</div>` : ''}
       ${nx ? `<div class="tx">次：${esc(nx)}</div>` : ''}</div>`;
   });
-  h += '<p class="note" style="margin:8px 0 0">資格が変わったら選び直してください（予約ページのチェックアウト時刻にも反映）。一休・Expediaは予約サイト側の特典で、ホテルの延長などには効きません。</p>';
+  h += '<p class="note" style="margin:8px 0 0">資格は毎朝6時に個人Gmailのメールから読み取ります（京王は会員メールに記載がないため、会員ページで確認した値）。予約ページのチェックアウト時刻もこの資格で表示します。一休・Expediaは予約サイト側の特典で、ホテルの延長などには効きません。</p>';
   document.getElementById('tiers-body').innerHTML = h;
   document.getElementById('tiers-body').className = '';
   // 下の表・資格カードに「いま」の印を付ける
@@ -342,13 +346,6 @@ function renderTiers(){
   });
 }
 
-async function saveTier(key, value){
-  try {
-    const r = await api({api: 'statusSet', field: 'tier_' + key, value});
-    if (r.ok) { D.manual = r.manual; try { localStorage.setItem(LEDGER_MEMO, JSON.stringify(D)); } catch(e) {} renderTiers(); }
-    else alert('保存できませんでした。');
-  } catch(e) { alert('保存できませんでした。'); }
-}
 
 function bar(done, plan, goal){
   const d = Math.min(100, done / goal * 100), p = Math.min(100 - d, plan / goal * 100);

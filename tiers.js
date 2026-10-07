@@ -1,6 +1,7 @@
 // 宵宿：会員資格の一覧と、予約ごとに効くチェックイン／チェックアウト時刻のルール。
 // 会員ステータス（status.html）と予約一覧（bookings.html）の両方で使う。
-// 今の資格は画面で選んで保存（Apps Script の STATUS_MANUAL.tiers）。未設定のときは下の def を使う。
+// 今の資格は毎朝メールから読み取った値（Apps Script の STATUS_MANUAL.tiers_auto、tiers_mail.py が送る）。
+// 読めていない制度だけ下の def を使う（画面では「未確認」と表示）。
 // 出典：各社公式・比較記事（2026-10-07時点）。制度は変わることがある。
 
 const PROGRAMS = [
@@ -46,10 +47,15 @@ const BASE_TIMES = {
 };
 
 function currentTiers(manual){
-  const t = ((manual || {}).tiers) || {};
+  const t = ((manual || {}).tiers_auto) || {};
   const o = {};
-  PROGRAMS.forEach(p => o[p.key] = t['tier_' + p.key] || p.def);
+  PROGRAMS.forEach(p => o[p.key] = (t[p.key] && t[p.key].tier) || p.def);
   return o;
+}
+
+// 資格の出典（いつ・どのメールで確認したか）。読めていない制度は null
+function tierSource(manual, key){
+  return (((manual || {}).tiers_auto) || {})[key] || null;
 }
 
 // GHA：同じ年に公式予約で2ブランド（3ブランド）泊まり終えた日から、プラチナ（チタニウム）になる見込み
