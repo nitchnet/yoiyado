@@ -48,7 +48,7 @@ h2{font-size:16px;margin:0 0 10px;letter-spacing:.04em;display:flex;align-items:
 h2 .n{font-size:11px;color:var(--gold);border:1px solid var(--gold);border-radius:999px;padding:0 8px;font-weight:700}
 h3{font-size:14.5px;margin:14px 0 6px;display:flex;align-items:center;gap:7px}
 .dot{width:9px;height:9px;border-radius:50%;flex:none;display:inline-block}
-.hl{background:var(--hilton)}.hy{background:var(--hyatt)}.ke{background:var(--keio)}
+.hl{background:var(--hilton)}.hy{background:var(--hyatt)}.ke{background:var(--keio)}.gh{background:#d0603c}.ip{background:#a07cc5}.kp{background:#3f8a5f}
 .rules{display:grid;gap:8px}
 .rule{display:grid;grid-template-columns:62px minmax(0,1fr);gap:8px;align-items:start;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
 .rule .d{font-weight:700;font-size:13px;color:var(--gold)}
@@ -104,6 +104,15 @@ footer a{color:inherit}
 .pg .br.plan{color:var(--ink)}
 .pg .br.none{color:var(--sub)}
 .pg .br .xx{color:var(--sub);font-size:11.5px}
+.tag.now{color:#fff;background:var(--gold)}
+.tr{border-top:1px dashed var(--line);padding:9px 0}
+.tr:first-child{border-top:0;padding-top:2px}
+.tr .tn{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.tr .tn b{font-size:13.5px}
+.tr select{font:inherit;font-size:13px;font-weight:700;padding:4px 8px;border-radius:8px;border:1px solid var(--gold);background:var(--gold-soft);color:var(--ink);max-width:100%}
+.tr .th{font-size:12.5px;color:var(--gold);font-weight:700;margin-top:4px}
+.tr .tp{font-size:12.5px;margin-top:3px}
+.tr .tx{font-size:12px;color:var(--sub);margin-top:2px}
 .hero{background:radial-gradient(120% 140% at 85% -20%,#3b4c78 0%,var(--night2) 38%,var(--night) 100%);color:#f3eee3;padding:22px 16px 74px;position:relative;overflow:hidden}
 .hero::after{content:"";position:absolute;inset:0;background-image:radial-gradient(1px 1px at 12% 30%,#fff8 50%,transparent 51%),radial-gradient(1px 1px at 72% 18%,#fff6 50%,transparent 51%),radial-gradient(1.5px 1.5px at 88% 62%,#fff5 50%,transparent 51%),radial-gradient(1px 1px at 40% 70%,#fff4 50%,transparent 51%),radial-gradient(1px 1px at 58% 40%,#fff5 50%,transparent 51%);pointer-events:none}
 .brand{max-width:720px;margin:0 auto;display:flex;align-items:center;gap:12px;position:relative;z-index:1}
@@ -141,10 +150,15 @@ footer a{color:inherit}
 
   <div class="ttl">
     <h1 class="serif">会員ステータス</h1>
-    <p>ヒルトン・ハイアット・京王プラザの資格と、チェックイン／チェックアウト。2026年10月5日時点</p>
+    <p>ヒルトン・ハイアット・京王プラザ・GHA・I Preferの資格と、チェックイン／チェックアウト。2026年10月7日時点</p>
   </div>
 </header>
 <main>
+
+<section class="card" id="now">
+  <h2>いまの資格</h2>
+  <div id="tiers-body" class="pg-empty">読み込み中…</div>
+</section>
 
 <section class="card" id="progress">
   <h2>進捗<span class="yrs" id="yrs"></span></h2>
@@ -166,31 +180,54 @@ footer a{color:inherit}
   <div class="tw"><table>
     <tr><th>ホテル・資格</th><th>イン</th><th>アウト</th><th>延長</th></tr>
     <tr><td colspan="4" style="padding-top:10px"><b><span class="dot hl"></span> ヒルトン東京</b></td></tr>
-    <tr><td>一般会員・シルバー</td><td class="t num">15:00</td><td class="t num">11:00</td><td>—</td></tr>
-    <tr class="mine"><td class="me">ゴールド・ダイヤモンド<span class="tag me">西村さん</span></td><td class="t num">15:00</td><td class="t num">11:00</td><td>リクエスト制・空室次第</td></tr>
-    <tr><td>ダイヤモンド・リザーブ</td><td class="t num">15:00</td><td class="t num">16:00</td><td><span class="tag ok">保証</span></td></tr>
+    <tr data-p="hilton" data-t="メンバー"><td>一般会員・シルバー</td><td class="t num">15:00</td><td class="t num">11:00</td><td>—</td></tr>
+    <tr data-p="hilton" data-t="ゴールド"><td>ゴールド</td><td class="t num">15:00</td><td class="t num">11:00</td><td>リクエスト制・空室次第</td></tr>
+    <tr data-p="hilton" data-t="ダイヤモンド"><td>ダイヤモンド<span class="tag me">目標</span></td><td class="t num">15:00</td><td class="t num">11:00</td><td>リクエスト制・空室次第</td></tr>
+    <tr data-p="hilton" data-t="ダイヤモンド・リザーブ"><td>ダイヤモンド・リザーブ</td><td class="t num">15:00</td><td class="t num">16:00</td><td><span class="tag ok">保証</span></td></tr>
     <tr><td colspan="4" style="padding-top:10px"><b><span class="dot hy"></span> ハイアット リージェンシー 東京</b></td></tr>
-    <tr><td>一般会員</td><td class="t num">14:00</td><td class="t num">11:00</td><td>—</td></tr>
-    <tr><td>ディスカバリスト・エクスプローリスト</td><td class="t num">14:00</td><td class="t num">14:00頃</td><td>空室次第</td></tr>
-    <tr class="mine"><td class="me">グローバリスト<span class="tag me">目標</span></td><td class="t num">14:00</td><td class="t num">16:00</td><td><span class="tag ok">依頼で付与</span></td></tr>
+    <tr data-p="hyatt" data-t="メンバー"><td>一般会員</td><td class="t num">14:00</td><td class="t num">11:00</td><td>—</td></tr>
+    <tr data-p="hyatt" data-t="ディスカバリスト"><td>ディスカバリスト・エクスプローリスト</td><td class="t num">14:00</td><td class="t num">14:00頃</td><td>空室次第</td></tr>
+    <tr data-p="hyatt" data-t="グローバリスト"><td>グローバリスト<span class="tag me">目標</span></td><td class="t num">14:00</td><td class="t num">16:00</td><td><span class="tag ok">依頼で付与</span></td></tr>
     <tr><td colspan="4" style="padding-top:10px"><b><span class="dot hy"></span> パーク ハイアット 東京</b></td></tr>
-    <tr><td>一般会員</td><td class="t num">15:00</td><td class="t num">12:00</td><td>—</td></tr>
-    <tr class="mine"><td class="me">グローバリスト<span class="tag me">目標</span></td><td class="t num">15:00</td><td class="t num">16:00</td><td><span class="tag ok">依頼で付与</span></td></tr>
-    <tr><td colspan="4" style="padding-top:10px"><b><span class="dot ke"></span> 京王プラザホテル</b></td></tr>
-    <tr><td>ブルーム</td><td class="t num">14:00</td><td class="t num">11:00</td><td>延長なし</td></tr>
-    <tr><td>プライム（年10万円以上）</td><td class="t num">14:00</td><td class="t num">13:00</td><td>会員特典</td></tr>
-    <tr class="mine"><td class="me">ロイヤル（年30万円以上）<span class="tag me">西村さん</span></td><td class="t num">14:00</td><td class="t num">15:00</td><td>会員特典</td></tr>
+    <tr data-p="hyatt_ph" data-t="メンバー"><td>一般会員</td><td class="t num">15:00</td><td class="t num">12:00</td><td>—</td></tr>
+    <tr data-p="hyatt_ph" data-t="グローバリスト"><td>グローバリスト<span class="tag me">目標</span></td><td class="t num">15:00</td><td class="t num">16:00</td><td><span class="tag ok">依頼で付与</span></td></tr>
+    <tr><td colspan="4" style="padding-top:10px"><b><span class="dot ke"></span> 京王プラザホテル（公式予約）</b></td></tr>
+    <tr data-p="keio" data-t="ブルーム"><td>ブルーム</td><td class="t num">14:00</td><td class="t num">11:00</td><td>延長なし</td></tr>
+    <tr data-p="keio" data-t="プライム"><td>プライム（年10万円以上）</td><td class="t num">14:00</td><td class="t num">13:00</td><td>会員特典</td></tr>
+    <tr data-p="keio" data-t="ロイヤル"><td>ロイヤル（年30万円以上）</td><td class="t num">14:00</td><td class="t num">15:00</td><td>会員特典</td></tr>
+    <tr><td colspan="4" style="padding-top:10px"><b><span class="dot ip"></span> I Prefer予約（京王プラザ・ニューオータニ）</b></td></tr>
+    <tr data-p="iprefer" data-t="チタニウム"><td>京王プラザ・チタニウム</td><td class="t num">14:00</td><td class="t num">11:00</td><td>早めの入室・延長とも空室次第</td></tr>
+    <tr data-p="iprefer" data-t="チタニウム"><td>ニューオータニ ザ・メイン・チタニウム</td><td class="t num">15:00</td><td class="t num">12:00</td><td>早めの入室・延長とも空室次第</td></tr>
+    <tr><td colspan="4" style="padding-top:10px"><b><span class="dot gh"></span> GHA DISCOVERY（公式予約）</b></td></tr>
+    <tr data-p="gha" data-t="シルバー"><td>グルーヴ・シルバー／ゴールド</td><td class="t num">15:00</td><td class="t num">11:00</td><td>—</td></tr>
+    <tr data-p="gha" data-t="シルバー"><td>BELLUSTAR・シルバー／ゴールド</td><td class="t num">15:00</td><td class="t num">12:00</td><td>—</td></tr>
+    <tr data-p="gha" data-t="プラチナ"><td>プラチナ（両ホテル）<span class="tag me">目標</span></td><td class="t num">15:00</td><td class="t num">15:00</td><td>会員特典</td></tr>
+    <tr data-p="gha" data-t="チタニウム"><td>チタニウム（両ホテル）</td><td class="t num">11:00</td><td class="t num">16:00</td><td>会員特典</td></tr>
+    <tr><td colspan="4" style="padding-top:10px"><b><span class="dot kp"></span> キンプトン新宿東京</b></td></tr>
+    <tr data-p="kimpton" data-t="—"><td>標準（IHGの資格は未管理）</td><td class="t num">15:00</td><td class="t num">11:00</td><td>15:00まで有料（宿泊代の30%）</td></tr>
   </table></div>
-  <p class="note">早めの入室（アーリーチェックイン）はどの資格も保証なし。ヒルトンのダイヤモンドで日曜にゆっくりしたいときは、チェックイン時に延長をお願いしておく。</p>
+  <p class="note">「いま」の印は、上の「いまの資格」に合わせて付きます。早めの入室（アーリーチェックイン）はGHAチタニウム以外は保証なし。ヒルトンのダイヤモンドで日曜にゆっくりしたいときは、チェックイン時に延長をお願いしておく。I Prefer・一休・Expedia経由の予約では、京王ロイヤルやGHAなどホテル側の会員特典は使えない前提で見ておく。</p>
+
+  <h3 style="margin-top:16px">スマホでチェックイン・スマホキー</h3>
+  <div class="tw"><table>
+    <tr><th>ホテル</th><th>スマホでイン</th><th>スマホキー</th><th>使い方・条件</th></tr>
+    <tr><td><span class="dot hl"></span> ヒルトン東京</td><td><span class="tag ok">○</span></td><td><span class="tag ok">○</span></td><td>Hilton Honorsアプリ・公式予約。到着前にフロア図から部屋を選べる。キーは当日部屋の準備ができると届き、登録した端末だけで使える。本人確認でフロントに寄るよう言われることがある</td></tr>
+    <tr><td><span class="dot ke"></span> 京王プラザ</td><td>△ 事前登録</td><td>×</td><td>NEC Smooth Check-inアプリで事前に情報と顔を登録し、当日はフロントの端末で顔認証（QRでも可）してカードキーを受け取る</td></tr>
+    <tr><td><span class="dot hy"></span> ハイアット リージェンシー／パーク ハイアット</td><td>未確認</td><td>未確認</td><td>World of Hyattアプリは対応ホテルでチェックインとスマホキー（Apple Walletにも対応）を提供。東京の2軒が対応しているかは未確認</td></tr>
+    <tr><td><span class="dot kp"></span> キンプトン新宿</td><td>未確認</td><td>未確認</td><td>IHG Oneアプリにチェックイン機能はあるが、ホテルごとに異なる</td></tr>
+    <tr><td><span class="dot ip"></span> ニューオータニ ザ・メイン</td><td>未確認</td><td>未確認</td><td>会員特典に「クイックチェックイン／アウト」があるが、スマホでできるかは不明</td></tr>
+    <tr><td><span class="dot gh"></span> グルーヴ／BELLUSTAR</td><td>未確認</td><td>未確認</td><td>館内のセルフチェックイン機・エクスプレスチェックイン／アウトの記載はあるが、スマホ対応の記載はない</td></tr>
+  </table></div>
+  <p class="note">2026-10-07時点で公式に確認できたのはヒルトン東京と京王プラザだけ。スマホでのチェックアウトはどのホテルも未確認。ほかは予約後にアプリに「チェックイン」ボタンが出るかで確かめる。</p>
 </section>
 
 <section class="card">
   <h2><span class="n">3</span>資格の取り方と特典</h2>
 
   <h3><span class="dot hl"></span> ヒルトン・オナーズ</h3>
-  <div class="tier"><div class="nm"><span>ゴールド</span><span class="cond">25泊／15滞在／6,000ドル。またはヒルトン・アメックスを持つ</span></div>
+  <div class="tier" data-p="hilton" data-t="ゴールド"><div class="nm"><span>ゴールド</span><span class="cond">25泊／15滞在／6,000ドル。またはヒルトン・アメックスを持つ</span></div>
     <ul class="b"><li>朝食（ブランド・地域による）またはお食事クレジット</li><li>空室次第のアップグレード</li><li>宿泊ポイント80%増し</li></ul></div>
-  <div class="tier mine"><div class="nm"><span>ダイヤモンド <span class="tag me">西村さん</span></span><span class="cond">50泊／25滞在／11,500ドル。<b>またはプレミアムカードで年200万円</b></span></div>
+  <div class="tier" data-p="hilton" data-t="ダイヤモンド"><div class="nm"><span>ダイヤモンド <span class="tag me">目標</span></span><span class="cond">50泊／25滞在／11,500ドル。<b>またはプレミアムカードで年200万円</b></span></div>
     <ul class="b"><li><b>エグゼクティブラウンジ</b>（ヒルトン東京は37階・17:30〜19:30）</li><li>朝食2名分</li><li>空室次第のアップグレード（スイートも対象）</li><li>宿泊ポイント100%増し・48時間前までの客室保証・プレミアムWi-Fi</li><li>レイトチェックアウトはリクエスト制</li></ul></div>
   <div class="tier"><div class="nm"><span>ダイヤモンド・リザーブ</span><span class="cond">80泊または40滞在 ＋ 18,000ドル（税・サ除く）</span></div>
     <ul class="b"><li><b>予約時にアップグレードを確約</b>（最大7泊・スイートまで）</li><li><b>16:00のレイトチェックアウト保証</b></li><li>宿泊ポイント120%増し</li><li>利用額の条件が約80泊分になるため、西村さんの計画では狙わない</li></ul></div>
@@ -199,15 +236,31 @@ footer a{color:inherit}
   <h3><span class="dot hy"></span> ワールド オブ ハイアット</h3>
   <div class="tier"><div class="nm"><span>ディスカバリスト／エクスプローリスト</span><span class="cond">10泊／30泊</span></div>
     <ul class="b"><li>空室次第のアップグレード・レイトチェックアウト（14時頃）</li></ul></div>
-  <div class="tier mine"><div class="nm"><span>グローバリスト <span class="tag me">目標</span></span><span class="cond">暦年60泊（または基本ポイント10万）</span></div>
+  <div class="tier" data-p="hyatt" data-t="グローバリスト"><div class="nm"><span>グローバリスト <span class="tag me">目標</span></span><span class="cond">暦年60泊（または基本ポイント10万）</span></div>
     <ul class="b"><li><b>スイート確約特典</b>：40泊・50泊の選択特典で計3回＋60泊で2回＝最大5回（70泊以降は10泊ごとに1回）。1回で同じホテル最大7連泊・予約時にスタンダードスイートを確約。パーク ハイアット東京も対象（2026年7月時点）</li><li><b>16:00のレイトチェックアウト</b>（依頼で付与）</li><li>クラブラウンジ（リージェンシークラブ）と朝食。ラウンジのないパーク ハイアットは朝食</li><li>空室次第のアップグレード（スタンダードスイートまで）・ポイント30%増し</li></ul></div>
   <p class="note">有効期限：取った年・翌年・翌々年の2月末まで。スイート特典も翌々年の2月末まで。<b>ライフタイム・グローバリスト＝累計の基本ポイント100万</b>（対象利用約20万ドル）。年400〜700万円の利用なら6〜10年。</p>
 
   <h3><span class="dot ke"></span> 京王プラザ エグゼクティブカード</h3>
-  <div class="tier"><div class="nm"><span>ブルーム／プライム</span><span class="cond">入会／年10万円以上</span></div>
+  <div class="tier" data-p="keio" data-t="プライム"><div class="nm"><span>ブルーム／プライム</span><span class="cond">入会／年10万円以上</span></div>
     <ul class="b"><li>ポイント2pt／3pt（100円あたり）。プライムは13:00まで延長</li></ul></div>
-  <div class="tier mine"><div class="nm"><span>ロイヤル <span class="tag me">西村さん</span></span><span class="cond">年30万円以上</span></div>
+  <div class="tier" data-p="keio" data-t="ロイヤル"><div class="nm"><span>ロイヤル</span><span class="cond">3月〜翌2月に30万円以上（起算月は3月）</span></div>
     <ul class="b"><li><b>15:00のレイトチェックアウト</b></li><li>公式の会員料金（約10%引き）・ポイント5pt（100円あたり）・誕生月のボーナス</li><li>ラウンジは部屋に付く：デラックスセレクト＝SKY PLAZA IBASHO（47階・17:00〜22:00・お酒あり）／プレミアグラン＝クラブラウンジ（シャンパーニュ）＋IBASHO</li></ul></div>
+
+  <h3><span class="dot gh"></span> GHA DISCOVERY（グルーヴ＝PARKROYAL・BELLUSTAR＝Pan Pacific）</h3>
+  <div class="tier" data-p="gha" data-t="シルバー"><div class="nm"><span>シルバー／ゴールド</span><span class="cond">入会／2滞在または1,000ドル</span></div>
+    <ul class="b"><li>D$（GHAのポイント）4%／5%還元・会員料金・Wi-Fi・誕生日特典</li><li>延長・アップグレードの特典はなし</li></ul></div>
+  <div class="tier" data-p="gha" data-t="プラチナ"><div class="nm"><span>プラチナ <span class="tag me">目標</span></span><span class="cond">1〜12月に<b>2ブランド</b>（または10泊・5,000ドル）</span></div>
+    <ul class="b"><li><b>15:00までのレイトチェックアウト</b></li><li>1カテゴリー上へのアップグレード（空室次第）・ウェルカム特典</li><li>D$ 6%還元</li><li>資格は2つ目のブランドに泊まり終えてから付く見込み（BELLUSTAR 12/5の宿泊後）</li></ul></div>
+  <div class="tier" data-p="gha" data-t="チタニウム"><div class="nm"><span>チタニウム</span><span class="cond">1〜12月に<b>3ブランド</b>（または30泊・15,000ドル）</span></div>
+    <ul class="b"><li><b>11:00からのアーリーチェックイン・16:00までのレイトチェックアウト</b></li><li>2カテゴリー上へのアップグレード（空室次第）</li><li>一部ブランドで朝食無料（グルーヴ・BELLUSTARで付くかは未確認）・D$ 7%還元</li></ul></div>
+  <p class="note">有効期限：取った年の残りと翌年いっぱい（公式規約）。公式予約のみ対象（Expedia・一休経由は数えない）。<b>東急ホテルズが2027年4月からGHAに加盟</b>するので、2027年はグルーヴ・BELLUSTAR＋東急系でチタニウムを狙える。</p>
+
+  <h3><span class="dot ip"></span> I Prefer（京王プラザ・ニューオータニ ザ・メイン）</h3>
+  <div class="tier" data-p="iprefer" data-t="チタニウム"><div class="nm"><span>チタニウム</span><span class="cond">12か月で5万ポイント（最上位）</span></div>
+    <ul class="b"><li>アップグレード・アーリーチェックイン・レイトチェックアウト（いずれも空室次第）</li><li>飲食特典・ポイント50%増し</li><li>朝食・ラウンジは付かない。特典の運用はホテルによってばらつきがある</li><li>京王はI Prefer予約だとSuperior Plus Twin→デラックスプラス ダブル／デラックスセレクト キング、ニューオータニはスタンダード→デラックス ダブルへのアップグレードが付く</li></ul></div>
+
+  <h3>予約サイト</h3>
+  <p class="note" style="margin-top:2px">一休.com・Expediaの会員ランクは予約サイト側の特典（ポイント・割引）で、ホテル側の資格・延長には効かない。今後Expediaを使わなくなると、ゴールドの維持は難しくなる見込み。</p>
 </section>
 
 <section class="card">
@@ -224,6 +277,7 @@ footer a{color:inherit}
 
 </main>
 <footer>YOIYADO · 各社公式・比較記事より（2026-10-05時点）。制度は変わることがあります · <a href="./">料金比較へ</a></footer>
+<script src="tiers.js"></script>
 <script>
 // 進捗：予約台帳（個人Gmailの予約メールから毎朝作成）を年ごとに集計する。
 // ステータスの泊数・金額に数えるのはホテル公式の予約だけ（一休・Expedia など第三者サイト経由は対象外）。
@@ -244,6 +298,56 @@ async function api(params){
     await new Promise(res => setTimeout(res, 1200 * (i + 1)));
   }
   throw new Error('通信に失敗しました');
+}
+
+// いまの資格：制度ごとに「いま → 次」と、いま効く特典。資格は選んで保存（サーバーに保存し、予約ページのチェックアウト表示にも使う）
+function renderTiers(){
+  const tiers = currentTiers(D.manual), proj = ghaProjection(D.rows || []);
+  const cy = String(new Date().getFullYear());
+  let h = '';
+  PROGRAMS.forEach(p => {
+    const t = tiers[p.key];
+    const opts = p.tiers.map(x => `<option${x === t ? ' selected' : ''}>${x}</option>`).join('');
+    let hint = '';
+    if (p.key === 'gha') {
+      const pr = proj[cy] || {};
+      if (pr.titanium && t !== 'チタニウム') hint = `${md(pr.titanium)}（3ブランド目のチェックアウト後）からチタニウム見込み`;
+      else if (pr.platinum && ['シルバー', 'ゴールド'].indexOf(t) >= 0) hint = `${md(pr.platinum)}（2ブランド目のチェックアウト後）からプラチナ見込み。3ブランド目でチタニウム`;
+    }
+    if (p.key === 'hilton') {
+      const sp = (((D.manual || {})[cy]) || {}).hilton_card_spend || 0;
+      if (sp >= 2e6 && t !== 'ダイヤモンド' && t !== 'ダイヤモンド・リザーブ') hint = 'カード利用が200万円に達したのでダイヤモンドになる見込み';
+    }
+    const nx = (p.next || {})[t], pk = (p.perks || {})[t];
+    h += `<div class="tr"><div class="tn"><b>${esc(p.name)}</b><select aria-label="${esc(p.name)}の今の資格" onchange="saveTier('${p.key}', this.value)">${opts}</select></div>
+      ${hint ? `<div class="th">◐ ${esc(hint)}</div>` : ''}
+      ${pk ? `<div class="tp">いま：${esc(pk)}</div>` : ''}
+      ${nx ? `<div class="tx">次：${esc(nx)}</div>` : ''}</div>`;
+  });
+  h += '<p class="note" style="margin:8px 0 0">資格が変わったら選び直してください（予約ページのチェックアウト時刻にも反映）。一休・Expediaは予約サイト側の特典で、ホテルの延長などには効きません。</p>';
+  document.getElementById('tiers-body').innerHTML = h;
+  document.getElementById('tiers-body').className = '';
+  // 下の表・資格カードに「いま」の印を付ける
+  document.querySelectorAll('[data-p]').forEach(el => {
+    const k = el.dataset.p === 'hyatt_ph' ? 'hyatt' : el.dataset.p;
+    const on = tiers[k] === el.dataset.t || (k === 'hyatt' && el.dataset.t === 'ディスカバリスト' && tiers.hyatt === 'エクスプローリスト')
+      || (k === 'hilton' && el.dataset.t === 'メンバー' && tiers.hilton === 'シルバー')
+      || (k === 'keio' && el.dataset.t === 'プライム' && el.tagName !== 'TR' && tiers.keio === 'ブルーム')
+      || (k === 'gha' && el.dataset.t === 'シルバー' && tiers.gha === 'ゴールド');
+    el.classList.toggle('mine', on);
+    const first = el.tagName === 'TR' ? el.querySelector('td') : el.querySelector('.nm > span');
+    let tag = first && first.querySelector('.tag.now');
+    if (on && first && !tag) first.insertAdjacentHTML('beforeend', '<span class="tag now">いま</span>');
+    if (!on && tag) tag.remove();
+  });
+}
+
+async function saveTier(key, value){
+  try {
+    const r = await api({api: 'statusSet', field: 'tier_' + key, value});
+    if (r.ok) { D.manual = r.manual; try { localStorage.setItem(LEDGER_MEMO, JSON.stringify(D)); } catch(e) {} renderTiers(); }
+    else alert('保存できませんでした。');
+  } catch(e) { alert('保存できませんでした。'); }
 }
 
 function bar(done, plan, goal){
@@ -278,12 +382,14 @@ function render(){
     <span>利用額を更新：<input id="hsp" inputmode="numeric" placeholder="例 350000" value="${spend || ''}"><button class="sv" onclick="saveSpend()">保存</button></span>
     ${m.hilton_card_spend_at ? `<span>（${new Date(m.hilton_card_spend_at).toLocaleDateString('ja-JP')} 更新）</span>` : ''}</div></div>`;
 
-  // 京王プラザ ロイヤル：年間利用金額 30万円以上（税別）。公式予約の宿泊のみ（代理店経由は対象外）
-  const ke = rows.filter(r => r.hotel === 'keio' && direct(r));
+  // 京王プラザ ロイヤル：年間利用金額 30万円以上（税別）。公式予約の宿泊のみ（代理店経由は対象外）。
+  // 集計は起算月の3月から翌2月まで（会員ページの「起算月 3月」）
+  const ke = (D.rows || []).filter(r => r.status === 'booked' && r.hotel === 'keio' && direct(r)
+    && r.checkin >= `${YEAR}-03-01` && r.checkin < `${YEAR + 1}-03-01`);
   const net = r => Math.max(0, (r.pay || 0) - 200 * r.adults * r.nights) / 1.1;   // 宿泊税と消費税を除いた概算
   const keDone = sum(ke.filter(stayed), net), kePlan = sum(ke.filter(r => !stayed(r)), net);
   h += `<div class="pg${keDone + kePlan >= 3e5 ? ' ok' : ''}"><div class="t"><b>京王プラザ ロイヤル</b><span class="v">${yen(keDone)}<small>利用済み</small> ＋ ${yen(kePlan)}<small>予約</small> ／ ${yen(3e5)}</span></div>
-    ${bar(keDone, kePlan, 3e5)}<div class="s">公式予約の宿泊額（税別の概算）。レストラン・バーの利用は含みません。集計期間は暦年として計算（公式に記載なし）</div></div>`;
+    ${bar(keDone, kePlan, 3e5)}<div class="s">${YEAR}年3月〜${YEAR + 1}年2月の公式予約の宿泊額（税別の概算）。レストラン・バーの利用は含みません</div></div>`;
 
   // GHA DISCOVERY プラチナ：年内に異なる2ブランドに宿泊（公式予約）
   // ブランドごとに「宿泊済み／予約済み（泊まれば達成）／未予約」を出し、同じブランドを重ねて予約しなくて済むようにする
@@ -304,6 +410,7 @@ function render(){
 
   h += `<div class="s" style="margin-top:8px;font-size:11.5px;color:var(--sub)">泊数・金額は予約台帳（毎朝更新）から計算。濃い色は宿泊済み、薄い色は予約済み。</div>`;
   document.getElementById('prog-body').innerHTML = h;
+  renderTiers();
   document.getElementById('prog-body').className = '';
   const ys = [new Date().getFullYear(), new Date().getFullYear() + 1];
   document.getElementById('yrs').innerHTML = ys.map(y => `<button type="button" aria-pressed="${y === YEAR}" onclick="YEAR=${y};render()">${y}</button>`).join('');

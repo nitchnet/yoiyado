@@ -71,6 +71,7 @@ main{max-width:720px;margin:-56px auto 0;padding:0 14px 36px;position:relative;z
 .tag.cx{color:var(--sub);background:var(--bg2)}
 .tag.ch{color:var(--sub);background:var(--bg2);font-weight:600}
 .bk .w{grid-column:2/4;font-size:12px;color:var(--sub);margin-top:4px;display:flex;flex-wrap:wrap;gap:4px 10px}
+.bk .w .tm{flex-basis:100%;color:var(--ink)}
 .bk.save{border:1.5px solid var(--gold);background:linear-gradient(180deg,var(--gold-soft),var(--card) 75%)}
 .bk .sv{grid-column:1/4;margin-top:6px;padding:7px 10px;border-radius:10px;background:var(--card);border:1px dashed var(--gold);font-size:12.5px;line-height:1.5}
 .bk .sv b{color:var(--gold)}
@@ -126,6 +127,7 @@ footer{max-width:720px;margin:0 auto;padding:0 16px 28px;text-align:center;font-
   <div id="list"></div>
 </main>
 <footer>YOIYADO · 金額は税・サービス料・宿泊税込みの滞在合計</footer>
+<script src="tiers.js"></script>
 <script>
 const GAS = "https://script.google.com/macros/s/AKfycbyXS4tQgx8U95EG5EUJd3H47_saO_Ny35XWZBWxyNY-2ck8QBLOmgAzSm6HtN7twnRXaFGf/exec";
 const NAMES = {keio:'京王プラザ', iprefer:'京王プラザ（I Prefer）', newotani:'ニューオータニ ザ・メイン（I Prefer）', groove:'ホテルグルーヴ', hilton:'ヒルトン東京', hyatt:'ハイアット リージェンシー', kimpton:'キンプトン新宿', bellustar:'BELLUSTAR TOKYO'};
@@ -197,6 +199,7 @@ function render(){
   const groups = {};
   rows.forEach(r => { const m = r.checkin.slice(0, 7); (groups[m] = groups[m] || []).push(r); });
   let l = '';
+  const tiers = currentTiers(data.manual), proj = ghaProjection(data.rows || []);
   Object.keys(groups).sort().forEach(m => {
     const g = groups[m], gn = g.filter(r => r.status === 'booked').reduce((a, r) => a + r.nights, 0);
     l += `<div class="month"><span>${Number(m.slice(0,4))}年${Number(m.slice(5))}月</span><span class="s">${g.length}件・${gn}泊</span></div>`;
@@ -205,13 +208,16 @@ function render(){
       const ch = r.channel && r.channel !== '公式' ? `<span class="tag ch">${esc(r.channel)}</span>` : '';
       const free = !cx && r.free_cancel_until ? `<span>無料キャンセル ${md(r.free_cancel_until)}（${wd(r.free_cancel_until)}）まで</span>` : '';
       const wl = !cx && w && w.best_pay && !sv ? `<span>今の最安 ${yen(w.best_pay)}（${esc(w.best_channel)}）</span>` : '';
+      // いまの資格で使えるチェックイン／アウト（会員ステータスで選んだ資格から）
+      const st = !cx && r.checkout > today ? stayTimes(r, tiers, proj) : null;
+      const tm = st && st.co ? `<span class="tm">イン ${st.ci}・<b>アウト ${st.co}</b>${st.why ? `（${esc(st.why)}${st.how ? '・' + esc(st.how) : ''}）` : ''}</span>` : '';
       l += `<div class="bk${cx ? ' cx' : ''}${sv ? ' save' : ''}">
         <div class="d num">${md(r.checkin)}<small>（${wd(r.checkin)}）${r.nights}泊・${r.adults}名</small></div>
         <div><div class="h"><span class="dot" style="background:${COLORS[r.hotel] || '#999'}"></span>${esc(NAMES[r.hotel] || r.hotel_name)}</div>
           <div class="r">${esc(r.room)}${cx ? '<span class="tag cx">キャンセル</span>' : r.refundable ? '<span class="tag ok">返金可</span>' : '<span class="tag nr">返金不可</span>'}${ch}</div>
           <div class="p">${esc(r.plan)}</div></div>
         <div class="pay num">${r.pay ? yen(r.pay) : '—'}${r.nights > 1 && r.pay ? `<small>1泊 ${yen(Math.round(r.pay / r.nights))}</small>` : ''}</div>
-        ${free || wl ? `<div class="w">${free}${wl}</div>` : ''}
+        ${free || wl || tm ? `<div class="w">${tm}${free}${wl}</div>` : ''}
         ${sv ? `<div class="sv">▼ <b>${yen(w.save)}安く</b>取り直せます：${esc(w.best_channel)}［${esc(w.best_kind)}］${esc(w.best_room)} ${yen(w.best_pay)}<br>
           ${esc(w.best_plan)}　<a href="${esc(w.best_url)}" target="_blank" rel="noopener">予約ページへ →</a></div>` : ''}
       </div>`;
