@@ -72,6 +72,7 @@ main{max-width:720px;margin:-56px auto 0;padding:0 14px 36px;position:relative;z
 .tag.ch{color:var(--sub);background:var(--bg2);font-weight:600}
 .bk .w{grid-column:2/4;font-size:12px;color:var(--sub);margin-top:4px;display:flex;flex-wrap:wrap;gap:4px 10px}
 .bk .w .tm{flex-basis:100%;color:var(--ink)}
+.tag.ot{color:var(--sub);background:var(--bg2);font-weight:500}
 .bk.save{border:1.5px solid var(--gold);background:linear-gradient(180deg,var(--gold-soft),var(--card) 75%)}
 .bk .sv{grid-column:1/4;margin-top:6px;padding:7px 10px;border-radius:10px;background:var(--card);border:1px dashed var(--gold);font-size:12.5px;line-height:1.5}
 .bk .sv b{color:var(--gold)}
@@ -130,8 +131,14 @@ footer{max-width:720px;margin:0 auto;padding:0 16px 28px;text-align:center;font-
 <script src="tiers.js"></script>
 <script>
 const GAS = "https://script.google.com/macros/s/AKfycbyXS4tQgx8U95EG5EUJd3H47_saO_Ny35XWZBWxyNY-2ck8QBLOmgAzSm6HtN7twnRXaFGf/exec";
-const NAMES = {keio:'京王プラザ', iprefer:'京王プラザ（I Prefer）', newotani:'ニューオータニ ザ・メイン（I Prefer）', groove:'ホテルグルーヴ', hilton:'ヒルトン東京', hyatt:'ハイアット リージェンシー', kimpton:'キンプトン新宿', bellustar:'BELLUSTAR TOKYO'};
+const NAMES = {keio:'京王プラザ', iprefer:'京王プラザ（I Prefer）', newotani:'ニューオータニ ザ・メイン（I Prefer）', groove:'ホテルグルーヴ', hilton:'ヒルトン東京', hyatt:'ハイアット リージェンシー', kimpton:'キンプトン新宿', bellustar:'BELLUSTAR TOKYO',
+  chinzanso:'ホテル椿山荘東京', capitol:'ザ・キャピトルホテル東急', yuen_daita:'由縁別邸 代田', aoyama_grand:'THE AOYAMA GRAND HOTEL', holic_ebisu:'恵比寿ホリックホテル',
+  ana_ic:'ANAインターコンチネンタル東京', ic_tokyobay:'インターコンチネンタル東京ベイ', cerulean:'セルリアンタワー東急ホテル', westin:'ウェスティンホテル東京'};
+// 料金比較・値下がりチェックの対象外（予約の記録だけ載せる）
+const OTHER = new Set(['chinzanso','capitol','yuen_daita','aoyama_grand','holic_ebisu','ana_ic','ic_tokyobay','cerulean','westin']);
+let OTHER_COLOR;
 const COLORS = {keio:'#7a5c9e', iprefer:'#a07cc5', newotani:'#9b6b3f', groove:'#d0603c', hilton:'#2f5fa8', hyatt:'#5b8c9c', kimpton:'#3f8a5f', bellustar:'#8a7a3a'};
+OTHER_COLOR = '#9a9a9a';
 const yen = n => '¥' + Number(n).toLocaleString('ja-JP');
 const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const wd = s => '日月火水木金土'[new Date(s + 'T00:00:00').getDay()];
@@ -184,7 +191,7 @@ function render(){
       <div><div class="k">泊数</div><div class="v num">${nights}<small>泊</small></div></div>
       <div><div class="k">合計</div><div class="v money num serif">${yen(total)}</div></div></div>
     <div class="chips">${Object.entries(byHotel).sort((a, b) => b[1][1] - a[1][1]).map(([k, v]) =>
-      `<span class="chip"><span class="dot" style="background:${COLORS[k] || '#999'}"></span>${esc(NAMES[k] || k)} ${v[0]}件・${v[1]}泊</span>`).join('')}</div>
+      `<span class="chip"><span class="dot" style="background:${COLORS[k] || OTHER_COLOR}"></span>${esc(NAMES[k] || k)} ${v[0]}件・${v[1]}泊</span>`).join('')}</div>
     <div class="filters" role="group" aria-label="表示する予約">
       ${[['future','今後の予約'],['past','過去も含む'],['cx','キャンセルも含む']].map(([v, l]) =>
         `<button type="button" aria-pressed="${view === v}" onclick="setView('${v}')">${l}</button>`).join('')}</div>
@@ -213,7 +220,7 @@ function render(){
       const tm = st && st.co ? `<span class="tm">イン ${st.ci}・<b>アウト ${st.co}</b>${st.why ? `（${esc(st.why)}${st.how ? '・' + esc(st.how) : ''}）` : ''}</span>` : '';
       l += `<div class="bk${cx ? ' cx' : ''}${sv ? ' save' : ''}">
         <div class="d num">${md(r.checkin)}<small>（${wd(r.checkin)}）${r.nights}泊・${r.adults}名</small></div>
-        <div><div class="h"><span class="dot" style="background:${COLORS[r.hotel] || '#999'}"></span>${esc(NAMES[r.hotel] || r.hotel_name)}</div>
+        <div><div class="h"><span class="dot" style="background:${COLORS[r.hotel] || OTHER_COLOR}"></span>${esc(NAMES[r.hotel] || r.hotel_name)}${OTHER.has(r.hotel) ? '<span class="tag ot">比較対象外</span>' : ''}</div>
           <div class="r">${esc(r.room)}${cx ? '<span class="tag cx">キャンセル</span>' : r.refundable ? '<span class="tag ok">返金可</span>' : '<span class="tag nr">返金不可</span>'}${ch}</div>
           <div class="p">${esc(r.plan)}</div></div>
         <div class="pay num">${r.pay ? yen(r.pay) : '—'}${r.nights > 1 && r.pay ? `<small>1泊 ${yen(Math.round(r.pay / r.nights))}</small>` : ''}</div>
