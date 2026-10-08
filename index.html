@@ -125,6 +125,7 @@ details.cond p{margin:6px 0 0;line-height:1.7}
 .tag{font-size:11px;padding:1px 7px;border-radius:6px;border:1px solid var(--line);color:var(--sub);background:var(--bg)}
 .tag.ok{color:var(--ok);border-color:transparent;background:var(--ok-bg)}
 .tag.nr{color:var(--warn);border-color:transparent;background:var(--warn-bg)}
+.tag.ot{color:var(--sub);background:var(--bg2);border-color:transparent}
 .tag.meal{color:var(--gold);border-color:transparent;background:var(--gold-soft)}
 .offer .plan{grid-column:2/4;font-size:12.5px;color:var(--sub);margin-top:6px;line-height:1.55}
 .offer .foot{grid-column:2/4;display:flex;justify-content:flex-end;margin-top:8px}
@@ -494,6 +495,8 @@ function render(){
   offers.sort((a,b) => a.pay - b.pay);
   const main = offers.filter(o => !o.alt);
   const min = main.length ? main[0].pay : 0;
+  // BEST は比較対象の部屋だけで決める（「ほかの部屋」は対象の部屋が満室のホテルの参考）
+  const minT = (main.find(o => !o.other) || {}).pay;
   const mb = myBooking(cur);
   if (mb) h += mineCard(mb, main, loading);
   // 順位は返金可（基本）で付け、返金不可の安いプランは同じ部屋の直下に添える
@@ -506,7 +509,7 @@ function render(){
     h += '<div class="list">';
     let rank = 0;
     list.forEach(o => {
-      const isBest = !o.alt && o.pay === min;
+      const isBest = !o.alt && !o.other && o.pay === minT;
       if (!o.alt) rank++;
       const parent = o.alt ? list.find(m => !m.alt && m.hotel === o.hotel && m.target === o.target) : null;
       const sub = o.alt ? `返金可より${yen(parent.pay - o.pay)}安い` : (o.pay > min && min ? `最安 +${yen(o.pay - min)}` : '');
@@ -519,7 +522,7 @@ function render(){
           ${sub ? `<div class="diff num">${sub}</div>` : ''}
           ${mb ? `<div class="vs num ${o.pay < mb.pay ? 'down' : ''}">${o.pay < mb.pay ? `いまの予約より${yen(mb.pay - o.pay)}安い` : o.pay > mb.pay ? `いまの予約より${yen(o.pay - mb.pay)}高い` : 'いまの予約と同額'}</div>` : ''}</div>
         <div class="room">${esc(o.label)}</div>
-        <div class="tags">${o.refundable === false ? '<span class="tag nr">返金不可</span>' : '<span class="tag ok">返金可</span>'}${o.meal ? '<span class="tag meal">朝食付き</span>' : ''}</div>
+        <div class="tags">${o.other ? '<span class="tag ot">対象の部屋は満室</span>' : ''}${o.refundable === false ? '<span class="tag nr">返金不可</span>' : '<span class="tag ok">返金可</span>'}${o.meal ? '<span class="tag meal">朝食付き</span>' : ''}</div>
         <div class="plan">${esc(o.plan)}${o.note ? '<br>' + esc(o.note) : ''}</div>
         <div class="foot"><a href="${esc(o.url)}" target="_blank" rel="noopener">予約ページへ →</a></div>
       </article>`;
