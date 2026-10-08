@@ -365,8 +365,7 @@ function render(){
   h += `<div class="pg${spend >= 2e6 ? ' ok' : ''}"><div class="t"><span class="nm2"><b>ヒルトン</b>${lv('hilton', 'ダイヤモンド')}</span><span class="v">${yen(spend)} <small>／ ${yen(2e6)}</small></span></div>
     ${bar(spend, 0, 2e6)}<div class="s">ヒルトン・アメックス・プレミアムの${YEAR}年の利用額（1〜12月）。${spend < 2e6 ? `あと <b>${yen(2e6 - spend)}</b>` : '<b>達成</b>'}
     ・公式予約のヒルトン宿泊 ${sum(hl, r => r.nights)}泊<br>
-    <span>利用額を更新：<input id="hsp" inputmode="numeric" placeholder="例 350000" value="${spend || ''}"><button class="sv" onclick="saveSpend()">保存</button></span>
-    ${m.hilton_card_spend_at ? `<span>（${new Date(m.hilton_card_spend_at).toLocaleDateString('ja-JP')} 更新）</span>` : ''}</div></div>`;
+    マネーフォワードの明細から自動で取り込み（毎週月・木の朝）${m.hilton_card_spend_at ? `・${new Date(m.hilton_card_spend_at).toLocaleDateString('ja-JP')} 更新` : ''}</div></div>`;
 
   // 京王プラザ ロイヤル：年間利用金額 30万円以上（税別）。公式予約の宿泊のみ（代理店経由は対象外）。
   // 集計は起算月の3月から翌2月まで（会員ページの「起算月 3月」）
