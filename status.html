@@ -110,6 +110,14 @@ footer a{color:inherit}
 .pg .t .lv b.un{border-style:dashed}
 .pg .t .lv small{margin-left:4px;color:var(--gold);font-weight:700}
 .pg .t .nm2{display:flex;align-items:baseline;flex-wrap:wrap;gap:2px 0;flex-basis:100%}
+.dr{margin-top:10px;padding-top:9px;border-top:1px dashed var(--line)}
+.dr .t{display:flex;flex-wrap:wrap;gap:2px 8px;align-items:baseline}
+.dr .t b{font-size:13.5px}
+.dr .t small{font-size:11.5px;color:var(--sub)}
+.dr .row{display:grid;grid-template-columns:40px minmax(0,1fr);gap:0 8px;align-items:center;font-size:12px;color:var(--sub)}
+.dr .row .bar{margin:6px 0 2px}
+.dr .row .v{grid-column:2;font-size:12px;color:var(--ink);font-weight:600}
+.dr.ok .t b{color:var(--gold)}
 .oth{font-size:12.5px;color:var(--sub);margin-top:10px;padding:8px 12px;border:1px dashed var(--line);border-radius:12px}
 .oth b{color:var(--ink)}
 .tr{border-top:1px dashed var(--line);padding:9px 0}
@@ -336,6 +344,27 @@ function renderTiers(){
 }
 
 
+// ヒルトン ダイヤモンド・リザーブ：1〜12月に「80泊または40滞在」と「対象利用額18,000ドル」の両方（カードでは取れない）。
+// 対象利用額は税・サービス料・宿泊税を除いた額（予約台帳の合計から概算：サービス料13%・消費税10%・宿泊税）。
+// 同じホテルで続けて泊まった予約（チェックアウト日＝次のチェックイン日）は1滞在として数える。
+// ドル円はサーバー（Apps Script）が取って予約台帳と一緒に返す（ブラウザから直接は取れないため）
+function diamondReserve(hl, stayed){
+  const USDJPY = D && D.usdjpy, rate = USDJPY || 150, goalYen = 18000 * rate;
+  const st = r => { const pp = (r.pay || 0) / r.adults / r.nights; return (pp >= 15000 ? 200 : pp >= 10000 ? 100 : 0) * r.adults * r.nights; };
+  const net = r => Math.max(0, (r.pay || 0) - st(r)) / 1.13 / 1.1;
+  const sorted = [...hl].sort((a, b) => a.checkin < b.checkin ? -1 : 1);
+  let stays = 0, staysDone = 0, prevOut = '';
+  sorted.forEach(r => { if (r.checkin !== prevOut) { stays++; if (stayed(r)) staysDone++; } prevOut = r.checkout; });
+  const nDone = sorted.filter(stayed).reduce((a, r) => a + r.nights, 0), nPlan = sorted.filter(r => !stayed(r)).reduce((a, r) => a + r.nights, 0);
+  const yDone = sorted.filter(stayed).reduce((a, r) => a + net(r), 0), yPlan = sorted.filter(r => !stayed(r)).reduce((a, r) => a + net(r), 0);
+  const nightsOk = nDone + nPlan >= 80 || stays >= 40, spendOk = yDone + yPlan >= goalYen;
+  const restN = Math.max(0, 80 - nDone - nPlan), restY = Math.max(0, goalYen - yDone - yPlan);
+  return `<div class="dr${nightsOk && spendOk ? ' ok' : ''}"><div class="t"><b>ダイヤモンド・リザーブ</b><small>80泊または40滞在 ＋ 対象利用額18,000ドル（両方）</small></div>
+    <div class="row"><span>泊数</span>${bar(nDone, nPlan, 80)}<span class="v num">${nDone}＋${nPlan}／80泊・${stays}／40滞在</span></div>
+    <div class="row"><span>利用額</span>${bar(yDone, yPlan, goalYen)}<span class="v num">${yen(yDone + yPlan)}／${yen(goalYen)}</span></div>
+    <div class="s">${nightsOk && spendOk ? '<b>予約分を含めて達成見込み</b>' : `あと${restN ? ` <b>${restN}泊</b>` : ''}${restN && restY ? '・' : ''}${restY ? ` 利用額 <b>${yen(restY)}</b>` : ''}`}。公式予約の宿泊から計算。利用額は税・サ・宿泊税を除いた概算で、1ドル=${Math.round(rate)}円${USDJPY ? '（為替は毎朝更新）' : '（仮）'}で換算</div></div>`;
+}
+
 function bar(done, plan, goal){
   const d = Math.min(100, done / goal * 100), p = Math.min(100 - d, plan / goal * 100);
   return `<div class="bar"><i class="done" style="width:${d}%"></i><i class="plan" style="left:${d}%;width:${p}%"></i></div>`;
@@ -365,7 +394,8 @@ function render(){
   h += `<div class="pg${spend >= 2e6 ? ' ok' : ''}"><div class="t"><span class="nm2"><b>ヒルトン</b>${lv('hilton', 'ダイヤモンド')}</span><span class="v">${yen(spend)} <small>／ ${yen(2e6)}</small></span></div>
     ${bar(spend, 0, 2e6)}<div class="s">ヒルトン・アメックス・プレミアムの${YEAR}年の利用額（1〜12月）。${spend < 2e6 ? `あと <b>${yen(2e6 - spend)}</b>` : '<b>達成</b>'}
     ・公式予約のヒルトン宿泊 ${sum(hl, r => r.nights)}泊<br>
-    マネーフォワードの明細から自動で取り込み（毎週月・木の朝）${m.hilton_card_spend_at ? `・${new Date(m.hilton_card_spend_at).toLocaleDateString('ja-JP')} 更新` : ''}</div></div>`;
+    マネーフォワードの明細から自動で取り込み（毎週月・木の朝）${m.hilton_card_spend_at ? `・${new Date(m.hilton_card_spend_at).toLocaleDateString('ja-JP')} 更新` : ''}</div>
+    ${diamondReserve(hl, stayed)}</div>`;
 
   // 京王プラザ ロイヤル：年間利用金額 30万円以上（税別）。公式予約の宿泊のみ（代理店経由は対象外）。
   // 集計は起算月の3月から翌2月まで（会員ページの「起算月 3月」）
