@@ -61,8 +61,8 @@ main{max-width:720px;margin:-56px auto 0;padding:0 14px 36px;position:relative;z
 .cp .ft button[aria-pressed="true"]{background:var(--night2);color:#fff;border-color:var(--night2)}
 @media (prefers-color-scheme: dark){.cp .ft button[aria-pressed="true"]{background:var(--gold);color:#1a1f2e;border-color:var(--gold)}}
 .cp .ft a{margin-left:auto;font-size:12px;color:var(--sub)}
-.cp .ft .cpy{margin-left:auto}
-.cp .ft .cpy + a{margin-left:4px}
+.cp .ft button.na{border:0;background:none;padding:4px 2px;font-size:11px;color:var(--sub);text-decoration:underline;text-underline-offset:2px}
+.cp .ft button.na[aria-pressed="true"]{background:none;color:var(--sub)}
 .tag{display:inline-block;font-size:10.5px;padding:0 6px;border-radius:6px;font-weight:700}
 .tag.k-price{color:var(--ok);background:var(--ok-bg)}
 .tag.k-status{color:#fff;background:var(--gold)}
@@ -173,33 +173,26 @@ async function setStatus(id, s){
   catch(e) { alert('保存できませんでした。'); }
 }
 
-// Gmailアプリで開いたときなど、リンクでメールに届かない場合の予備：件名をコピーしてGmailの検索に貼る
-async function copySubject(btn, t){
-  try { await navigator.clipboard.writeText(t); }
-  catch(e) { const x = document.createElement('textarea'); x.value = t; document.body.appendChild(x); x.select(); try { document.execCommand('copy'); } catch(_) {} x.remove(); }
-  btn.textContent = 'コピーしました'; setTimeout(() => { btn.textContent = '件名をコピー'; }, 1500);
-}
-
 function card(c, rows, st){
   const warn = cpWarn(c, rows, st), s = cpStatus(c, st);
+  const manual = !!(st[c.id] && st[c.id].s), byMail = !manual && !!c.registered;  // 画面で押したか・メールで登録済みと分かったか
   const hotels = c.scope === 'hotels' && (c.hotels || []).length ? c.hotels.map(h => NAMES[h] || h).join('・') : 'ブランド全体';
   const reg = c.registration_required
-    ? `<span class="tag ${s === 'registered' ? 'ok' : 'reg'}">要登録・${CP_STATUS_LABEL[s]}</span>` : '';
+    ? `<span class="tag ${s === 'registered' ? 'ok' : 'reg'}">要登録・${s === 'registered' && byMail ? '登録済み（メールで確認）' : CP_STATUS_LABEL[s]}</span>` : '';
   const meta = [];
   if (c.booking_start || c.booking_end) meta.push(['予約', span(c.booking_start, c.booking_end)]);
   if (c.stay_start || c.stay_end) meta.push(['宿泊', span(c.stay_start, c.stay_end)]);
   if (c.registration_required) meta.push(['登録', c.registration_deadline ? `${md(c.registration_deadline)}まで` : '期限の記載なし']);
   meta.push(['対象', hotels]);
   if (c.conditions) meta.push(['条件', c.conditions]);
-  const btn = (v, label) => `<button type="button" aria-pressed="${s === v}" onclick="setStatus(${esc(JSON.stringify(c.id))},'${v}')">${label}</button>`;
+  const btn = (v, label, cls) => `<button type="button"${cls ? ` class="${cls}"` : ''} aria-pressed="${s === v}" onclick="setStatus(${esc(JSON.stringify(c.id))},'${v}')">${label}</button>`;
   return `<article class="cp${warn.length ? ' warn' : ''}">
     <div class="top"><span class="tag k-${esc(c.kind)}">${CP_KIND[c.kind] || ''}</span>${reg}<span>${esc(CP_SOURCE_NAME[c.source] || c.source)}・${md(c.received)}受信</span></div>
     <div class="nm">${esc(c.name)}</div>
     ${c.summary ? `<div class="sm">${esc(c.summary)}</div>` : ''}
     <dl class="meta">${meta.map(([k, v]) => `<dt>${k}</dt><dd>${esc(v)}</dd>`).join('')}</dl>
-    ${warn.length ? `<div class="al">⚠ 事前登録が必要です。対象になりそうな予約が${warn.length}件あります：${warn.slice(0, 6).map(r => `${md(r.checkin)} ${esc(NAMES[r.hotel] || r.hotel_name)}`).join('、')}${warn.length > 6 ? ' ほか' : ''}<br>登録したら「登録済み」を押してください。</div>` : ''}
-    <div class="ft">${c.registration_required ? btn('registered', '登録済み') : ''}${btn('na', '対象外')}${s !== 'unknown' ? btn('unknown', '未確認に戻す') : ''}
-      ${c.subject ? `<button type="button" class="cpy" onclick="copySubject(this, ${esc(JSON.stringify(c.subject))})">件名をコピー</button>` : ''}
+    ${warn.length ? `<div class="al">⚠ 事前登録が必要です。対象になりそうな予約が${warn.length}件あります：${warn.slice(0, 6).map(r => `${md(r.checkin)} ${esc(NAMES[r.hotel] || r.hotel_name)}`).join('、')}${warn.length > 6 ? ' ほか' : ''}<br>登録したら「登録した」を押してください。</div>` : ''}
+    <div class="ft">${c.registration_required && !byMail && s !== 'registered' ? btn('registered', '登録した') : ''}${manual ? btn('unknown', '元に戻す', 'na') : btn('na', '対象外にする', 'na')}
       ${c.link ? `<a href="${esc(c.link)}" target="_blank" rel="noopener">元メール →</a>` : ''}</div>
   </article>`;
 }
