@@ -77,6 +77,8 @@ main{max-width:720px;margin:-56px auto 0;padding:0 14px 36px;position:relative;z
 .bk .sv{grid-column:1/4;margin-top:6px;padding:7px 10px;border-radius:10px;background:var(--card);border:1px dashed var(--gold);font-size:12.5px;line-height:1.5}
 .bk .sv b{color:var(--gold)}
 .bk.cpw{border-color:var(--warn)}
+.sum2.dup{background:var(--warn-bg);color:var(--warn)}
+.sum2.dup b{color:inherit}
 .bk .cw{grid-column:1/4;margin-top:6px;padding:6px 10px;border-radius:10px;background:var(--warn-bg);color:var(--warn);font-size:12px;line-height:1.5}
 .bk .cw a{color:inherit;font-weight:700}
 .bk .sv a{color:inherit;font-weight:700}
@@ -190,6 +192,13 @@ function render(){
   // 取り直し候補：差額が2,000円以上または3%以上（値下がりメールと同じ基準）
   const isSave = r => { const w = W[r.key]; return w && w.best_pay && w.save >= Math.max(2000, r.pay * 0.03); };
   const saves = future.filter(isSave), saveTotal = saves.reduce((a, r) => a + W[r.key].save, 0);
+  // 重複の可能性：同じホテルで泊まる日が重なる有効な予約（京王プラザは公式と I Prefer 経由を同じホテルとみなす）
+  const DUP = {};
+  const same = h => h === 'iprefer' ? 'keio' : h;
+  future.forEach(a => future.forEach(b => {
+    if (a !== b && same(a.hotel) === same(b.hotel) && a.checkin < b.checkout && b.checkin < a.checkout) (DUP[a.key] = DUP[a.key] || []).push(b);
+  }));
+  const dupDays = [...new Set(future.filter(r => DUP[r.key]).map(r => r.checkin))].sort();
   const fmtT = s => { if (!s) return '—'; const d = new Date(s); return (d.getMonth() + 1) + '/' + d.getDate() + ' ' + String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0'); };
   let h = `<div class="sum">
       <div><div class="k">今後の予約</div><div class="v num">${future.length}<small>件</small></div></div>
@@ -200,6 +209,7 @@ function render(){
     <div class="filters" role="group" aria-label="表示する予約">
       ${[['future','今後の予約'],['past','過去も含む'],['cx','キャンセルも含む']].map(([v, l]) =>
         `<button type="button" aria-pressed="${view === v}" onclick="setView('${v}')">${l}</button>`).join('')}</div>
+    ${dupDays.length ? `<div class="sum2 dup">⚠ 重複の可能性：<b>${dupDays.map(d => md(d)).join('、')}</b>（同じホテルで泊まる日が重なる予約があります）</div>` : ''}
     ${saves.length ? `<div class="sum2">取り直すと安くなる予約：<b>${saves.length}件・合計 ${yen(saveTotal)}</b></div>` :
       (Object.keys(W).length ? `<div class="sum2">取り直すと安くなる予約はありません（返金可の予約を毎朝確認しています）</div>` : '')}
     <div class="updated">台帳の更新：${fmtT(data.built)}　値下がりチェック：${fmtT(data.watch_checked)}</div>`;
@@ -228,7 +238,8 @@ function render(){
       const st = !cx && r.checkout > today ? stayTimes(r, tiers, proj) : null;
       const tm = st && st.co ? `<span class="tm">イン ${st.ci}・<b>アウト ${st.co}</b>${st.why ? `（${esc(st.why)}${st.how ? '・' + esc(st.how) : ''}）` : ''}</span>` : '';
       const cw = !cx && CW[r.key] ? CW[r.key] : [];
-      l += `<div class="bk${cx ? ' cx' : ''}${sv ? ' save' : ''}${cw.length ? ' cpw' : ''}">
+      const dp = !cx && DUP[r.key] ? DUP[r.key] : [];
+      l += `<div class="bk${cx ? ' cx' : ''}${sv ? ' save' : ''}${cw.length || dp.length ? ' cpw' : ''}">
         <div class="d num">${md(r.checkin)}<small>（${wd(r.checkin)}）${r.nights}泊・${r.adults}名</small></div>
         <div><div class="h"><span class="dot" style="background:${COLORS[r.hotel] || OTHER_COLOR}"></span>${esc(NAMES[r.hotel] || r.hotel_name)}${OTHER.has(r.hotel) ? '<span class="tag ot">比較対象外</span>' : ''}</div>
           <div class="r">${esc(r.room)}${cx ? '<span class="tag cx">キャンセル</span>' : r.refundable ? '<span class="tag ok">返金可</span>' : '<span class="tag nr">返金不可</span>'}${ch}</div>
@@ -237,6 +248,7 @@ function render(){
         ${free || wl || tm ? `<div class="w">${tm}${free}${wl}</div>` : ''}
         ${sv ? `<div class="sv">▼ <b>${yen(w.save)}安く</b>取り直せます：${esc(w.best_channel)}［${esc(w.best_kind)}］${esc(w.best_room)} ${yen(w.best_pay)}<br>
           ${esc(w.best_plan)}　<a href="${esc(w.best_url)}" target="_blank" rel="noopener">予約ページへ →</a></div>` : ''}
+        ${dp.length ? `<div class="cw">⚠ 重複の可能性：同じ日に${esc(NAMES[r.hotel] || r.hotel_name)}の予約がほかに${dp.length}件あります（予約番号 ${esc(r.key.split(':').pop())}）。不要ならホテルのサイトでキャンセルしてください</div>` : ''}
         ${cw.length ? `<div class="cw">⚠ 要登録のキャンペーン：${cw.slice(0, 3).map(c => `<a href="campaigns.html">${esc(c.name)}</a>${c.registration_deadline ? `（登録 ${md(c.registration_deadline)}まで）` : ''}`).join('、')}${cw.length > 3 ? ` ほか${cw.length - 3}件` : ''}。未登録です</div>` : ''}
       </div>`;
     });
