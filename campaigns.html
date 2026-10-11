@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow, noarchive">
+<meta name="referrer" content="no-referrer">
+<title>キャンペーン｜宵宿</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="theme-color" content="#1f2a44">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="宵宿">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@600;700&text=%E5%AE%B5%E5%AE%BF%E3%82%AD%E3%83%A3%E3%83%B3%E3%83%9A%E3%83%BC%E3%83%B3&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f4f1ea;--bg2:#ece7dc;--card:#fffdf9;--ink:#1c2233;--sub:#6d6a64;--line:#e4ddcf;
+  --night:#1f2a44;--night2:#2d3b5e;--gold:#b8893a;--gold-soft:#f3e7cf;
+  --ok:#2f7d5b;--ok-bg:#e5f2ea;--warn:#b0462f;--warn-bg:#fbebe5;
+  --shadow:0 1px 2px rgba(28,34,51,.05),0 6px 20px rgba(28,34,51,.06);
+}
+@media (prefers-color-scheme: dark){:root{
+  --bg:#0f1422;--bg2:#141b2d;--card:#182033;--ink:#ece8df;--sub:#9aa0ae;--line:#2a3349;
+  --night:#0b1020;--night2:#1d2742;--gold:#d8b06a;--gold-soft:#3a3221;
+  --ok:#6cc79c;--ok-bg:#183126;--warn:#f0957a;--warn-bg:#3a231d;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.25);
+}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 -apple-system,BlinkMacSystemFont,"Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic UI",Meiryo,sans-serif;-webkit-font-smoothing:antialiased}
+.serif{font-family:"Shippori Mincho","Hiragino Mincho ProN","Yu Mincho",serif}
+.num{font-variant-numeric:tabular-nums}
+.hero{background:radial-gradient(120% 140% at 85% -20%,#3b4c78 0%,var(--night2) 38%,var(--night) 100%);color:#f3eee3;padding:22px 16px 74px;position:relative;overflow:hidden}
+.ttl{max-width:720px;margin:14px auto 0;position:relative;z-index:1}
+.ttl h1{margin:0;font-size:26px;letter-spacing:.1em;font-weight:700}
+.ttl p{margin:6px 0 0;font-size:12.5px;color:#c9cbd6;letter-spacing:.03em}
+main{max-width:720px;margin:-56px auto 0;padding:0 14px 36px;position:relative;z-index:2}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;margin-bottom:14px;box-shadow:var(--shadow)}
+.sumrow{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px}
+.sumrow b{font-size:18px}
+.sumrow .w b{color:var(--warn)}
+.updated{font-size:11.5px;color:var(--sub);margin-top:8px}
+.grp{display:flex;justify-content:space-between;align-items:baseline;margin:18px 4px 8px;font-weight:700}
+.grp .s{font-size:12px;color:var(--sub);font-weight:500}
+.cp{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:11px 12px;margin-bottom:8px}
+.cp.warn{border:1.5px solid var(--warn);background:linear-gradient(180deg,var(--warn-bg),var(--card) 70%)}
+.cp .top{display:flex;gap:6px;align-items:center;flex-wrap:wrap;font-size:11.5px;color:var(--sub)}
+.cp .nm{font-weight:700;font-size:14.5px;line-height:1.45;margin-top:3px;overflow-wrap:anywhere}
+.cp .sm{font-size:12.5px;margin-top:3px;line-height:1.55;overflow-wrap:anywhere}
+.cp .meta{font-size:12px;color:var(--sub);margin-top:5px;display:grid;grid-template-columns:auto minmax(0,1fr);gap:1px 8px}
+.cp .meta dt{white-space:nowrap}
+.cp .meta dd{margin:0;color:var(--ink);overflow-wrap:anywhere}
+.cp .al{margin-top:7px;padding:7px 10px;border-radius:10px;background:var(--card);border:1px dashed var(--warn);font-size:12.5px;line-height:1.55;color:var(--warn)}
+.cp .al a{color:inherit;font-weight:700}
+.cp .ft{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:8px}
+.cp .ft button{font:inherit;font-size:12px;padding:4px 10px;border-radius:999px;border:1px solid var(--line);background:var(--bg);color:var(--sub);cursor:pointer}
+.cp .ft button[aria-pressed="true"]{background:var(--night2);color:#fff;border-color:var(--night2)}
+@media (prefers-color-scheme: dark){.cp .ft button[aria-pressed="true"]{background:var(--gold);color:#1a1f2e;border-color:var(--gold)}}
+.cp .ft a{margin-left:auto;font-size:12px;color:var(--sub)}
+.tag{display:inline-block;font-size:10.5px;padding:0 6px;border-radius:6px;font-weight:700}
+.tag.k-price{color:var(--ok);background:var(--ok-bg)}
+.tag.k-status{color:#fff;background:var(--gold)}
+.tag.k-points{color:var(--gold);background:var(--gold-soft)}
+.tag.k-other{color:var(--sub);background:var(--bg2)}
+.tag.reg{color:var(--warn);background:var(--warn-bg)}
+.tag.ok{color:var(--ok);background:var(--ok-bg)}
+details.fold{margin-top:6px}
+details.fold summary{cursor:pointer;font-weight:700;margin:14px 4px 8px;list-style:none}
+details.fold summary::before{content:"▸ ";color:var(--gold)}
+details.fold[open] summary::before{content:"▾ "}
+details.fold summary .s{font-size:12px;color:var(--sub);font-weight:500}
+.err{background:var(--warn-bg);color:var(--warn);border-radius:10px;padding:9px 12px;font-size:13px}
+.empty{color:var(--sub);font-size:13px;text-align:center;padding:10px}
+footer{max-width:720px;margin:0 auto;padding:0 16px 28px;text-align:center;font-size:11px;color:var(--sub);letter-spacing:.06em}
+.hero{background:radial-gradient(120% 140% at 85% -20%,#3b4c78 0%,var(--night2) 38%,var(--night) 100%);color:#f3eee3;padding:22px 16px 74px;position:relative;overflow:hidden}
+.hero::after{content:"";position:absolute;inset:0;background-image:radial-gradient(1px 1px at 12% 30%,#fff8 50%,transparent 51%),radial-gradient(1px 1px at 72% 18%,#fff6 50%,transparent 51%),radial-gradient(1.5px 1.5px at 88% 62%,#fff5 50%,transparent 51%),radial-gradient(1px 1px at 40% 70%,#fff4 50%,transparent 51%),radial-gradient(1px 1px at 58% 40%,#fff5 50%,transparent 51%);pointer-events:none}
+.brand{max-width:720px;margin:0 auto;display:flex;align-items:center;gap:12px;position:relative;z-index:1}
+.brand svg{flex:none;filter:drop-shadow(0 2px 6px rgba(0,0,0,.25))}
+.brand .wm{display:flex;flex-direction:column;line-height:1.1}
+.brand .jp{font-size:28px;font-weight:700;letter-spacing:.12em}
+.brand .en{font-size:10.5px;letter-spacing:.42em;color:#d8b06a;margin-top:4px;font-weight:600}
+.tagline{max-width:720px;margin:14px auto 0;font-size:13px;color:#c9cbd6;position:relative;z-index:1;letter-spacing:.04em}
+
+.hero .tagline{line-height:1.6}
+.tabs{max-width:720px;margin:14px auto 0;position:relative;z-index:1}
+.tabs nav{display:inline-flex;gap:2px;padding:4px;max-width:100%;border-radius:999px;background:#ffffff14;border:1px solid #ffffff2e}
+.tabs a{font-size:12.5px;font-weight:700;letter-spacing:.02em;padding:7px 11px;border-radius:999px;text-decoration:none;color:#d9dbe5;white-space:nowrap}
+.tabs a:hover{color:#fff}
+.tabs a[aria-current]{background:#f3eee3;color:#1f2a44}
+.tabs a:focus-visible{outline:2px solid #d8b06a;outline-offset:2px}
+</style>
+</head>
+<body>
+<header class="hero">
+    <div class="brand">
+    <!-- ロゴ：宵の三日月が宿の屋根にかかる -->
+    <svg width="46" height="46" viewBox="0 0 64 64" aria-hidden="true">
+      <defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f1d9a3"/><stop offset="1" stop-color="#c8963f"/></linearGradient></defs>
+      <rect x="2" y="2" width="60" height="60" rx="16" fill="#ffffff14" stroke="#ffffff30"/>
+      <path d="M41 13a12 12 0 1 0 11 16.5A10 10 0 0 1 41 13z" fill="url(#lg)"/>
+      <path d="M12 37 L30 25 L48 37" fill="none" stroke="#f3eee3" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M17 35 V50 H43 V35" fill="none" stroke="#f3eee3" stroke-width="3.2" stroke-linejoin="round"/>
+      <rect x="26.5" y="40" width="7" height="10" rx="1.5" fill="url(#lg)"/>
+    </svg>
+    <div class="wm"><span class="jp serif">宵宿</span><span class="en">YOIYADO</span></div>
+  </div>
+  <div class="tagline">今夜の一泊を、いちばん賢く。会員価格をその場で比べる。</div>
+<div class="tabs"><nav aria-label="ページ切り替え"><a href="./">料金比較</a><a href="bookings.html">予約</a><a href="status.html">会員ステータス</a><a href="campaigns.html" aria-current="page">キャンペーン</a></nav></div>
+<script src="swipe.js" defer></script>
+
+  <div class="ttl">
+    <h1 class="serif">キャンペーン</h1>
+    <p>会員制度のキャンペーンメールから、毎朝自動でまとめています。</p>
+  </div>
+</header>
+<main>
+  <section class="card" id="summary"><div class="empty">読み込み中…</div></section>
+  <div id="list"></div>
+</main>
+<footer>YOIYADO · メールの内容をAIで要約しています。条件は元メールで確認してください。リンクは自動で開きません</footer>
+<script src="campaigns.js"></script>
+<script>
+const GAS = "https://script.google.com/macros/s/AKfycbyXS4tQgx8U95EG5EUJd3H47_saO_Ny35XWZBWxyNY-2ck8QBLOmgAzSm6HtN7twnRXaFGf/exec";
+const NAMES = {keio:'京王プラザ', iprefer:'京王プラザ（I Prefer）', newotani:'ニューオータニ', groove:'ホテルグルーヴ', bellustar:'BELLUSTAR', hilton:'ヒルトン東京',
+  hyatt:'ハイアット リージェンシー', kimpton:'キンプトン新宿', park_hyatt:'パーク ハイアット', grand_hyatt:'グランド ハイアット', capitol:'キャピトル東急', cerulean:'セルリアンタワー東急'};
+const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const md = s => s ? Number(s.slice(5,7)) + '/' + Number(s.slice(8,10)) : '';
+const span = (a, b) => a || b ? `${a ? md(a) : ''}〜${b ? md(b) : ''}` : '';
+let K = '', CP = null, LED = null;
+try { K = localStorage.getItem('yoiyado_k') || ''; } catch(e) {}
+
+async function api(params){
+  for (let i = 0; i < 5; i++) {
+    try {
+      const r = await fetch(GAS + '?' + new URLSearchParams(Object.assign({k: K}, params)), {credentials: 'omit', cache: 'no-store'});
+      const t = await r.text();
+      if (t.trim().startsWith('{')) return JSON.parse(t);
+    } catch(e) {}
+    await new Promise(res => setTimeout(res, 1200 * (i + 1)));
+  }
+  throw new Error('通信に失敗しました');
+}
+
+// キャンペーンと予約台帳は端末に控えを置き、まず控えで表示してから最新に差し替える
+async function load(){
+  if (!K) { document.getElementById('summary').innerHTML = '<div class="err">合言葉が設定されていません。料金比較のページで合言葉を設定してから開いてください。</div>'; return; }
+  try { CP = JSON.parse(localStorage.getItem('yoiyado_campaigns') || 'null'); } catch(e) {}
+  try { LED = JSON.parse(localStorage.getItem('yoiyado_ledger') || 'null'); } catch(e) {}
+  if (CP) render();
+  // 台帳は重いので待たない：キャンペーンが届いたら出し、台帳が届いたら警告を付け直す
+  const pc = api({api: 'campaigns'}).then(v => {
+    if (v.campaigns) { CP = v; try { localStorage.setItem('yoiyado_campaigns', JSON.stringify(CP)); } catch(e) {} render(); }
+  }).catch(() => {});
+  const pl = api({api: 'ledger'}).then(v => {
+    if (v.rows) { LED = v; try { localStorage.setItem('yoiyado_ledger', JSON.stringify(LED)); } catch(e) {} if (CP) render(); }
+  }).catch(() => {});
+  await Promise.allSettled([pc, pl]);
+  if (!CP) document.getElementById('summary').innerHTML = '<div class="err">キャンペーンを読み込めませんでした。少し時間をおいて開き直してください。</div>';
+}
+
+async function setStatus(id, s){
+  // 押した瞬間に表示を変え、裏で保存する
+  CP.status = CP.status || {};
+  if (s === 'unknown') delete CP.status[id]; else CP.status[id] = {s, at: new Date().toISOString()};
+  render();
+  try { const r = await api({api: 'campaignStatus', id, status: s}); if (r.ok) { CP.status = r.status; try { localStorage.setItem('yoiyado_campaigns', JSON.stringify(CP)); } catch(e) {} render(); } }
+  catch(e) { alert('保存できませんでした。'); }
+}
+
+function card(c, rows, st){
+  const warn = cpWarn(c, rows, st), s = cpStatus(c, st);
+  const hotels = c.scope === 'hotels' && (c.hotels || []).length ? c.hotels.map(h => NAMES[h] || h).join('・') : 'ブランド全体';
+  const reg = c.registration_required
+    ? `<span class="tag ${s === 'registered' ? 'ok' : 'reg'}">要登録・${CP_STATUS_LABEL[s]}</span>` : '';
+  const meta = [];
+  if (c.booking_start || c.booking_end) meta.push(['予約', span(c.booking_start, c.booking_end)]);
+  if (c.stay_start || c.stay_end) meta.push(['宿泊', span(c.stay_start, c.stay_end)]);
+  if (c.registration_required) meta.push(['登録', c.registration_deadline ? `${md(c.registration_deadline)}まで` : '期限の記載なし']);
+  meta.push(['対象', hotels]);
+  if (c.conditions) meta.push(['条件', c.conditions]);
+  const btn = (v, label) => `<button type="button" aria-pressed="${s === v}" onclick="setStatus('${esc(c.id)}','${v}')">${label}</button>`;
+  return `<article class="cp${warn.length ? ' warn' : ''}">
+    <div class="top"><span class="tag k-${esc(c.kind)}">${CP_KIND[c.kind] || ''}</span>${reg}<span>${esc(CP_SOURCE_NAME[c.source] || c.source)}・${md(c.received)}受信</span></div>
+    <div class="nm">${esc(c.name)}</div>
+    ${c.summary ? `<div class="sm">${esc(c.summary)}</div>` : ''}
+    <dl class="meta">${meta.map(([k, v]) => `<dt>${k}</dt><dd>${esc(v)}</dd>`).join('')}</dl>
+    ${warn.length ? `<div class="al">⚠ 事前登録が必要です。対象になりそうな予約が${warn.length}件あります：${warn.slice(0, 6).map(r => `${md(r.checkin)} ${esc(NAMES[r.hotel] || r.hotel_name)}`).join('、')}${warn.length > 6 ? ' ほか' : ''}<br>登録したら「登録済み」を押してください。</div>` : ''}
+    <div class="ft">${c.registration_required ? btn('registered', '登録済み') : ''}${btn('na', '対象外')}${s !== 'unknown' ? btn('unknown', '未確認に戻す') : ''}
+      ${c.link ? `<a href="${esc(c.link)}" target="_blank" rel="noopener">元メール →</a>` : ''}</div>
+  </article>`;
+}
+
+function render(){
+  const rows = (LED && LED.rows) || [], st = CP.status || {};
+  const live = (CP.campaigns || []).filter(c => !cpExpired(c) && cpStatus(c, st) !== 'na');
+  const hiddenNa = (CP.campaigns || []).filter(c => !cpExpired(c) && cpStatus(c, st) === 'na');
+  const groups = {1: [], 2: [], 3: [], 4: [], 5: []};
+  live.forEach(c => groups[cpRank(c, rows, st)].push(c));
+  Object.values(groups).forEach(g => g.sort((a, b) => cpEnd(a) < cpEnd(b) ? -1 : 1));
+  const warnN = groups[1].length;
+  document.getElementById('summary').innerHTML = `<div class="sumrow">
+      <span>受付中 <b class="num">${live.length}</b>件</span>
+      <span class="w">要登録で予約と重なる <b class="num">${warnN}</b>件</span>
+      <span>資格 <b class="num">${groups[2].length}</b>件</span></div>
+    <div class="updated">毎朝6時にメールから更新${CP.built ? `（最終 ${md(CP.built)} ${CP.built.slice(11, 16)}）` : ''}・期限切れは自動で非表示${hiddenNa.length ? `・対象外にした${hiddenNa.length}件は非表示` : ''}</div>`;
+  const TITLE = {1: '⚠ 要登録・予約と重なる', 2: '資格の取得を早める', 3: '比較中のホテルが安くなる', 4: 'ポイント', 5: 'その他'};
+  let h = '';
+  [1, 2, 3].forEach(k => { if (groups[k].length) h += `<div class="grp"><span>${TITLE[k]}</span><span class="s">${groups[k].length}件</span></div>` + groups[k].map(c => card(c, rows, st)).join(''); });
+  // ポイント：事前登録が必要なものは出し、不要なものは折りたたむ
+  const ptsReg = groups[4].filter(c => c.registration_required), ptsFree = groups[4].filter(c => !c.registration_required);
+  if (ptsReg.length) h += `<div class="grp"><span>ポイント（要登録）</span><span class="s">${ptsReg.length}件</span></div>` + ptsReg.map(c => card(c, rows, st)).join('');
+  if (ptsFree.length) h += `<details class="fold"><summary>ポイント（登録不要） <span class="s">${ptsFree.length}件</span></summary>${ptsFree.map(c => card(c, rows, st)).join('')}</details>`;
+  if (groups[5].length) h += `<details class="fold"><summary>その他 <span class="s">${groups[5].length}件</span></summary>${groups[5].map(c => card(c, rows, st)).join('')}</details>`;
+  document.getElementById('list').innerHTML = h || '<div class="card empty">受付中のキャンペーンはありません。</div>';
+}
+
+load();
+let lastLoad = Date.now();
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && Date.now() - lastLoad > 30000) { lastLoad = Date.now(); load(); }
+});
+</script>
+</body>
+</html>

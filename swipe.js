@@ -1,4 +1,4 @@
-// 宵宿：スマホの横フリックでタブ（料金比較・予約・会員ステータス）を切り替える。3ページ共通。
+// 宵宿：スマホの横フリックでタブ（料金比較・予約・会員ステータス・キャンペーン）を切り替える。4ページ共通。
 // ・判定：touchstart〜touchend の横移動が70px以上、かつ縦移動の1.5倍以上のときだけ
 // ・画面の左右端20px以内で始まった操作（ブラウザの戻る・進むの操作）は無視
 // ・横スクロールできる表・入力欄・選択・スイッチ・年切替（2026/2027）の上で始まった操作は無視
@@ -6,9 +6,9 @@
 // ・切り替え時：タブ表示をすぐ移し、内容を150msで横にスライド。各タブの縦スクロール位置は覚えて戻す
 // ・タッチ操作だけで動く（PCのマウス操作では反応しない）
 (function () {
-  const PAGES = [{ key: 'cmp', href: './' }, { key: 'bookings', href: 'bookings.html' }, { key: 'status', href: 'status.html' }];
+  const PAGES = [{ key: 'cmp', href: './' }, { key: 'bookings', href: 'bookings.html' }, { key: 'status', href: 'status.html' }, { key: 'campaigns', href: 'campaigns.html' }];
   const file = location.pathname.split('/').pop();
-  const idx = file === 'bookings.html' ? 1 : file === 'status.html' ? 2 : 0;
+  const idx = file === 'bookings.html' ? 1 : file === 'status.html' ? 2 : file === 'campaigns.html' ? 3 : 0;
   const SCROLL_KEY = 'yoiyado_scroll_' + PAGES[idx].key, IN_KEY = 'yoiyado_swipe_in';
   const ss = {
     get: k => { try { return sessionStorage.getItem(k); } catch (e) { return null; } },
