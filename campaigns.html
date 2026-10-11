@@ -61,6 +61,8 @@ main{max-width:720px;margin:-56px auto 0;padding:0 14px 36px;position:relative;z
 .cp .ft button[aria-pressed="true"]{background:var(--night2);color:#fff;border-color:var(--night2)}
 @media (prefers-color-scheme: dark){.cp .ft button[aria-pressed="true"]{background:var(--gold);color:#1a1f2e;border-color:var(--gold)}}
 .cp .ft a{margin-left:auto;font-size:12px;color:var(--sub)}
+.cp .ft .cpy{margin-left:auto}
+.cp .ft .cpy + a{margin-left:4px}
 .tag{display:inline-block;font-size:10.5px;padding:0 6px;border-radius:6px;font-weight:700}
 .tag.k-price{color:var(--ok);background:var(--ok-bg)}
 .tag.k-status{color:#fff;background:var(--gold)}
@@ -171,6 +173,13 @@ async function setStatus(id, s){
   catch(e) { alert('保存できませんでした。'); }
 }
 
+// Gmailアプリで開いたときなど、リンクでメールに届かない場合の予備：件名をコピーしてGmailの検索に貼る
+async function copySubject(btn, t){
+  try { await navigator.clipboard.writeText(t); }
+  catch(e) { const x = document.createElement('textarea'); x.value = t; document.body.appendChild(x); x.select(); try { document.execCommand('copy'); } catch(_) {} x.remove(); }
+  btn.textContent = 'コピーしました'; setTimeout(() => { btn.textContent = '件名をコピー'; }, 1500);
+}
+
 function card(c, rows, st){
   const warn = cpWarn(c, rows, st), s = cpStatus(c, st);
   const hotels = c.scope === 'hotels' && (c.hotels || []).length ? c.hotels.map(h => NAMES[h] || h).join('・') : 'ブランド全体';
@@ -190,6 +199,7 @@ function card(c, rows, st){
     <dl class="meta">${meta.map(([k, v]) => `<dt>${k}</dt><dd>${esc(v)}</dd>`).join('')}</dl>
     ${warn.length ? `<div class="al">⚠ 事前登録が必要です。対象になりそうな予約が${warn.length}件あります：${warn.slice(0, 6).map(r => `${md(r.checkin)} ${esc(NAMES[r.hotel] || r.hotel_name)}`).join('、')}${warn.length > 6 ? ' ほか' : ''}<br>登録したら「登録済み」を押してください。</div>` : ''}
     <div class="ft">${c.registration_required ? btn('registered', '登録済み') : ''}${btn('na', '対象外')}${s !== 'unknown' ? btn('unknown', '未確認に戻す') : ''}
+      ${c.subject ? `<button type="button" class="cpy" onclick="copySubject(this, ${esc(JSON.stringify(c.subject))})">件名をコピー</button>` : ''}
       ${c.link ? `<a href="${esc(c.link)}" target="_blank" rel="noopener">元メール →</a>` : ''}</div>
   </article>`;
 }
