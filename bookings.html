@@ -46,7 +46,9 @@ main{max-width:720px;margin:-56px auto 0;padding:0 14px 36px;position:relative;z
 .sum .v small{font-size:12px;font-weight:600;color:var(--sub);margin-left:2px}
 .sum > div{min-width:0}
 .sum .v.money{font-size:clamp(15px,4.6vw,22px);white-space:nowrap}
-.chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}
+.chips{display:flex;gap:6px;flex-wrap:nowrap;overflow-x:auto;margin:10px -16px 0;padding:0 16px 2px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.chips::-webkit-scrollbar{display:none}
+.chips .chip{flex:none;white-space:nowrap}
 .chip{display:inline-flex;align-items:center;gap:6px;font-size:12px;padding:3px 10px 3px 8px;border-radius:999px;border:1px solid var(--line);background:var(--bg)}
 .dot{width:8px;height:8px;border-radius:50%;flex:none;display:inline-block}
 .filters{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}
@@ -54,6 +56,15 @@ main{max-width:720px;margin:-56px auto 0;padding:0 14px 36px;position:relative;z
 .filters button[aria-pressed="true"]{background:var(--night2);color:#fff;border-color:var(--night2)}
 @media (prefers-color-scheme: dark){.filters button[aria-pressed="true"]{background:var(--gold);color:#1a1f2e;border-color:var(--gold)}}
 .updated{font-size:11.5px;color:var(--sub);margin-top:10px}
+.filters + .sum{margin-top:12px}
+.filters .cxb{margin-left:auto;font-size:11.5px;padding:4px 10px}
+.sub2{font-size:12px;color:var(--sub);margin-top:4px}
+.sub2:empty{display:none}
+details.pm > summary{cursor:pointer;list-style:none}
+details.pm > summary::-webkit-details-marker{display:none}
+details.pm > summary > span:first-child::after{content:' ▸';color:var(--sub);font-size:11px;font-weight:500}
+details.pm[open] > summary > span:first-child::after{content:' ▾'}
+details.pm > summary{margin:10px 4px 6px;color:var(--sub)}
 .month{display:flex;justify-content:space-between;align-items:baseline;margin:18px 4px 8px;font-weight:700}
 .month .s{font-size:12px;color:var(--sub);font-weight:500}
 .bk{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:11px 12px;margin-bottom:8px;display:grid;grid-template-columns:70px minmax(0,1fr) auto;gap:2px 10px;align-items:start}
@@ -177,16 +188,24 @@ async function load(){
   if (!data) document.getElementById('summary').innerHTML = '<div class="err">予約一覧を読み込めませんでした。少し時間をおいて開き直してください。</div>';
 }
 
-function setView(v){ view = v; try { localStorage.setItem('yoiyado_bk_view', v); } catch(e) {} render(); }
+// 2026-10-12 年ごとの表示に変更（西村氏）：年を選ぶと、その年の件数・泊数・合計（泊まり済み＋予定）とホテル別の泊数を出す
+let yearSel = null, showCx = false;
+function setYear(y){ yearSel = y; try { localStorage.setItem('yoiyado_bk_year', y); } catch(e) {} render(); }
+function toggleCx(){ showCx = !showCx; try { localStorage.setItem('yoiyado_bk_cx', showCx ? '1' : '0'); } catch(e) {} render(); }
 
 function render(){
   const today = new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 10);
   const all = (data.rows || []).filter(r => r.checkin || r.status === 'booked');
   const future = all.filter(r => r.status === 'booked' && r.checkout > today);
-  // 集計（今後の有効な予約）
-  const nights = future.reduce((a, r) => a + r.nights, 0), total = future.reduce((a, r) => a + (r.pay || 0), 0);
+  const years = [...new Set(all.filter(r => r.checkin && r.status === 'booked').map(r => r.checkin.slice(0, 4)).concat([today.slice(0, 4)]))].sort();
+  const Y = yearSel && years.includes(yearSel) ? yearSel : today.slice(0, 4);
+  // 集計（選んだ年の有効な予約。泊まり済み＋これから）
+  const yb = all.filter(r => r.status === 'booked' && r.checkin && r.checkin.slice(0, 4) === Y);
+  const done = yb.filter(r => r.checkout <= today), plan = yb.filter(r => r.checkout > today);
+  const nights = yb.reduce((a, r) => a + r.nights, 0), total = yb.reduce((a, r) => a + (r.pay || 0), 0);
+  const dn = done.reduce((a, r) => a + r.nights, 0), pn = plan.reduce((a, r) => a + r.nights, 0);
   const byHotel = {};
-  future.forEach(r => { byHotel[r.hotel] = byHotel[r.hotel] || [0, 0]; byHotel[r.hotel][0]++; byHotel[r.hotel][1] += r.nights; });
+  yb.forEach(r => { byHotel[r.hotel] = byHotel[r.hotel] || [0, 0]; byHotel[r.hotel][0]++; byHotel[r.hotel][1] += r.nights; });
   const built = data.built ? new Date(data.built) : null;
   const W = data.watch || {};
   // 取り直し候補：差額が2,000円以上または3%以上（値下がりメールと同じ基準）
@@ -200,24 +219,25 @@ function render(){
   }));
   const dupDays = [...new Set(future.filter(r => DUP[r.key]).map(r => r.checkin))].sort();
   const fmtT = s => { if (!s) return '—'; const d = new Date(s); return (d.getMonth() + 1) + '/' + d.getDate() + ' ' + String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0'); };
-  let h = `<div class="sum">
-      <div><div class="k">今後の予約</div><div class="v num">${future.length}<small>件</small></div></div>
+  let h = `<div class="filters" role="group" aria-label="表示する年">
+      ${years.map(v => `<button type="button" aria-pressed="${v === Y}" onclick="setYear('${v}')">${v}年</button>`).join('')}
+      <button type="button" class="cxb" aria-pressed="${showCx}" onclick="toggleCx()">キャンセルも表示</button></div>
+    <div class="sum">
+      <div><div class="k">${Y}年の予約</div><div class="v num">${yb.length}<small>件</small></div></div>
       <div><div class="k">泊数</div><div class="v num">${nights}<small>泊</small></div></div>
       <div><div class="k">合計</div><div class="v money num serif">${yen(total)}</div></div></div>
+    <div class="sub2">${dn ? `泊まり済み ${dn}泊・${yen(done.reduce((a, r) => a + (r.pay || 0), 0))}` : ''}${dn && pn ? '　' : ''}${pn ? `これから ${pn}泊・${yen(plan.reduce((a, r) => a + (r.pay || 0), 0))}` : ''}</div>
     <div class="chips">${Object.entries(byHotel).sort((a, b) => b[1][1] - a[1][1]).map(([k, v]) =>
-      `<span class="chip"><span class="dot" style="background:${COLORS[k] || OTHER_COLOR}"></span>${esc(NAMES[k] || k)} ${v[0]}件・${v[1]}泊</span>`).join('')}</div>
-    <div class="filters" role="group" aria-label="表示する予約">
-      ${[['future','今後の予約'],['past','過去も含む'],['cx','キャンセルも含む']].map(([v, l]) =>
-        `<button type="button" aria-pressed="${view === v}" onclick="setView('${v}')">${l}</button>`).join('')}</div>
+      `<span class="chip"><span class="dot" style="background:${COLORS[k] || OTHER_COLOR}"></span>${esc(NAMES[k] || k)} ${v[1]}泊</span>`).join('')}</div>
     ${dupDays.length ? `<div class="sum2 dup">⚠ 重複の可能性：<b>${dupDays.map(d => md(d)).join('、')}</b>（同じホテルで泊まる日が重なる予約があります）</div>` : ''}
     ${saves.length ? `<div class="sum2">取り直すと安くなる予約：<b>${saves.length}件・合計 ${yen(saveTotal)}</b></div>` :
       (Object.keys(W).length ? `<div class="sum2">取り直すと安くなる予約はありません（返金可の予約を毎朝確認しています）</div>` : '')}
     <div class="updated">台帳の更新：${fmtT(data.built)}　値下がりチェック：${fmtT(data.watch_checked)}</div>`;
   document.getElementById('summary').innerHTML = h;
 
-  const rows = all.filter(r => view === 'cx' ? true : view === 'past' ? r.status === 'booked' : (r.status === 'booked' && r.checkout > today))
-                  .filter(r => r.checkin).sort((a, b) => a.checkin < b.checkin ? -1 : 1);
-  if (!rows.length) { document.getElementById('list').innerHTML = '<div class="card empty">該当する予約はありません。</div>'; return; }
+  const rows = all.filter(r => r.checkin && r.checkin.slice(0, 4) === Y && (showCx || r.status === 'booked'))
+                  .sort((a, b) => a.checkin < b.checkin ? -1 : 1);
+  if (!rows.length) { document.getElementById('list').innerHTML = `<div class="card empty">${Y}年の予約はありません。</div>`; return; }
   const groups = {};
   rows.forEach(r => { const m = r.checkin.slice(0, 7); (groups[m] = groups[m] || []).push(r); });
   let l = '';
@@ -228,7 +248,9 @@ function render(){
     const g = groups[m], bk = g.filter(r => r.status === 'booked'), gn = bk.reduce((a, r) => a + r.nights, 0);
     // 月の総額（有効な予約の宿泊税込み合計。ポイント宿泊など金額のない予約は除く）
     const gp = bk.reduce((a, r) => a + (r.pay || 0), 0), np = bk.filter(r => !r.pay).length;
-    l += `<div class="month"><span>${Number(m.slice(0,4))}年${Number(m.slice(5))}月</span><span class="s">${g.length}件・${gn}泊${gp ? `・${yen(gp)}` : ''}${np ? `（ほか${np}件はポイント等）` : ''}</span></div>`;
+    const head = `<span>${Number(m.slice(0,4))}年${Number(m.slice(5))}月</span><span class="s">${bk.length}件・${gn}泊${gp ? `・${yen(gp)}` : ''}${np ? `（ほか${np}件はポイント等）` : ''}</span>`;
+    const past = m < today.slice(0, 7);  // 終わった月は見出し1行にたたむ（押すと開く）
+    l += past ? `<details class="pm"><summary class="month">${head}</summary>` : `<div class="month">${head}</div>`;
     g.forEach(r => {
       const cx = r.status !== 'booked', w = W[r.key], sv = !cx && isSave(r) && r.checkout > today;
       const ch = r.channel && r.channel !== '公式' ? `<span class="tag ch">${esc(r.channel)}</span>` : '';
@@ -252,6 +274,7 @@ function render(){
         ${cw.length ? `<div class="cw">⚠ 要登録のキャンペーン：${cw.slice(0, 3).map(c => `<a href="campaigns.html">${esc(c.name)}</a>${c.registration_deadline ? `（登録 ${md(c.registration_deadline)}まで）` : ''}`).join('、')}${cw.length > 3 ? ` ほか${cw.length - 3}件` : ''}。未登録です</div>` : ''}
       </div>`;
     });
+    if (past) l += '</details>';
   });
   document.getElementById('list').innerHTML = l;
 }
@@ -274,7 +297,7 @@ async function loadCampaigns(){
   }
 }
 
-try { view = localStorage.getItem('yoiyado_bk_view') || 'future'; } catch(e) {}
+try { yearSel = localStorage.getItem('yoiyado_bk_year'); showCx = localStorage.getItem('yoiyado_bk_cx') === '1'; } catch(e) {}
 load();
 if (K) loadCampaigns();
 // ホーム画面から開いた宵宿は裏で開いたままになり、戻っても再読み込みされない。画面に戻ったら最新を取り直す
