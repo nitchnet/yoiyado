@@ -182,7 +182,7 @@ function card(c, rows, st){
   if (c.registration_required) meta.push(['登録', c.registration_deadline ? `${md(c.registration_deadline)}まで` : '期限の記載なし']);
   meta.push(['対象', hotels]);
   if (c.conditions) meta.push(['条件', c.conditions]);
-  const btn = (v, label) => `<button type="button" aria-pressed="${s === v}" onclick="setStatus('${esc(c.id)}','${v}')">${label}</button>`;
+  const btn = (v, label) => `<button type="button" aria-pressed="${s === v}" onclick="setStatus(${esc(JSON.stringify(c.id))},'${v}')">${label}</button>`;
   return `<article class="cp${warn.length ? ' warn' : ''}">
     <div class="top"><span class="tag k-${esc(c.kind)}">${CP_KIND[c.kind] || ''}</span>${reg}<span>${esc(CP_SOURCE_NAME[c.source] || c.source)}・${md(c.received)}受信</span></div>
     <div class="nm">${esc(c.name)}</div>
