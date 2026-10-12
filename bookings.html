@@ -93,6 +93,8 @@ details.pm > summary{margin:10px 4px 6px;color:var(--sub)}
 .bk .cw{grid-column:1/4;margin-top:6px;padding:6px 10px;border-radius:10px;background:var(--warn-bg);color:var(--warn);font-size:12px;line-height:1.5}
 .bk .cw a{color:inherit;font-weight:700}
 .bk .sv a{color:inherit;font-weight:700}
+.bk .sv.nr small{display:block;color:var(--sub);font-size:11px;margin-top:2px}
+.nrset select{font:inherit;font-size:11.5px;padding:0 2px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink)}
 .sum2{margin-top:10px;font-size:13px;padding:8px 10px;border-radius:10px;background:var(--gold-soft)}
 .sum2 b{color:var(--gold)}
 .err{background:var(--warn-bg);color:var(--warn);border-radius:10px;padding:9px 12px;font-size:13px}
@@ -190,6 +192,15 @@ async function load(){
 
 // 2026-10-12 年ごとの表示に変更（西村氏）：年を選ぶと、その年の件数・泊数・合計（泊まり済み＋予定）とホテル別の泊数を出す
 let yearSel = null, showCx = false;
+async function setNrDays(v){
+  data.settings = Object.assign({}, data.settings, {hyatt_nr_days: Number(v)});
+  try {
+    const r = await fetch(GAS + '?api=settingSet&name=hyatt_nr_days&value=' + encodeURIComponent(v) + '&k=' + encodeURIComponent(K), {credentials: 'omit', cache: 'no-store'});
+    const j = JSON.parse(await r.text());
+    if (!j.ok) throw new Error(j.error || 'failed');
+  } catch(e) { alert('保存できませんでした。少し時間をおいてもう一度お試しください。'); }
+}
+
 function setYear(y){ yearSel = y; try { localStorage.setItem('yoiyado_bk_year', y); } catch(e) {} render(); }
 function toggleCx(){ showCx = !showCx; try { localStorage.setItem('yoiyado_bk_cx', showCx ? '1' : '0'); } catch(e) {} render(); }
 
@@ -218,6 +229,7 @@ function render(){
     if (a !== b && same(a.hotel) === same(b.hotel) && a.checkin < b.checkout && b.checkin < a.checkout) (DUP[a.key] = DUP[a.key] || []).push(b);
   }));
   const dupDays = [...new Set(future.filter(r => DUP[r.key]).map(r => r.checkin))].sort();
+  const hs = data.hyatt_status || {}, nrDays = Number((data.settings || {}).hyatt_nr_days || 7);
   const fmtT = s => { if (!s) return '—'; const d = new Date(s); return (d.getMonth() + 1) + '/' + d.getDate() + ' ' + String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0'); };
   let h = `<div class="filters" role="group" aria-label="表示する年">
       ${years.map(v => `<button type="button" aria-pressed="${v === Y}" onclick="setYear('${v}')">${v}年</button>`).join('')}
@@ -232,7 +244,11 @@ function render(){
     ${dupDays.length ? `<div class="sum2 dup">⚠ 重複の可能性：<b>${dupDays.map(d => md(d)).join('、')}</b>（同じホテルで泊まる日が重なる予約があります）</div>` : ''}
     ${saves.length ? `<div class="sum2">取り直すと安くなる予約：<b>${saves.length}件・合計 ${yen(saveTotal)}</b></div>` :
       (Object.keys(W).length ? `<div class="sum2">取り直すと安くなる予約はありません（返金可の予約を毎朝確認しています）</div>` : '')}
-    <div class="updated">台帳の更新：${fmtT(data.built)}　値下がりチェック：${fmtT(data.watch_checked)}</div>`;
+    ${hs.blocked && hs.date === today ? `<div class="sum2 dup">⚠ ハイアットの料金は<b>取得停止中</b>です（ボット判定の画面が出たため、今日は問い合わせを止めました。明朝6時に再開）</div>` : ''}
+    <div class="updated">台帳の更新：${fmtT(data.built)}　値下がりチェック：${fmtT(data.watch_checked)}</div>
+    <div class="updated nrset">ハイアットの返金不可チェック：チェックインの
+      <select aria-label="何日前から" onchange="setNrDays(this.value)">${[3,5,7,10,14,21,30].map(v => `<option value="${v}"${v === nrDays ? ' selected' : ''}>${v}</option>`).join('')}</select>
+      日前から（毎朝6時）</div>`;
   document.getElementById('summary').innerHTML = h;
 
   const rows = all.filter(r => r.checkin && r.checkin.slice(0, 4) === Y && (showCx || r.status === 'booked'))
@@ -270,6 +286,9 @@ function render(){
         ${free || wl || tm ? `<div class="w">${tm}${free}${wl}</div>` : ''}
         ${sv ? `<div class="sv">▼ <b>${yen(w.save)}安く</b>取り直せます：${esc(w.best_channel)}［${esc(w.best_kind)}］${esc(w.best_room)} ${yen(w.best_pay)}<br>
           ${esc(w.best_plan)}　<a href="${esc(w.best_url)}" target="_blank" rel="noopener">予約ページへ →</a></div>` : ''}
+        ${!cx && r.refundable && w && w.nr_ok ? `<div class="sv nr">返金不可にすると <b>${yen(w.nr_save)}安い</b>（${yen(w.nr_pay)}・${esc(w.nr_plan)}）。期限 ${md(w.free_cancel_until)}（${wd(w.free_cancel_until)}）23:59まで<br>
+          <small>返金不可は予約時に全額がかかり、返金されません。新しく予約 → 予約ページへの反映を確認 → いまの予約をキャンセル</small>
+          <a href="${esc(w.nr_url)}" target="_blank" rel="noopener">ハイアットで見る →</a></div>` : ''}
         ${dp.length ? `<div class="cw">⚠ 重複の可能性：同じ日に${esc(NAMES[r.hotel] || r.hotel_name)}の予約がほかに${dp.length}件あります（予約番号 ${esc(r.key.split(':').pop())}）。不要ならホテルのサイトでキャンセルしてください</div>` : ''}
         ${cw.length ? `<div class="cw">⚠ 要登録のキャンペーン：${cw.slice(0, 3).map(c => `<a href="campaigns.html">${esc(c.name)}</a>${c.registration_deadline ? `（登録 ${md(c.registration_deadline)}まで）` : ''}`).join('、')}${cw.length > 3 ? ` ほか${cw.length - 3}件` : ''}。未登録です</div>` : ''}
       </div>`;
