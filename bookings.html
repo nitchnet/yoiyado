@@ -45,6 +45,7 @@ main{max-width:720px;margin:-56px auto 0;padding:0 14px 36px;position:relative;z
 .sum .v{font-size:22px;font-weight:700;line-height:1.2}
 .sum .v small{font-size:12px;font-weight:600;color:var(--sub);margin-left:2px}
 .sum > div{min-width:0}
+.sum .avg{font-size:11px;color:var(--sub);margin-top:1px;white-space:nowrap}
 .sum .v.money{font-size:clamp(15px,4.6vw,22px);white-space:nowrap}
 .chips{display:flex;gap:6px;flex-wrap:nowrap;overflow-x:auto;margin:10px -16px 0;padding:0 16px 2px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
 .chips::-webkit-scrollbar{display:none}
@@ -215,6 +216,9 @@ function render(){
   const done = yb.filter(r => r.checkout <= today), plan = yb.filter(r => r.checkout > today);
   const nights = yb.reduce((a, r) => a + r.nights, 0), total = yb.reduce((a, r) => a + (r.pay || 0), 0);
   const dn = done.reduce((a, r) => a + r.nights, 0), pn = plan.reduce((a, r) => a + r.nights, 0);
+  // 1泊平均：金額の分かる予約だけで割る（ポイント宿泊など金額のない予約は除く）
+  const paid = yb.filter(r => r.pay), pnn = paid.reduce((a, r) => a + r.nights, 0);
+  const avg = pnn ? Math.round(paid.reduce((a, r) => a + r.pay, 0) / pnn) : 0;
   const byHotel = {};
   yb.forEach(r => { byHotel[r.hotel] = byHotel[r.hotel] || [0, 0]; byHotel[r.hotel][0]++; byHotel[r.hotel][1] += r.nights; });
   const built = data.built ? new Date(data.built) : null;
@@ -237,7 +241,7 @@ function render(){
     <div class="sum">
       <div><div class="k">${Y}年の予約</div><div class="v num">${yb.length}<small>件</small></div></div>
       <div><div class="k">泊数</div><div class="v num">${nights}<small>泊</small></div></div>
-      <div><div class="k">合計</div><div class="v money num serif">${yen(total)}</div></div></div>
+      <div><div class="k">合計</div><div class="v money num serif">${yen(total)}</div>${avg ? `<div class="avg num">1泊平均 ${yen(avg)}</div>` : ''}</div></div>
     <div class="sub2">${dn ? `泊まり済み ${dn}泊・${yen(done.reduce((a, r) => a + (r.pay || 0), 0))}` : ''}${dn && pn ? '　' : ''}${pn ? `これから ${pn}泊・${yen(plan.reduce((a, r) => a + (r.pay || 0), 0))}` : ''}</div>
     <div class="chips">${Object.entries(byHotel).sort((a, b) => b[1][1] - a[1][1]).map(([k, v]) =>
       `<span class="chip"><span class="dot" style="background:${COLORS[k] || OTHER_COLOR}"></span>${esc(NAMES[k] || k)} ${v[1]}泊</span>`).join('')}</div>
