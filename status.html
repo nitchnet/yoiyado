@@ -444,9 +444,9 @@ function hyattOutlook(today){
   }
   // 照会の状況（直近7日・目的別）と停止
   const now16 = new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 16);
-  const stop = hp.stop_until && hp.stop_until > now16 ? hp.stop_until : '';
+  const stop = hp.stop_hold ? 'hold' : '';  // 承認まで止まったまま
   const wk = hp.week || [], tot = k => wk.reduce((a, d) => a + (d[k] || 0), 0);
-  h += `<div class="s" style="margin-top:6px">${stop ? `<b style="color:var(--warn)">ハイアット取得停止中（${md(stop)}まで）</b>。` : ''}ハイアットへの照会（直近7日）：手動 ${tot('manual')}・振り替え ${tot('transfer')}・監視 ${tot('monitor')}回${hp.used_today && hp.date === today ? `（今日 自動 ${(hp.used_today.transfer || 0) + (hp.used_today.monitor || 0)}／${hp.auto_max}回）` : ''}。毎週月曜に週報メール</div>`;
+  h += `<div class="s" style="margin-top:6px">${stop ? `<b style="color:var(--warn)">ハイアット取得停止中（再開には承認が必要）</b>。` : ''}ハイアットへの照会（直近7日）：手動 ${tot('manual')}・振り替え ${tot('transfer')}・監視 ${tot('monitor')}回${hp.used_today && hp.date === today ? `（今日 自動 ${(hp.used_today.transfer || 0) + (hp.used_today.monitor || 0)}／${hp.auto_max}回）` : ''}。毎週月曜に週報メール</div>`;
   h += `<details class="hyset"><summary>ハイアット照会の設定</summary><div class="g">${HY_SET.map(([k, label, unit]) =>
     `<label>${label}<input type="number" inputmode="numeric" value="${Number(st[k] ?? '')}" onchange="saveSetting('${k}', this)"><small>${unit}</small></label>`).join('')}</div>
     <div class="s">変えると翌朝の処理から使います。手動検索の上限はなく、目安を超えると料金比較に警告が出ます。</div></details></div>`;

@@ -235,7 +235,7 @@ function render(){
   }));
   const dupDays = [...new Set(future.filter(r => DUP[r.key]).map(r => r.checkin))].sort();
   const hp = data.hyatt || {}, nrDays = Number((data.settings || {}).hyatt_nr_days || 7);
-  const hStop = hp.stop_until && hp.stop_until > new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 16) ? hp.stop_until : '';
+  const hStop = hp.stop_hold ? (hp.stop_until || '?') : '';  // 止めたら承認まで止まったまま（72時間で自動再開はしない）
   // ハイアットへの振り替え候補（毎朝7時台に調べた結果。元の予約＋上乗せ額以内のもの）
   const TR = {}; (hp.transfer || []).forEach(t => { if (t.ok) TR[t.k] = t; });
   const fmtT = s => { if (!s) return '—'; const d = new Date(s); return (d.getMonth() + 1) + '/' + d.getDate() + ' ' + String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0'); };
@@ -252,7 +252,7 @@ function render(){
     ${dupDays.length ? `<div class="sum2 dup">⚠ 重複の可能性：<b>${dupDays.map(d => md(d)).join('、')}</b>（同じホテルで泊まる日が重なる予約があります）</div>` : ''}
     ${saves.length ? `<div class="sum2">取り直すと安くなる予約：<b>${saves.length}件・合計 ${yen(saveTotal)}</b></div>` :
       (Object.keys(W).length ? `<div class="sum2">取り直すと安くなる予約はありません（返金可の予約を毎朝確認しています）</div>` : '')}
-    ${hStop ? `<div class="sum2 dup">⚠ <b>ハイアット取得停止中（${md(hStop)}まで）</b>：ボット判定とみられる応答があったため、手動・自動とも照会を止めています</div>` : ''}
+    ${hStop ? `<div class="sum2 dup">⚠ <b>ハイアット取得停止中</b>：ボット判定・アクセス制限とみられる応答があったため、手動・自動とも照会を止めています。再開には承認が必要です</div>` : ''}
     <div class="updated">台帳の更新：${fmtT(data.built)}　値下がりチェック：${fmtT(data.watch_checked)}</div>
     <div class="updated nrset">ハイアットの返金不可チェック：チェックインの
       <select aria-label="何日前から" onchange="setNrDays(this.value)">${[3,5,7,10,14,21,30].map(v => `<option value="${v}"${v === nrDays ? ' selected' : ''}>${v}</option>`).join('')}</select>
