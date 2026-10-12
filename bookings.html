@@ -279,7 +279,9 @@ function render(){
       const cx = r.status !== 'booked', w = W[r.key], sv = !cx && isSave(r) && r.checkout > today;
       const ch = r.channel && r.channel !== '公式' ? `<span class="tag ch">${esc(r.channel)}</span>` : '';
       const free = !cx && r.free_cancel_until ? `<span>無料キャンセル ${md(r.free_cancel_until)}（${wd(r.free_cancel_until)}）まで</span>` : '';
-      const wl = !cx && w && w.best_pay && !sv ? `<span>今の最安 ${yen(w.best_pay)}（${esc(w.best_channel)}）</span>` : '';
+      // 調べた日が今日でなければ「（10/12時点）」のように日付を付ける（ハイアットは毎日は調べないため）
+      const wd8 = w && w.checked && w.checked.slice(0, 10) !== today ? `・${md(w.checked)}時点` : '';
+      const wl = !cx && w && w.best_pay && !sv ? `<span>今の最安 ${yen(w.best_pay)}（${esc(w.best_channel)}${wd8}）</span>` : '';
       // いまの資格で使えるチェックイン／アウト（会員ステータスで選んだ資格から）
       const st = !cx && r.checkout > today ? stayTimes(r, tiers, proj) : null;
       const tm = st && st.co ? `<span class="tm">イン ${st.ci}・<b>アウト ${st.co}</b>${st.why ? `（${esc(st.why)}${st.how ? '・' + esc(st.how) : ''}）` : ''}</span>` : '';
