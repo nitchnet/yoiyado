@@ -27,10 +27,10 @@ const PROGRAMS = [
    tiers: ['メンバー', 'シルバー', 'ゴールド', 'チタニウム'], def: 'チタニウム',
    next: {'チタニウム': '最上位（12か月で5万ポイント）'},
    perks: {'チタニウム': 'アップグレード・アーリーチェックイン・レイトチェックアウト（いずれも空室次第）・飲食特典。朝食・ラウンジは付かない'}},
-  {key: 'gha', name: 'GHA DISCOVERY（グルーヴ・BELLUSTAR）', hotels: ['groove', 'bellustar'],
+  {key: 'gha', name: 'GHA DISCOVERY（グルーヴ・BELLUSTAR・キャピトル東急）', hotels: ['groove', 'bellustar', 'capitol'],
    tiers: ['シルバー', 'ゴールド', 'プラチナ', 'チタニウム'], def: 'シルバー',
    next: {'シルバー': 'プラチナ：1〜12月に2ブランド（または10泊・5,000ドル）', 'ゴールド': 'プラチナ：1〜12月に2ブランド',
-          'プラチナ': 'チタニウム：1〜12月に3ブランド（または30泊・15,000ドル）。東急ホテルズが2027年4月から加盟'},
+          'プラチナ': 'チタニウム：1〜12月に3ブランド（または30泊・15,000ドル）。2027年はグルーヴ・BELLUSTAR・キャピトル東急（東急ホテルズ・4月加盟の想定）で3ブランド'},
    perks: {'シルバー': 'D$ 4%・会員料金', 'ゴールド': 'D$ 5%',
            'プラチナ': 'D$ 6%・1カテゴリー上へアップグレード（空室次第）・15:00アウト',
            'チタニウム': 'D$ 7%・2カテゴリー上へアップグレード（空室次第）・11:00イン・16:00アウト'}},
@@ -58,11 +58,20 @@ function tierSource(manual, key){
   return (((manual || {}).tiers_auto) || {})[key] || null;
 }
 
+// GHA の対象ホテル（公式予約のみ）。東急ホテルズは2027年4月に GHA に加盟する想定（2026-10-12 西村氏）。
+// キャピトルホテル東急を別ブランド（東急ホテルズ）として仮に数える。加盟前の宿泊は数えない
+const GHA_HOTELS = {groove: {brand: 'PARKROYAL', from: ''}, bellustar: {brand: 'Pan Pacific', from: ''},
+                    capitol: {brand: '東急ホテルズ', from: '2027-04-01'}};
+function ghaEligible(r){
+  const g = GHA_HOTELS[r.hotel];
+  return !!g && r.channel === '公式' && (!g.from || r.checkin >= g.from);
+}
+
 // GHA：同じ年に公式予約で2ブランド（3ブランド）泊まり終えた日から、プラチナ（チタニウム）になる見込み
 function ghaProjection(rows){
   const out = {};
   const years = {};
-  (rows || []).filter(r => r.status === 'booked' && r.channel === '公式' && (r.hotel === 'groove' || r.hotel === 'bellustar'))
+  (rows || []).filter(r => r.status === 'booked' && ghaEligible(r))
     .sort((a, b) => a.checkout < b.checkout ? -1 : 1)
     .forEach(r => {
       const y = r.checkin.slice(0, 4), s = years[y] = years[y] || {brands: new Set()};
@@ -99,7 +108,7 @@ function stayTimes(r, tiers, proj){
     if (t === 'グローバリスト') { co = '16:00'; why = t; how = '依頼で付与'; }
     else if (t === 'ディスカバリスト' || t === 'エクスプローリスト') { co = '14:00頃'; why = t; how = '空室次第'; }
     else why = t;
-  } else if ((r.hotel === 'groove' || r.hotel === 'bellustar') && direct) {
+  } else if (ghaEligible(r)) {
     let t = tiers.gha, est = false;
     const rank = TIER_RANK.gha, y = Number(r.checkin.slice(0, 4));
     // 取った年の残りと翌年いっぱい有効なので、前年に達成していればその年も対象
