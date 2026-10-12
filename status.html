@@ -457,7 +457,10 @@ const HY_SET = [['hyatt_auto', '自動照会の上限', '回/日'], ['hyatt_spli
   ['hyatt_margin', '振り替え：元の予約＋', '円'], ['hyatt_rescue_margin', '救済モード：元の予約＋', '円'],
   ['hyatt_gap_min', '自動の間隔（最短）', '秒'], ['hyatt_gap_max', '自動の間隔（最長）', '秒'],
   ['hyatt_min_gap', '照会どうしの最低間隔', '秒'], ['hyatt_manual_warn', '手動照会の目安', '回/日'],
-  ['hyatt_nr_days', '返金不可チェック：チェックインの', '日前から']];
+  ['hyatt_nr_days', '返金不可チェック：チェックインの', '日前から'],
+  ['hyatt_near_days', '振り替えの巡回：宿泊日まで', '日以内は'], ['hyatt_near_every', '　→ 何日に1回', '日'],
+  ['hyatt_mid_days', '振り替えの巡回：宿泊日まで', '日以内は'], ['hyatt_mid_every', '　→ 何日に1回', '日'],
+  ['hyatt_far_every', '振り替えの巡回：それより先は', '日に1回']];
 async function saveSetting(k, el){
   try {
     const r = await api({api: 'settingSet', name: k, value: el.value});
