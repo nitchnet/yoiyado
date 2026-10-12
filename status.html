@@ -79,6 +79,15 @@ footer a{color:inherit}
 .yrs button{font:inherit;font-size:12px;padding:3px 10px;border-radius:999px;border:1px solid var(--line);background:var(--bg);color:var(--sub);cursor:pointer}
 .yrs button[aria-pressed="true"]{background:var(--night2);color:#fff;border-color:var(--night2)}
 @media (prefers-color-scheme: dark){.yrs button[aria-pressed="true"],.pg button.sv{background:var(--gold);color:#1a1f2e;border-color:var(--gold)}}
+.hyc{margin-top:6px;display:grid;gap:4px;font-size:12px}
+.hyc > div{display:grid;grid-template-columns:76px minmax(0,1fr);gap:6px;padding:5px 8px;border-radius:8px;background:var(--card);border:1px solid var(--line)}
+.hyc small{display:block;color:var(--sub);font-size:11px}
+.hyset{margin-top:8px;font-size:12px}
+.hyset summary{cursor:pointer;color:var(--sub)}
+.hyset .g{display:grid;grid-template-columns:1fr;gap:4px;margin:6px 0}
+.hyset label{display:flex;align-items:center;gap:6px;justify-content:space-between}
+.hyset input{width:84px;font:inherit;font-size:12px;padding:2px 6px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);text-align:right}
+.hyset label small{width:44px;color:var(--sub)}
 .pg{border:1px solid var(--line);border-radius:12px;padding:11px 12px;margin-top:10px;background:var(--bg)}
 .pg .t{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}
 .pg .t b{font-size:14.5px}
@@ -393,6 +402,8 @@ function render(){
   h += `<div class="pg${gDone + gPlan >= gGoal ? ' ok' : ''}"><div class="t"><span class="nm2"><b>GHA DISCOVERY</b>${lv('gha', gTier, ghaNote())}</span><span class="v">${gDone}<small>ブランド宿泊</small> ＋ ${gPlan}<small>予約</small> ／ ${gGoal}ブランド</span></div>
     ${bar(gDone, gPlan, gGoal)}${lines}<div class="s">${rest.length ? `あとは <b>${rest.join('・')}</b> を公式で1泊予約すれば、予約分を含めて達成見込み` : '<b>予約分を含めて達成見込み</b>。これ以上の予約は不要です'}</div></div>`;
 
+  h += hyattOutlook(today);
+
   const tiers = currentTiers(D.manual);
   h += `<div class="oth">ほかの資格：I Prefer <b>${esc(tiers.iprefer)}</b>・一休 <b>${esc(tiers.ikyu)}</b>・Expedia <b>${esc(tiers.expedia)}</b></div>`;
   const un = PROGRAMS.filter(p => !tierSource(D.manual, p.key)).map(p => p.name.replace(/（.*）/, ''));
@@ -402,6 +413,57 @@ function render(){
   document.getElementById('prog-body').className = '';
   const ys = [new Date().getFullYear(), new Date().getFullYear() + 1];
   document.getElementById('yrs').innerHTML = ys.map(y => `<button type="button" aria-pressed="${y === YEAR}" onclick="YEAR=${y};render()">${y}</button>`).join('');
+}
+
+// ハイアット60泊の見込み（年ごと）：9/30までに63泊（60泊＋予備）。振り替え候補は毎朝7時台に hyatt_plan.py が調べる
+const HY_EXCLUDE = [2026];   // 年内に60泊へ届かないため振り替えの対象外（西村氏）
+const WDJ = '日月火水木金土';
+function hyattOutlook(today){
+  const hp = D.hyatt || {}, st = D.settings || {}, target = Number(st.hyatt_target || 63), y = YEAR;
+  const hy = (D.rows || []).filter(r => r.status === 'booked' && r.hotel === 'hyatt' && r.channel === '公式' && r.checkin && r.checkin.slice(0, 4) === String(y));
+  const n930 = hy.filter(r => r.checkin <= `${y}-09-30`), total = hy.reduce((a, r) => a + r.nights, 0);
+  const done = n930.filter(r => r.checkout <= today).reduce((a, r) => a + r.nights, 0);
+  const plan = n930.filter(r => r.checkout > today).reduce((a, r) => a + r.nights, 0);
+  const proj = done + plan, rest = Math.max(0, target - proj);
+  let mode, modeTxt;
+  if (HY_EXCLUDE.includes(y)) { mode = 'off'; modeTxt = '振り替えの対象外（年内に60泊へ届かないため）'; }
+  else if (today > `${y}-12-31`) { mode = 'off'; modeTxt = '終了'; }
+  else if (today <= `${y}-09-30`) { mode = proj >= target ? 'done' : 'normal'; modeTxt = mode === 'done' ? '目標到達（振り替えの照会は止めて、監視に回す）' : '通常モード（京王・グルーヴの平日を、＋' + yen(st.hyatt_margin || 5000) + 'までならハイアットへ）'; }
+  else { mode = total >= 60 ? 'done' : 'rescue'; modeTxt = mode === 'done' ? '60泊到達' : '救済モード（10〜12月も候補・＋' + yen(st.hyatt_rescue_margin || 10000) + 'まで）'; }
+  const cands = (hp.transfer || []).filter(t => t.year === y && t.ok).sort((a, b) => a.checkin < b.checkin ? -1 : 1);
+  const checkedN = (hp.transfer || []).filter(t => t.year === y && t.checked).length;
+  const HN = {keio: '京王', iprefer: '京王（I Prefer）', groove: 'グルーヴ'};
+  const wd = s => WDJ[new Date(s + 'T00:00:00+09:00').getDay()];
+  let h = `<div class="pg${mode === 'done' ? ' ok' : ''}"><div class="t"><span class="nm2"><b>ハイアット60泊の見込み</b><span class="lv">${y}年・9/30まで</span></span>
+      <span class="v">${done}<small>泊済</small> ＋ ${plan}<small>予約</small> ／ ${target}泊</span></div>
+    ${bar(done, plan, target)}
+    <div class="s">${mode === 'off' ? esc(modeTxt) : `${rest ? `あと <b>${rest}泊</b>（60泊まで ${Math.max(0, 60 - proj)}泊）` : '<b>目標に届く見込み</b>'}。${esc(modeTxt)}`}${total > proj ? `。10〜12月の予約を含めた年間は${total}泊` : ''}</div>`;
+  if (mode === 'normal' || mode === 'rescue') {
+    h += `<div class="s" style="margin-top:6px"><b>振り替え候補 ${cands.length}件</b>（これまでに${checkedN}日分を確認）${cands.length ? '' : '。見つかったら一覧とメールでお知らせします'}</div>`;
+    if (cands.length) h += `<div class="hyc">${cands.map(t => `<div><span class="num">${md(t.checkin)}（${wd(t.checkin)}）</span><span>${esc(HN[t.hotel] || t.hotel)} ${yen(t.booked_pay)} → ハイアット ${yen(t.pay)}（<b>${t.diff >= 0 ? '+' + yen(t.diff) : '−' + yen(-t.diff)}</b>）<small>期限 ${md(t.free_cancel_until)}・${md(t.checked)}確認${t.mode === 'rescue' ? '・救済' : ''}</small></span></div>`).join('')}</div>`;
+  }
+  // 照会の状況（直近7日・目的別）と停止
+  const now16 = new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 16);
+  const stop = hp.stop_until && hp.stop_until > now16 ? hp.stop_until : '';
+  const wk = hp.week || [], tot = k => wk.reduce((a, d) => a + (d[k] || 0), 0);
+  h += `<div class="s" style="margin-top:6px">${stop ? `<b style="color:var(--warn)">ハイアット取得停止中（${md(stop)}まで）</b>。` : ''}ハイアットへの照会（直近7日）：手動 ${tot('manual')}・振り替え ${tot('transfer')}・監視 ${tot('monitor')}回${hp.used_today && hp.date === today ? `（今日 自動 ${(hp.used_today.transfer || 0) + (hp.used_today.monitor || 0)}／${hp.auto_max}回）` : ''}。毎週月曜に週報メール</div>`;
+  h += `<details class="hyset"><summary>ハイアット照会の設定</summary><div class="g">${HY_SET.map(([k, label, unit]) =>
+    `<label>${label}<input type="number" inputmode="numeric" value="${Number(st[k] ?? '')}" onchange="saveSetting('${k}', this)"><small>${unit}</small></label>`).join('')}</div>
+    <div class="s">変えると翌朝の処理から使います。手動検索の上限はなく、目安を超えると料金比較に警告が出ます。</div></details></div>`;
+  return h;
+}
+const HY_SET = [['hyatt_auto', '自動照会の上限', '回/日'], ['hyatt_split_transfer', 'うち振り替え候補', '回'],
+  ['hyatt_jun30_nights', '6/30時点でこれ未満なら振り替えに全振り', '泊'], ['hyatt_target', '9/30までの目標', '泊'],
+  ['hyatt_margin', '振り替え：元の予約＋', '円'], ['hyatt_rescue_margin', '救済モード：元の予約＋', '円'],
+  ['hyatt_gap_min', '自動の間隔（最短）', '秒'], ['hyatt_gap_max', '自動の間隔（最長）', '秒'],
+  ['hyatt_min_gap', '照会どうしの最低間隔', '秒'], ['hyatt_manual_warn', '手動照会の目安', '回/日'],
+  ['hyatt_nr_days', '返金不可チェック：チェックインの', '日前から']];
+async function saveSetting(k, el){
+  try {
+    const r = await api({api: 'settingSet', name: k, value: el.value});
+    if (r.ok) { D.settings = r.settings; try { localStorage.setItem(LEDGER_MEMO, JSON.stringify(D)); } catch(e) {} el.style.borderColor = 'var(--ok)'; }
+    else { alert('この値は使えません（範囲外）'); el.value = (D.settings || {})[k]; }
+  } catch(e) { alert('保存できませんでした。'); }
 }
 
 async function saveSpend(){
