@@ -252,6 +252,11 @@ function render(){
     ${dupDays.length ? `<div class="sum2 dup">⚠ 重複の可能性：<b>${dupDays.map(d => md(d)).join('、')}</b>（同じホテルで泊まる日が重なる予約があります）</div>` : ''}
     ${saves.length ? `<div class="sum2">取り直すと安くなる予約：<b>${saves.length}件・合計 ${yen(saveTotal)}</b></div>` :
       (Object.keys(W).length ? `<div class="sum2">取り直すと安くなる予約はありません（返金可の予約を毎朝確認しています）</div>` : '')}
+    ${(() => { const cc = data.cal_check || {}, m = cc.missing || [], x = cc.extra || [], w = cc.wrong || [];
+      const parts = [m.length ? `予約はあるのにカレンダーが空き ${m.map(v => md(v.checkin)).join('、')}` : '',
+                     x.length ? `カレンダーに宿泊予定があるのに予約なし ${x.map(v => md(v.checkin)).join('、')}` : '',
+                     w.length ? `ホテルが違う ${w.map(v => md(v.checkin)).join('、')}` : ''].filter(Boolean);
+      return parts.length ? `<div class="sum2 dup">⚠ <b>カレンダー（P予定）とのずれ</b>：${parts.join('／')}</div>` : ''; })()}
     ${hStop ? `<div class="sum2 dup">⚠ <b>ハイアット取得停止中</b>：ボット判定・アクセス制限とみられる応答があったため、手動・自動とも照会を止めています。再開には承認が必要です</div>` : ''}
     <div class="updated">台帳の更新：${fmtT(data.built)}　値下がりチェック：${fmtT(data.watch_checked)}</div>
     <div class="updated nrset">ハイアットの返金不可チェック：チェックインの
