@@ -97,6 +97,27 @@ details.pm > summary{margin:10px 4px 6px;color:var(--sub)}
 .bk .sv.tr small{display:block;color:var(--sub);font-size:11px;margin-top:2px}
 .bk .sv.nr small{display:block;color:var(--sub);font-size:11px;margin-top:2px}
 .nrset select{font:inherit;font-size:11.5px;padding:0 2px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink)}
+.bk .lk{grid-column:2/4;display:flex;gap:12px;flex-wrap:wrap;font-size:11.5px;margin-top:3px}
+.bk .lk a{color:var(--sub)}
+.trt{padding:12px 14px}
+.trt summary{display:flex;justify-content:space-between;align-items:center;cursor:pointer;font-weight:700;list-style:none}
+.trt summary::-webkit-details-marker{display:none}
+.trt summary .s{font-size:12px;color:var(--sub);font-weight:500}
+.trt summary span:first-child::after{content:' ▸';color:var(--sub);font-size:11px}
+.trt[open] summary span:first-child::after{content:' ▾'}
+.trs{font-size:12px;color:var(--sub);margin-top:8px}
+.trs b{color:var(--ink)}
+.trb{display:flex;gap:4px;margin:8px 0}
+.trb button{font:inherit;font-size:11.5px;padding:3px 10px;border-radius:999px;border:1px solid var(--line);background:var(--bg);color:var(--sub);cursor:pointer}
+.trb button[aria-pressed="true"]{background:var(--night2);color:#fff;border-color:var(--night2)}
+@media (prefers-color-scheme: dark){.trb button[aria-pressed="true"]{background:var(--gold);color:#1a1f2e;border-color:var(--gold)}}
+.trg{display:grid;grid-template-columns:auto minmax(0,1fr) auto auto;gap:4px 10px;font-size:12.5px;align-items:baseline}
+.trg .th{font-size:11px;color:var(--sub);border-bottom:1px solid var(--line);padding-bottom:2px}
+.trg .r{text-align:right}
+.trg small{display:block;font-size:10.5px;color:var(--sub)}
+.trg div.r small{display:block}
+.trg .ok{color:var(--ok);font-weight:700}
+.trg a{color:inherit}
 .sum2{margin-top:10px;font-size:13px;padding:8px 10px;border-radius:10px;background:var(--gold-soft)}
 .sum2 b{color:var(--gold)}
 .err{background:var(--warn-bg);color:var(--warn);border-radius:10px;padding:9px 12px;font-size:13px}
@@ -146,6 +167,7 @@ footer{max-width:720px;margin:0 auto;padding:0 16px 28px;text-align:center;font-
 </header>
 <main>
   <section class="card" id="summary"><div class="empty">読み込み中…</div></section>
+  <div id="trtable"></div>
   <div id="list"></div>
 </main>
 <footer>YOIYADO · 金額は税・サービス料・宿泊税込みの滞在合計</footer>
@@ -203,6 +225,43 @@ async function setNrDays(v){
   } catch(e) { alert('保存できませんでした。少し時間をおいてもう一度お試しください。'); }
 }
 
+// ハイアット振り替えの判断表（2026-10-17）：ハイアット以外の予約と、同じ日のハイアット（キング・会員料金・返金可）の料金・差額。
+// 毎朝7時台の照会（各日2日に1回）の結果。並べ替えと「あと何泊・追加いくら」
+let trSort = 'diff', trOpen = false;
+try { trSort = localStorage.getItem('yoiyado_tr_sort') || 'diff'; trOpen = localStorage.getItem('yoiyado_tr_open') === '1'; } catch(e) {}
+function setTrSort(v){ trSort = v; try { localStorage.setItem('yoiyado_tr_sort', v); } catch(e) {} render(); }
+function trToggle(el){ trOpen = el.open; try { localStorage.setItem('yoiyado_tr_open', el.open ? '1' : '0'); } catch(e) {} }
+function transferTable(Y, today){
+  const hp = data.hyatt || {}, st = data.settings || {}, target = Number(st.hyatt_target || 63);
+  const live = new Map((data.rows || []).filter(r => r.status === 'booked').map(r => [r.key, r]));
+  const rows = (hp.transfer || []).filter(t => String(t.year) === String(Y) && live.has(t.k) && t.checkin >= today);
+  if (!rows.length) return '';
+  const hy = (data.rows || []).filter(r => r.status === 'booked' && r.hotel === 'hyatt' && r.channel === '公式' && r.checkin && r.checkin.slice(0, 4) === String(Y) && r.checkin <= `${Y}-09-30`);
+  const nights = hy.reduce((a, r) => a + r.nights, 0), rest = Math.max(0, target - nights);
+  const priced = rows.filter(t => t.pay != null && t.diff != null).sort((a, b) => a.diff - b.diff);
+  const by930 = priced.filter(t => t.checkin <= `${Y}-09-30`);
+  const sumN = (list, n) => list.slice(0, n).reduce((a, t) => a + t.diff, 0);
+  const wd = by930.filter(t => t.weekday !== false);
+  const HN = {keio: '京王', iprefer: '京王IP', groove: 'グルーヴ', newotani: 'オータニ'};
+  const W = '日月火水木金土', dow = s => W[new Date(s + 'T00:00:00+09:00').getDay()];
+  const list = trSort === 'date' ? [...rows].sort((a, b) => a.checkin < b.checkin ? -1 : 1)
+    : [...priced, ...rows.filter(t => t.pay == null || t.diff == null)];
+  const sign = n => n >= 0 ? '+' + yen(n) : '−' + yen(-n);
+  return `<details class="card trt"${trOpen ? ' open' : ''} ontoggle="trToggle(this)">
+    <summary><span>ハイアット振り替えの判断表</span><span class="s">${Y}年・9/30まで あと${rest}泊</span></summary>
+    <div class="trs">${rest ? `差額の小さい順に<b>${Math.min(rest, by930.length)}泊</b>振り替えると <b>${sign(sumN(by930, rest))}</b>（平日だけなら ${sign(sumN(wd, rest))}）` : '<b>9/30までの目標に届いています</b>'}
+      ・ハイアット ${nights}泊／目標${target}泊</div>
+    <div class="trb" role="group" aria-label="並べ替え">${[['diff', '差額順'], ['date', '日付順']].map(([v, l]) =>
+      `<button type="button" aria-pressed="${trSort === v}" onclick="setTrSort('${v}')">${l}</button>`).join('')}</div>
+    <div class="trg"><div class="th">日付</div><div class="th">今の予約</div><div class="th r">ハイアット</div><div class="th r">差額</div>
+    ${list.map(t => `<div class="${t.ok ? 'ok' : ''}">${md(t.checkin)}<small>（${dow(t.checkin)}）</small></div>
+      <div>${esc(HN[t.hotel] || t.hotel)} <span class="num">${yen(t.booked_pay)}</span></div>
+      <div class="r num">${t.pay != null ? `<a href="${esc(t.url || '#')}" target="_blank" rel="noopener">${yen(t.pay)}</a>` : `<small>${esc(t.reason || '未確認')}</small>`}</div>
+      <div class="r num ${t.diff != null && t.diff <= Number(st.hyatt_margin || 5000) ? 'ok' : ''}">${t.diff != null ? sign(t.diff) : '—'}<small>${md(t.checked || today)}</small></div>`).join('')}</div>
+    <div class="trs" style="margin-top:6px">金額は税・サ・宿泊税込みの滞在合計。ハイアットはキング・会員料金・返金可。各日を2日に1回調べています（右下は調べた日）。緑は+${yen(Number(st.hyatt_margin || 5000))}以内</div>
+  </details>`;
+}
+
 function setYear(y){ yearSel = y; try { localStorage.setItem('yoiyado_bk_year', y); } catch(e) {} render(); }
 function toggleCx(){ showCx = !showCx; try { localStorage.setItem('yoiyado_bk_cx', showCx ? '1' : '0'); } catch(e) {} render(); }
 
@@ -257,8 +316,16 @@ function render(){
                      x.length ? `カレンダーに宿泊予定があるのに予約なし ${x.map(v => md(v.checkin)).join('、')}` : '',
                      w.length ? `ホテルが違う ${w.map(v => md(v.checkin)).join('、')}` : ''].filter(Boolean);
       return parts.length ? `<div class="sum2 dup">⚠ <b>カレンダー（P予定）とのずれ</b>：${parts.join('／')}</div>` : ''; })()}
+    ${(() => { // 朝の処理の健康状態（2026-10-17）：失敗・未実行を赤く出す
+      const hh = data.health || {}, nowJ = new Date(Date.now() + 9 * 3600e3).toISOString(), late = nowJ.slice(11, 16) >= '08:30';
+      if (hh.date === today && (hh.problems || []).length)
+        return `<div class="sum2 dup">⚠ <b>朝の処理で不具合</b>：${(hh.problems || []).map(esc).join('／')}</div>`;
+      if (late && hh.date !== today)
+        return `<div class="sum2 dup">⚠ <b>今朝の処理がまだ動いていません</b>（最後に終わったのは ${hh.checked ? md(hh.checked) + ' ' + hh.checked.slice(11, 16) : '不明'}）。自宅PCの電源・スリープを確認してください</div>`;
+      return '';
+    })()}
     ${hStop ? `<div class="sum2 dup">⚠ <b>ハイアット取得停止中</b>：ボット判定・アクセス制限とみられる応答があったため、手動・自動とも照会を止めています。再開には承認が必要です</div>` : ''}
-    <div class="updated">台帳の更新：${fmtT(data.built)}　値下がりチェック：${fmtT(data.watch_checked)}</div>
+    <div class="updated">台帳の更新：${fmtT(data.built)}　値下がりチェック：${fmtT(data.watch_checked)}${(data.health || {}).date === today && !((data.health || {}).problems || []).length ? `　朝の処理：正常（${data.health.checked.slice(11, 16)}確認）` : ''}</div>
     <div class="updated nrset">ハイアットの返金不可チェック：チェックインの
       <select aria-label="何日前から" onchange="setNrDays(this.value)">${[3,5,7,10,14,21,30].map(v => `<option value="${v}"${v === nrDays ? ' selected' : ''}>${v}</option>`).join('')}</select>
       日前から（毎朝7時台）</div>`;
@@ -286,6 +353,10 @@ function render(){
       const free = !cx && r.free_cancel_until ? `<span>無料キャンセル ${md(r.free_cancel_until)}（${wd(r.free_cancel_until)}）まで</span>` : '';
       // 調べた日が今日でなければ「（10/12時点）」のように日付を付ける（ハイアットは毎日は調べないため）
       const wd8 = w && w.checked && w.checked.slice(0, 10) !== today ? `・${md(w.checked)}時点` : '';
+      // その予約の確認ページ・予約メールへのリンク（押したときだけ開く）
+      const PP = {groove: ['PRGTK', 'PR'], bellustar: ['PPBTK', 'PP']}, conf = r.conf || r.key.split(':').pop();
+      const lk = [PP[r.hotel] && r.channel === '公式' ? `<a href="https://www.panpacific.com/content/pphg-revamp/ja/booking/view.html?acc-confirmation=${encodeURIComponent(conf)}&ppcode=${PP[r.hotel][0]}&brand=${PP[r.hotel][1]}" target="_blank" rel="noopener">予約の確認・変更 →</a>` : '',
+                  data.mail_acct ? `<a href="https://mail.google.com/mail/?authuser=${encodeURIComponent(data.mail_acct).replace('%40', '@')}#search/${encodeURIComponent('"' + conf + '"')}" target="_blank" rel="noopener">予約メール →</a>` : ''].filter(Boolean).join('');
       const wl = !cx && w && w.best_pay && !sv ? `<span>今の最安 ${yen(w.best_pay)}（${esc(w.best_channel)}${wd8}）</span>` : '';
       // いまの資格で使えるチェックイン／アウト（会員ステータスで選んだ資格から）
       const st = !cx && r.checkout > today ? stayTimes(r, tiers, proj) : null;
@@ -300,6 +371,7 @@ function render(){
           <div class="p">${esc(r.plan)}</div></div>
         <div class="pay num">${r.pay ? yen(r.pay) : '—'}${r.nights > 1 && r.pay ? `<small>1泊 ${yen(Math.round(r.pay / r.nights))}</small>` : ''}</div>
         ${free || wl || tm ? `<div class="w">${tm}${free}${wl}</div>` : ''}
+        ${lk ? `<div class="lk">${lk}</div>` : ''}
         ${sv ? `<div class="sv">▼ <b>${yen(w.save)}安く</b>取り直せます：${esc(w.best_channel)}［${esc(w.best_kind)}］${esc(w.best_room)} ${yen(w.best_pay)}<br>
           ${esc(w.best_plan)}　<a href="${esc(w.best_url)}" target="_blank" rel="noopener">予約ページへ →</a></div>` : ''}
         ${!cx && r.refundable && w && w.nr_ok ? `<div class="sv nr">返金不可にすると <b>${yen(w.nr_save)}安い</b>（${yen(w.nr_pay)}・${esc(w.nr_plan)}）。期限 ${md(w.free_cancel_until)}（${wd(w.free_cancel_until)}）23:59まで<br>
@@ -315,6 +387,7 @@ function render(){
     if (past) l += '</details>';
   });
   document.getElementById('list').innerHTML = l;
+  document.getElementById('trtable').innerHTML = transferTable(Y, today);
 }
 
 let CPD = null;
