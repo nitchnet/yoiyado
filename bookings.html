@@ -107,7 +107,18 @@ details.pm > summary{margin:10px 4px 6px;color:var(--sub)}
 #mailov .mv-hd b{font-size:14px;line-height:1.4}
 #mailov .mv-hd button{flex:none;font:inherit;font-size:12.5px;padding:4px 12px;border-radius:999px;border:1px solid var(--line);background:var(--bg);color:var(--ink);cursor:pointer}
 #mailov .mv-meta{font-size:11.5px;color:var(--sub);padding:0 16px 8px;border-bottom:1px solid var(--line)}
-#mailov pre{margin:0;padding:12px 16px 24px;overflow:auto;white-space:pre-wrap;word-break:break-word;font:13px/1.6 inherit;font-family:inherit}
+#mailov .mv-body{overflow:auto;padding:4px 16px 24px}
+#mailov pre{margin:0;padding:8px 0 0;white-space:pre-wrap;word-break:break-word;font:12.5px/1.6 inherit;font-family:inherit}
+.dt{display:grid;gap:0}
+.dt-r{display:grid;grid-template-columns:6.5em 1fr;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);font-size:13.5px;line-height:1.55}
+.dt-k{color:var(--sub);font-size:12px;padding-top:1px}
+.dt-v{min-width:0;overflow-wrap:anywhere}.dt-v small{display:block;color:var(--sub);font-size:11.5px}.dt-v.sub{color:var(--sub)}
+.dt-bs{display:flex;flex-direction:column;gap:8px;margin:14px 0 6px}
+.dt-b{display:block;text-align:center;font:inherit;font-size:14px;padding:11px 12px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink);text-decoration:none;cursor:pointer}
+.dt-b:first-child{background:var(--ink);color:var(--card);border-color:var(--ink)}
+.dt-b.warn{color:#c0392b;border-color:#e3b3ac}
+.dt-n{font-size:12px;color:var(--sub);margin:6px 0}
+.dt-m{margin-top:12px;border-top:1px solid var(--line);padding-top:8px}.dt-m summary{cursor:pointer;font-size:13px;color:var(--sub)}
 .trt{padding:12px 14px}
 .trt summary{display:flex;justify-content:space-between;align-items:baseline;gap:8px;cursor:pointer;font-weight:700;list-style:none}
 .trt summary::-webkit-details-marker{display:none}
@@ -272,28 +283,73 @@ function transferTable(Y, today){
   </details>`;
 }
 
-// 予約メールを宵宿の中で開く（本文の文字だけ。リンクは押せない文字のまま）
-async function showMail(id){
+// 予約の詳細（2026-10-17）：どのホテルも同じ並びで、予約内容・支払い・キャンセル規定と、変更・キャンセルのリンクを出す。
+// リンクは予約確認メールに載っているもの（押したときだけ開く）。メールにリンクがない経路は、サイトの予約確認の入口＋予約番号のコピー。
+const SITE = {'一休': ['一休の予約確認', 'https://www.ikyu.com/'], 'Expedia': ['エクスペディアの旅程', 'https://www.expedia.co.jp/trips'],
+              'I Prefer': ['I Preferの予約確認', 'https://www.phgsecure.com/ibe/reservationbrandredirect.ashx?brandcode=PH']};
+const MAILC = {};
+async function getMail(id){
+  if (MAILC[id]) return MAILC[id];
+  const r = await fetch(GAS + '?api=mail&id=' + encodeURIComponent(id) + '&k=' + encodeURIComponent(K), {credentials: 'omit', cache: 'no-store'});
+  const j = JSON.parse(await r.text());
+  if (j.error) throw new Error(j.error);
+  return (MAILC[id] = j);
+}
+function mailOv(){
   let ov = document.getElementById('mailov');
   if (!ov) {
     ov = document.createElement('div'); ov.id = 'mailov';
-    ov.innerHTML = '<div class="mv-box" role="dialog" aria-modal="true"><div class="mv-hd"><b id="mvsub"></b><button type="button" onclick="closeMail()" aria-label="閉じる">閉じる</button></div><div class="mv-meta" id="mvmeta"></div><pre id="mvtext"></pre></div>';
+    ov.innerHTML = '<div class="mv-box" role="dialog" aria-modal="true" aria-labelledby="mvsub"><div class="mv-hd"><b id="mvsub"></b><button type="button" onclick="closeMail()" aria-label="閉じる">閉じる</button></div><div class="mv-meta" id="mvmeta"></div><div class="mv-body" id="mvbody"></div></div>';
     ov.addEventListener('click', e => { if (e.target === ov) closeMail(); });
     document.body.appendChild(ov);
   }
-  document.getElementById('mvsub').textContent = '読み込み中…'; document.getElementById('mvmeta').textContent = ''; document.getElementById('mvtext').textContent = '';
   ov.style.display = 'flex'; document.documentElement.style.overflow = 'hidden';
-  try {
-    const r = await fetch(GAS + '?api=mail&id=' + encodeURIComponent(id) + '&k=' + encodeURIComponent(K), {credentials: 'omit', cache: 'no-store'});
-    const j = JSON.parse(await r.text());
-    if (j.error) throw new Error(j.error);
-    document.getElementById('mvsub').textContent = j.subject || '予約メール';
-    document.getElementById('mvmeta').textContent = `${j.from || ''}　${j.date || ''}`;
-    document.getElementById('mvtext').textContent = j.text || '';
-  } catch(e) {
-    document.getElementById('mvsub').textContent = 'メールを読み込めませんでした';
-    document.getElementById('mvtext').textContent = 'まだ取り込まれていないか、通信に失敗しました。少し時間をおいてもう一度お試しください。';
+  return ov;
+}
+const telNo = s => { const d = String(s || '').replace(/[^\d+]/g, ''); return d.startsWith('81') ? '0' + d.slice(2) : d.startsWith('+81') ? '0' + d.slice(3) : d; };
+async function showDetail(key){
+  const r = (data.rows || []).find(x => x.key === key); if (!r) return;
+  mailOv();
+  const conf = r.conf || r.key.split(':').pop(), cx = r.status !== 'booked';
+  document.getElementById('mvsub').textContent = NAMES[r.hotel] || r.hotel_name || r.hotel;
+  document.getElementById('mvmeta').textContent = `${r.channel || '公式'}　予約番号 ${conf}`;
+  const today = new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 10);
+  const st = !cx && r.checkout > today ? stayTimes(r, currentTiers(data.manual), ghaProjection(data.rows || [])) : null;
+  const row = (k, v) => v ? `<div class="dt-r"><div class="dt-k">${k}</div><div class="dt-v">${v}</div></div>` : '';
+  const base = row('状態', cx ? '<span class="tag cx">キャンセル</span>' : r.refundable ? '<span class="tag ok">返金可</span>' : '<span class="tag nr">返金不可</span>')
+    + row('日程', `${md(r.checkin)}（${wd(r.checkin)}）〜 ${md(r.checkout)}（${wd(r.checkout)}）・${r.nights}泊・${r.adults}名`)
+    + row('イン／アウト', st && st.co ? `${esc(st.ci)} ／ ${esc(st.co)}${st.why ? `<small>（${esc(st.why)}）</small>` : ''}` : '')
+    + row('部屋', esc(r.room || '')) + row('プラン', esc(r.plan || ''))
+    + row('金額', r.pay ? `${yen(r.pay)}${r.nights > 1 ? `<small>（1泊 ${yen(Math.round(r.pay / r.nights))}）</small>` : ''}<small>税・サ・宿泊税込み</small>` : '—')
+    + row('無料キャンセル', !cx && r.free_cancel_until ? `${md(r.free_cancel_until)}（${wd(r.free_cancel_until)}）まで` : '');
+  const bodyEl = document.getElementById('mvbody');
+  bodyEl.innerHTML = `<div class="dt">${base}<div class="dt-r"><div class="dt-k">メールから</div><div class="dt-v sub">読み込み中…</div></div></div>`;
+  let j = null;
+  try { if (r.mail_id) j = await getMail(r.mail_id); } catch(e) {}
+  if (document.getElementById('mvsub').textContent !== (NAMES[r.hotel] || r.hotel_name || r.hotel)) return;  // 別の予約を開き直した
+  const L = (j && j.links) || {}, btn = [];
+  const a = (u, t, cls) => `<a class="dt-b${cls ? ' ' + cls : ''}" href="${esc(u)}" target="_blank" rel="noopener noreferrer">${esc(t)} →</a>`;
+  const PP = {groove: ['PRGTK', 'PR'], bellustar: ['PPBTK', 'PP']};
+  if (!cx) {
+    if (L.manage) btn.push(a(L.manage.url, '予約の確認・変更・キャンセル'));
+    else if (PP[r.hotel] && r.channel === '公式') btn.push(a(`https://www.panpacific.com/content/pphg-revamp/ja/booking/view.html?acc-confirmation=${encodeURIComponent(conf)}&ppcode=${PP[r.hotel][0]}&brand=${PP[r.hotel][1]}`, '予約の確認・変更・キャンセル'));
+    else {
+      if (L.modify) btn.push(a(L.modify.url, '予約の確認・変更'));
+      else if (L.view) btn.push(a(L.view.url, '予約の確認'));
+      if (L.cancel) btn.push(a(L.cancel.url, 'キャンセル', 'warn'));
+    }
+    if (!btn.length && SITE[r.channel]) btn.push(a(SITE[r.channel][1], SITE[r.channel][0]));
   }
+  const tel = j && j.phone ? telNo(j.phone) : '';
+  if (tel) btn.push(`<a class="dt-b" href="tel:${esc(tel)}">電話 ${esc(tel)}</a>`);
+  btn.push(`<button type="button" class="dt-b" onclick="copyConf(this, ${esc(JSON.stringify(conf))})">予約番号をコピー</button>`);
+  const more = j ? row('支払い', esc(j.pay || '')) + row('キャンセル規定', esc(j.cancel || '')) : '';
+  bodyEl.innerHTML = `<div class="dt">${base}${more}</div>
+    ${btn.length ? `<div class="dt-bs">${btn.join('')}</div>` : ''}
+    ${!cx && !L.manage && !L.modify && !L.cancel && !(PP[r.hotel] && r.channel === '公式') ? `<div class="dt-n">予約メールに変更・キャンセルのリンクがありません。${SITE[r.channel] ? 'サイトの予約確認から、予約番号で探してください。' : 'ホテルに電話するか、予約したサイトから手続きしてください。'}</div>` : ''}
+    ${!cx && L.cancel ? '<div class="dt-n">キャンセルはホテルのページで確定するまで行われません。</div>' : ''}
+    ${j ? `<details class="dt-m"><summary>元のメールを見る</summary><div class="mv-meta">${esc(j.subject || '')}<br>${esc(j.from || '')}　${esc(j.date || '')}</div><pre>${esc(j.text || '')}</pre></details>`
+        : `<div class="dt-n">${r.mail_id ? '予約メールを読み込めませんでした。少し時間をおいてお試しください。' : 'この予約は予約メールが見つかっていません。'}</div>`}`;
 }
 function closeMail(){ const ov = document.getElementById('mailov'); if (ov) ov.style.display = 'none'; document.documentElement.style.overflow = ''; }
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeMail(); });
@@ -400,8 +456,7 @@ function render(){
       // その予約の確認ページ・予約メールへのリンク（押したときだけ開く）
       const PP = {groove: ['PRGTK', 'PR'], bellustar: ['PPBTK', 'PP']}, conf = r.conf || r.key.split(':').pop();
       const lk = [PP[r.hotel] && r.channel === '公式' ? `<a href="https://www.panpacific.com/content/pphg-revamp/ja/booking/view.html?acc-confirmation=${encodeURIComponent(conf)}&ppcode=${PP[r.hotel][0]}&brand=${PP[r.hotel][1]}" target="_blank" rel="noopener">予約の確認・変更 →</a>` : '',
-                  (r.mail_id ? `<button type="button" class="cpy mv" onclick="showMail(${esc(JSON.stringify(r.mail_id))})">予約メールを見る</button>` : ''),
-                  (TOUCH ? `<button type="button" class="cpy" onclick="copyConf(this, ${esc(JSON.stringify(conf))})">予約番号をコピー</button>` : ''), (!TOUCH && data.mail_acct) ? `<a href="https://mail.google.com/mail/?authuser=${encodeURIComponent(data.mail_acct).replace('%40', '@')}#${r.mail_id ? 'all/' + encodeURIComponent(r.mail_id) : 'search/' + encodeURIComponent('"' + conf + '"')}" target="_blank" rel="noopener">予約メール →</a>` : ''].filter(Boolean).join('');
+                  `<button type="button" class="cpy mv" onclick="showDetail(${esc(JSON.stringify(r.key))})">予約の詳細</button>`, (!TOUCH && data.mail_acct) ? `<a href="https://mail.google.com/mail/?authuser=${encodeURIComponent(data.mail_acct).replace('%40', '@')}#${r.mail_id ? 'all/' + encodeURIComponent(r.mail_id) : 'search/' + encodeURIComponent('"' + conf + '"')}" target="_blank" rel="noopener">予約メール →</a>` : ''].filter(Boolean).join('');
       const wl = !cx && w && w.best_pay && !sv ? `<span>今の最安 ${yen(w.best_pay)}（${esc(w.best_channel)}${wd8}）</span>` : '';
       // いまの資格で使えるチェックイン／アウト（会員ステータスで選んだ資格から）
       const st = !cx && r.checkout > today ? stayTimes(r, tiers, proj) : null;
