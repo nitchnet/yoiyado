@@ -117,7 +117,7 @@ details.pm > summary{margin:10px 4px 6px;color:var(--sub)}
 .dt-b{display:block;text-align:center;font:inherit;font-size:14px;padding:11px 12px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink);text-decoration:none;cursor:pointer}
 .dt-b:first-child{background:var(--ink);color:var(--card);border-color:var(--ink)}
 .dt-b.warn{color:#c0392b;border-color:#e3b3ac}
-.dt-n{font-size:12px;color:var(--sub);margin:6px 0}
+.dt-n{font-size:12px;color:var(--sub);margin:6px 0}.dt-g{color:inherit}
 .dt-m{margin-top:12px;border-top:1px solid var(--line);padding-top:8px}.dt-m summary{cursor:pointer;font-size:13px;color:var(--sub)}
 .trt{padding:12px 14px}
 .trt summary{display:flex;justify-content:space-between;align-items:baseline;gap:8px;cursor:pointer;font-weight:700;list-style:none}
@@ -344,14 +344,17 @@ async function showDetail(key){
   const telShow = j && j.phone ? String(j.phone).replace(/^\+?81[-\s]?(\d)/, '0$1') : '';
   if (tel) btn.push(`<a class="dt-b" href="tel:${esc(tel)}">電話 ${esc(telShow)}</a>`);
   btn.push(`<button type="button" class="dt-b" onclick="copyConf(this, ${esc(JSON.stringify(conf))})">予約番号をコピー</button>`);
-  const more = j ? row('支払い', esc(j.pay || '')) + row('キャンセル規定', esc(j.cancel || '')) : '';
+  const more = j ? row('支払い', esc(j.pay_ja || j.pay || '')) + row('キャンセル規定', esc(j.cancel_ja || j.cancel || '')) : '';
+  // 原典：パソコンではGmailでそのメールを開ける（スマホのGmailはこのリンクを受け付けないので「元のメールを見る」で）
+  const gm = !TOUCH && data.mail_acct ? `<a class="dt-g" href="https://mail.google.com/mail/?authuser=${encodeURIComponent(data.mail_acct).replace('%40', '@')}#${r.mail_id ? 'all/' + encodeURIComponent(r.mail_id) : 'search/' + encodeURIComponent('"' + conf + '"')}" target="_blank" rel="noopener">Gmailで開く →</a>` : '';
   bodyEl.innerHTML = `<div class="dt">${base}</div>
     ${btn.length ? `<div class="dt-bs">${btn.join('')}</div>` : ''}
     ${more ? `<div class="dt">${more}</div>` : ''}
     ${!cx && !L.manage && !L.modify && !L.cancel && !(PP[r.hotel] && r.channel === '公式') ? `<div class="dt-n">予約メールに変更・キャンセルのリンクがありません。${SITE[r.channel] ? 'サイトの予約確認から、予約番号で探してください。' : 'ホテルに電話するか、予約したサイトから手続きしてください。'}</div>` : ''}
     ${!cx && L.cancel ? '<div class="dt-n">キャンセルはホテルのページで確定するまで行われません。</div>' : ''}
-    ${j ? `<details class="dt-m"><summary>元のメールを見る</summary><div class="mv-meta">${esc(j.subject || '')}<br>${esc(j.from || '')}　${esc(j.date || '')}</div><pre>${esc(j.text || '')}</pre></details>`
-        : `<div class="dt-n">${r.mail_id ? '予約メールを読み込めませんでした。少し時間をおいてお試しください。' : 'この予約は予約メールが見つかっていません。'}</div>`}`;
+    ${j ? `<details class="dt-m"><summary>元のメールを見る</summary>${gm ? `<div class="dt-n">${gm}</div>` : ''}<div class="mv-meta">${esc(j.subject || '')}<br>${esc(j.from || '')}　${esc(j.date || '')}</div><pre>${esc(j.text || '')}</pre></details>`
+        : `<div class="dt-n">${r.mail_id ? '予約メールを読み込めませんでした。少し時間をおいてお試しください。' : 'この予約は予約メールが見つかっていません。'}${gm ? '　' + gm : ''}</div>`}
+    ${(j && ((j.cancel_ja && j.cancel_ja !== j.cancel) || (j.pay_ja && j.pay_ja !== j.pay))) ? '<div class="dt-n">英語の規定は日本語に訳して表示しています（正確な文面は元のメールで）。</div>' : ''}`;
 }
 function closeMail(){ const ov = document.getElementById('mailov'); if (ov) ov.style.display = 'none'; document.documentElement.style.overflow = ''; }
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeMail(); });
@@ -458,7 +461,7 @@ function render(){
       // その予約の確認ページ・予約メールへのリンク（押したときだけ開く）
       const PP = {groove: ['PRGTK', 'PR'], bellustar: ['PPBTK', 'PP']}, conf = r.conf || r.key.split(':').pop();
       const lk = [PP[r.hotel] && r.channel === '公式' ? `<a href="https://www.panpacific.com/content/pphg-revamp/ja/booking/view.html?acc-confirmation=${encodeURIComponent(conf)}&ppcode=${PP[r.hotel][0]}&brand=${PP[r.hotel][1]}" target="_blank" rel="noopener">予約の確認・変更 →</a>` : '',
-                  `<button type="button" class="cpy mv" onclick="showDetail(${esc(JSON.stringify(r.key))})">予約の詳細</button>`, (!TOUCH && data.mail_acct) ? `<a href="https://mail.google.com/mail/?authuser=${encodeURIComponent(data.mail_acct).replace('%40', '@')}#${r.mail_id ? 'all/' + encodeURIComponent(r.mail_id) : 'search/' + encodeURIComponent('"' + conf + '"')}" target="_blank" rel="noopener">予約メール →</a>` : ''].filter(Boolean).join('');
+                  `<button type="button" class="cpy mv" onclick="showDetail(${esc(JSON.stringify(r.key))})">予約の詳細</button>`].filter(Boolean).join('');
       const wl = !cx && w && w.best_pay && !sv ? `<span>今の最安 ${yen(w.best_pay)}（${esc(w.best_channel)}${wd8}）</span>` : '';
       // いまの資格で使えるチェックイン／アウト（会員ステータスで選んだ資格から）
       const st = !cx && r.checkout > today ? stayTimes(r, tiers, proj) : null;
