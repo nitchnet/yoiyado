@@ -119,6 +119,12 @@ details.pm > summary{margin:10px 4px 6px;color:var(--sub)}
 .dt-b.warn{color:#c0392b;border-color:#e3b3ac}
 .dt-n{font-size:12px;color:var(--sub);margin:6px 0}.dt-g{color:inherit}
 .dt-m{margin-top:12px;border-top:1px solid var(--line);padding-top:8px}.dt-m summary{cursor:pointer;font-size:13px;color:var(--sub)}
+.today{margin:0 0 12px;padding:10px 12px;border-radius:12px;background:var(--bg);border:1px solid var(--line)}
+.today .td-h{font-size:12px;color:var(--sub);margin-bottom:4px;font-weight:600}.today .td-s{font-weight:400;margin-left:4px}
+.today .td-i{font-size:13.5px;line-height:1.5;padding:4px 0;border-top:1px dashed var(--line)}.today .td-i:first-of-type{border-top:0}
+.today .td-i a{color:inherit;text-decoration:none}.today .td-i.info{color:var(--sub)}.today .td-i.none{color:var(--sub)}
+.today .td-m{font-size:11.5px;color:var(--sub);margin-top:2px}
+.bk.flash{outline:2px solid #d8b06a;outline-offset:2px;transition:outline-color .4s}
 .trt{padding:12px 14px}
 .trt summary{display:flex;justify-content:space-between;align-items:baseline;gap:8px;cursor:pointer;font-weight:700;list-style:none}
 .trt summary::-webkit-details-marker{display:none}
@@ -200,7 +206,7 @@ const NAMES = {keio:'京王プラザ', iprefer:'京王プラザ（I Prefer）', 
   chinzanso:'ホテル椿山荘東京', capitol:'ザ・キャピトルホテル東急', yuen_daita:'由縁別邸 代田', aoyama_grand:'THE AOYAMA GRAND HOTEL', holic_ebisu:'恵比寿ホリックホテル',
   ana_ic:'ANAインターコンチネンタル東京', ic_tokyobay:'インターコンチネンタル東京ベイ', cerulean:'セルリアンタワー東急ホテル', westin:'ウェスティンホテル東京'};
 // 料金比較・値下がりチェックの対象外（予約の記録だけ載せる）
-const OTHER = new Set(['chinzanso','capitol','yuen_daita','aoyama_grand','holic_ebisu','ana_ic','ic_tokyobay','cerulean','westin']);
+const OTHER = new Set(['chinzanso','capitol','yuen_daita','aoyama_grand','holic_ebisu','ana_ic','ic_tokyobay','cerulean','westin','park_hyatt','grand_hyatt','andaz','hyatt_centric','hyatt_other']);
 let OTHER_COLOR;
 const COLORS = {keio:'#7a5c9e', iprefer:'#a07cc5', newotani:'#9b6b3f', groove:'#d0603c', hilton:'#2f5fa8', hyatt:'#5b8c9c', kimpton:'#3f8a5f', bellustar:'#8a7a3a'};
 OTHER_COLOR = '#9a9a9a';
@@ -208,7 +214,7 @@ const yen = n => '¥' + Number(n).toLocaleString('ja-JP');
 const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const wd = s => '日月火水木金土'[new Date(s + 'T00:00:00').getDay()];
 const md = s => Number(s.slice(5,7)) + '/' + Number(s.slice(8,10));
-let K = '', data = null, view = 'future';
+let K = '', data = null, view = 'future', STALE = false;
 try { K = localStorage.getItem('yoiyado_k') || ''; } catch(e) {}
 
 // 予約台帳は毎朝1回しか変わらないので、この端末に控えを置いてまず即座に表示し、裏で最新を取りに行って変わっていれば差し替える
@@ -233,6 +239,7 @@ async function load(){
     await new Promise(res => setTimeout(res, 1200 * (i + 1)));
   }
   if (!data) document.getElementById('summary').innerHTML = '<div class="err">予約一覧を読み込めませんでした。少し時間をおいて開き直してください。</div>';
+  else { STALE = true; render(); }
 }
 
 // 2026-10-12 年ごとの表示に変更（西村氏）：年を選ぶと、その年の件数・泊数・合計（泊まり済み＋予定）とホテル別の泊数を出す
@@ -257,7 +264,7 @@ function transferTable(Y, today){
   const live = new Map((data.rows || []).filter(r => r.status === 'booked').map(r => [r.key, r]));
   const rows = (hp.transfer || []).filter(t => String(t.year) === String(Y) && live.has(t.k) && t.checkin >= today);
   if (!rows.length) return '';
-  const hy = (data.rows || []).filter(r => r.status === 'booked' && r.hotel === 'hyatt' && r.channel === '公式' && r.checkin && r.checkin.slice(0, 4) === String(Y) && r.checkin <= `${Y}-09-30`);
+  const hy = (data.rows || []).filter(r => r.status === 'booked' && HYATT_HOTELS.includes(r.hotel) && r.channel === '公式' && r.checkin && r.checkin.slice(0, 4) === String(Y) && r.checkin <= `${Y}-09-30`);
   const nights = hy.reduce((a, r) => a + r.nights, 0), rest = Math.max(0, target - nights);
   const priced = rows.filter(t => t.pay != null && t.diff != null).sort((a, b) => a.diff - b.diff);
   const by930 = priced.filter(t => t.checkin <= `${Y}-09-30`);
@@ -330,10 +337,10 @@ async function showDetail(key){
   try { if (r.mail_id) j = await getMail(r.mail_id); } catch(e) {}
   if (seq !== DSEQ) return;
   const L = (j && j.links) || {}, btn = [];
-  const a = (u, t, cls) => `<a class="dt-b${cls ? ' ' + cls : ''}" href="${esc(u)}" target="_blank" rel="noopener noreferrer">${esc(t)} →</a>`;
+  const a = (u, t, cls) => !/^https:\/\//.test(String(u)) ? '' : `<a class="dt-b${cls ? ' ' + cls : ''}" href="${esc(u)}" target="_blank" rel="noopener noreferrer">${esc(t)} →</a>`;
   const PP = {groove: ['PRGTK', 'PR'], bellustar: ['PPBTK', 'PP']};
   if (!cx) {
-    if (L.manage) btn.push(a(L.manage.url, '予約の確認・変更・キャンセル'));
+    if (L.manage && /^https:\/\//.test(L.manage.url)) btn.push(a(L.manage.url, '予約の確認・変更・キャンセル'));
     else if (PP[r.hotel] && r.channel === '公式') btn.push(a(`https://www.panpacific.com/content/pphg-revamp/ja/booking/view.html?acc-confirmation=${encodeURIComponent(conf)}&ppcode=${PP[r.hotel][0]}&brand=${PP[r.hotel][1]}`, '予約の確認・変更・キャンセル'));
     else {
       if (L.modify) btn.push(a(L.modify.url, '予約の確認・変更'));
@@ -369,6 +376,14 @@ async function copyConf(btn, t){
   const o = btn.textContent; btn.textContent = 'コピーしました（Gmailで検索）'; setTimeout(() => { btn.textContent = o; }, 1800);
 }
 
+// 「今日やること」から予約カードへ移る（その年に切り替えてから）
+function goBk(key){
+  const r = (data.rows || []).find(x => x.key === key); if (!r) return;
+  if (r.checkin && r.checkin.slice(0, 4) !== yearSel) { yearSel = r.checkin.slice(0, 4); render(); }
+  const el = document.getElementById('bk-' + key.replace(/[^\w-]/g, '_')); if (!el) return;
+  const d = el.closest('details'); if (d) d.open = true;
+  el.scrollIntoView({behavior: 'smooth', block: 'center'}); el.classList.add('flash'); setTimeout(() => el.classList.remove('flash'), 1600);
+}
 function setYear(y){ yearSel = y; try { localStorage.setItem('yoiyado_bk_year', y); } catch(e) {} render(); }
 function toggleCx(){ showCx = !showCx; try { localStorage.setItem('yoiyado_bk_cx', showCx ? '1' : '0'); } catch(e) {} render(); }
 
@@ -405,7 +420,28 @@ function render(){
   // ハイアットへの振り替え候補（毎朝7時台に調べた結果。元の予約＋上乗せ額以内のもの）
   const TR = {}; (hp.transfer || []).forEach(t => { if (t.ok) TR[t.k] = t; });
   const fmtT = s => { if (!s) return '—'; const d = new Date(s); return (d.getMonth() + 1) + '/' + d.getDate() + ' ' + String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0'); };
-  let h = `<div class="filters" role="group" aria-label="表示する年">
+  // 今日やること（2026-10-17）：毎朝ここだけ見れば足りるように、判断が要るものを期限の近い順に最大3件
+  const addDays = n => new Date(Date.now() + 9 * 3600e3 + n * 864e5).toISOString().slice(0, 10);
+  const soon = addDays(2), name = r => NAMES[r.hotel] || r.hotel_name || r.hotel;
+  const todo = [];
+  future.filter(r => r.checkin === today).forEach(r => todo.push({p: 0, t: `今夜は <b>${esc(name(r))}</b>（${r.nights}泊）`, k: r.key, info: true}));
+  future.forEach(r => {
+    const fc = r.free_cancel_until, near = r.refundable && fc && fc >= today && fc <= soon;
+    const what = [isSave(r) && r.checkout > today ? `取り直すと${yen(W[r.key].save)}安い` : '', TR[r.key] ? 'ハイアットに振り替え可' : '',
+                  DUP[r.key] ? '重複の可能性' : '', W[r.key] && W[r.key].nr_ok && r.refundable ? `返金不可にすると${yen(W[r.key].nr_save)}安い` : ''].filter(Boolean);
+    if (what.length && near) todo.push({p: 1, d: fc, t: `<b>${md(fc)}（${wd(fc)}）まで</b>：${md(r.checkin)} ${esc(name(r))}　${what.join('・')}`, k: r.key});
+    else if (DUP[r.key] && !near) todo.push({p: 2, d: r.checkin, t: `重複の可能性：${md(r.checkin)} ${esc(name(r))}`, k: r.key});
+    else if (what.length) todo.push({p: 3, d: fc || r.checkin, t: `${md(r.checkin)} ${esc(name(r))}　${what.join('・')}${fc ? `（期限 ${md(fc)}）` : ''}`, k: r.key});
+  });
+  { const cc = data.cal_check || {}, n = (cc.missing || []).length + (cc.extra || []).length + (cc.wrong || []).length;
+    if (n) todo.push({p: 2, d: '', t: `カレンダー（P予定）とのずれ ${n}件` }); }
+  const seenK = new Set(), todoL = todo.sort((a, b) => a.p - b.p || String(a.d).localeCompare(String(b.d)))
+    .filter(x => !x.k || x.info || (!seenK.has(x.k) && seenK.add(x.k)));
+  const acts = todoL.filter(x => !x.info), shown = todoL.filter(x => x.info).concat(acts.slice(0, 3));
+  const todayBox = `<div class="today" role="region" aria-label="今日やること"><div class="td-h">今日やること${STALE ? '<span class="td-s">（保存済みのデータ）</span>' : ''}</div>
+    ${shown.map(x => `<div class="td-i${x.info ? ' info' : ''}">${x.k ? `<a href="#" onclick="goBk(${esc(JSON.stringify(x.k))});return false">${x.t}</a>` : x.t}</div>`).join('')}
+    ${acts.length ? (acts.length > 3 ? `<div class="td-m">ほか${acts.length - 3}件は下の予約カードに出ています</div>` : '') : '<div class="td-i none">今日の操作はありません</div>'}</div>`;
+  let h = (STALE ? `<div class="sum2 dup">⚠ <b>最新の予約データを取得できませんでした</b>。この端末に保存したデータ（台帳の更新 ${fmtT(data.built)}）を表示しています。料金や期限は古い可能性があります</div>` : '') + todayBox + `<div class="filters" role="group" aria-label="表示する年">
       ${years.map(v => `<button type="button" aria-pressed="${v === Y}" onclick="setYear('${v}')">${v}年</button>`).join('')}
       <button type="button" class="cxb" aria-pressed="${showCx}" onclick="toggleCx()">キャンセルも表示</button></div>
     <div class="sum">
@@ -471,7 +507,7 @@ function render(){
       const cw = !cx && CW[r.key] ? CW[r.key] : [];
       const dp = !cx && DUP[r.key] ? DUP[r.key] : [];
       const tr = !cx && TR[r.key] && r.checkout > today ? TR[r.key] : null;
-      l += `<div class="bk${cx ? ' cx' : ''}${sv ? ' save' : ''}${cw.length || dp.length ? ' cpw' : ''}">
+      l += `<div id="bk-${esc(r.key.replace(/[^\w-]/g, '_'))}" class="bk${cx ? ' cx' : ''}${sv ? ' save' : ''}${cw.length || dp.length ? ' cpw' : ''}">
         <div class="d num">${md(r.checkin)}<small>（${wd(r.checkin)}）${r.nights}泊・${r.adults}名</small></div>
         <div><div class="h"><span class="dot" style="background:${COLORS[r.hotel] || OTHER_COLOR}"></span>${esc(NAMES[r.hotel] || r.hotel_name)}${OTHER.has(r.hotel) ? '<span class="tag ot">比較対象外</span>' : ''}</div>
           <div class="r">${esc(r.room)}${cx ? '<span class="tag cx">キャンセル</span>' : r.refundable ? '<span class="tag ok">返金可</span>' : '<span class="tag nr">返金不可</span>'}${ch}</div>
@@ -481,7 +517,7 @@ function render(){
         ${lk ? `<div class="lk">${lk}</div>` : ''}
         ${sv ? `<div class="sv">▼ <b>${yen(w.save)}安く</b>取り直せます：${esc(w.best_channel)}［${esc(w.best_kind)}］${esc(w.best_room)} ${yen(w.best_pay)}<br>
           ${esc(w.best_plan)}　<a href="${esc(w.best_url)}" target="_blank" rel="noopener">予約ページへ →</a></div>` : ''}
-        ${!cx && r.refundable && w && w.nr_ok ? `<div class="sv nr">返金不可にすると <b>${yen(w.nr_save)}安い</b>（${yen(w.nr_pay)}・${esc(w.nr_plan)}）。期限 ${md(w.free_cancel_until)}（${wd(w.free_cancel_until)}）23:59まで<br>
+        ${!cx && r.refundable && w && w.nr_ok ? `<div class="sv nr">返金不可にすると <b>${yen(w.nr_save)}安い</b>（${yen(w.nr_pay)}・${esc(w.nr_plan)}）。期限 ${md(w.free_cancel_until)}（${wd(w.free_cancel_until)}）まで（締切の時刻は「予約の詳細」のキャンセル規定で確認）<br>
           <small>返金不可は予約時に全額がかかり、返金されません。新しく予約 → 予約ページへの反映を確認 → いまの予約をキャンセル</small>
           <a href="${esc(w.nr_url)}" target="_blank" rel="noopener">ハイアットで見る →</a></div>` : ''}
         ${tr ? `<div class="sv tr">ハイアットに振り替え可（<b>${tr.diff >= 0 ? '+' + yen(tr.diff) : '−' + yen(-tr.diff)}</b>・${yen(tr.pay)}）${tr.mode === 'rescue' ? '・救済モード' : ''}。元の予約の無料キャンセル期限 ${md(tr.free_cancel_until)}<br>

@@ -1,3 +1,5 @@
+// ハイアット系（60泊に数えるホテル）。料金比較・振り替え・値下がり監視はリージェンシー東京（hyatt）だけ（2026-10-17）
+const HYATT_HOTELS = ['hyatt', 'park_hyatt', 'grand_hyatt', 'andaz', 'hyatt_centric', 'hyatt_other'];
 // 宵宿：会員資格の一覧と、予約ごとに効くチェックイン／チェックアウト時刻のルール。
 // 会員ステータス（status.html）と予約一覧（bookings.html）の両方で使う。
 // 今の資格は毎朝メールから読み取った値（Apps Script の STATUS_MANUAL.tiers_auto、tiers_mail.py が送る）。
@@ -12,7 +14,7 @@ const PROGRAMS = [
    perks: {'ゴールド': '朝食またはお食事クレジット・空室次第のアップグレード・ポイント80%増し',
            'ダイヤモンド': 'エグゼクティブラウンジ・朝食2名・スイートも対象のアップグレード（空室次第）',
            'ダイヤモンド・リザーブ': '予約時アップグレード確約・16:00アウト保証'}},
-  {key: 'hyatt', name: 'ワールド オブ ハイアット', hotels: ['hyatt'],
+  {key: 'hyatt', name: 'ワールド オブ ハイアット', hotels: HYATT_HOTELS,
    tiers: ['メンバー', 'ディスカバリスト', 'エクスプローリスト', 'グローバリスト'], def: 'メンバー',
    next: {'メンバー': 'グローバリスト：1〜12月に公式予約で60泊（10泊でディスカバリスト、30泊でエクスプローリスト）',
           'ディスカバリスト': 'グローバリスト：年60泊', 'エクスプローリスト': 'グローバリスト：年60泊'},
@@ -103,7 +105,7 @@ function stayTimes(r, tiers, proj){
     if (t === 'ダイヤモンド・リザーブ') { co = '16:00'; why = t; how = '保証'; }
     else if (t === 'ゴールド' || t === 'ダイヤモンド') { why = t; how = '延長はリクエスト制'; }
     else why = t;
-  } else if (r.hotel === 'hyatt' && direct) {
+  } else if (HYATT_HOTELS.includes(r.hotel) && direct) {
     const t = tiers.hyatt;
     if (t === 'グローバリスト') { co = '16:00'; why = t; how = '依頼で付与'; }
     else if (t === 'ディスカバリスト' || t === 'エクスプローリスト') { co = '14:00頃'; why = t; how = '空室次第'; }

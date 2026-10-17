@@ -360,7 +360,7 @@ function render(){
   let h = '';
 
   // ハイアット グローバリスト：公式予約の宿泊数 60泊
-  const hy = rows.filter(r => r.hotel === 'hyatt'), hyD = hy.filter(direct), hyX = hy.filter(r => !direct(r));
+  const hy = rows.filter(r => HYATT_HOTELS.includes(r.hotel)), hyD = hy.filter(direct), hyX = hy.filter(r => !direct(r));
   const hyDone = sum(hyD.filter(stayed), r => r.nights), hyPlan = sum(hyD.filter(r => !stayed(r)), r => r.nights);
   const hyRest = Math.max(0, 60 - hyDone - hyPlan);
   h += `<div class="pg${hyDone + hyPlan >= 60 ? ' ok' : ''}"><div class="t"><span class="nm2"><b>ハイアット</b>${lv('hyatt', 'グローバリスト')}</span><span class="v">${hyDone}<small>泊済み</small> ＋ ${hyPlan}<small>泊予約</small> ／ 60泊</span></div>
@@ -420,7 +420,7 @@ const HY_EXCLUDE = [2026];   // 年内に60泊へ届かないため振り替え�
 const WDJ = '日月火水木金土';
 function hyattOutlook(today){
   const hp = D.hyatt || {}, st = D.settings || {}, target = Number(st.hyatt_target || 63), y = YEAR;
-  const hy = (D.rows || []).filter(r => r.status === 'booked' && r.hotel === 'hyatt' && r.channel === '公式' && r.checkin && r.checkin.slice(0, 4) === String(y));
+  const hy = (D.rows || []).filter(r => r.status === 'booked' && HYATT_HOTELS.includes(r.hotel) && r.channel === '公式' && r.checkin && r.checkin.slice(0, 4) === String(y));
   const n930 = hy.filter(r => r.checkin <= `${y}-09-30`), total = hy.reduce((a, r) => a + r.nights, 0);
   const done = n930.filter(r => r.checkout <= today).reduce((a, r) => a + r.nights, 0);
   const plan = n930.filter(r => r.checkout > today).reduce((a, r) => a + r.nights, 0);
