@@ -100,7 +100,7 @@ details.pm > summary{margin:10px 4px 6px;color:var(--sub)}
 .bk .lk{grid-column:2/4;display:flex;gap:12px;flex-wrap:wrap;font-size:11.5px;margin-top:3px}
 .bk .lk a{color:var(--sub)}
 .trt{padding:12px 14px}
-.trt summary{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:2px 10px;cursor:pointer;font-weight:700;list-style:none}
+.trt summary{display:flex;justify-content:space-between;align-items:baseline;gap:8px;cursor:pointer;font-weight:700;list-style:none}
 .trt summary::-webkit-details-marker{display:none}
 .trt summary .s{font-size:12px;color:var(--sub);font-weight:500;white-space:nowrap;margin-left:auto}
 .trt summary span:first-child{white-space:nowrap}
@@ -249,9 +249,9 @@ function transferTable(Y, today){
     : [...priced, ...rows.filter(t => t.pay == null || t.diff == null)];
   const sign = n => n >= 0 ? '+' + yen(n) : '−' + yen(-n);
   return `<details class="card trt"${trOpen ? ' open' : ''} ontoggle="trToggle(this)">
-    <summary><span>ハイアット振り替えの判断表</span><span class="s">${Y}年・9/30まで あと${rest}泊</span></summary>
+    <summary><span>ハイアット振り替えの判断表</span><span class="s">あと${rest}泊</span></summary>
     <div class="trs">${rest ? `差額の小さい順に<b>${Math.min(rest, by930.length)}泊</b>振り替えると <b>${sign(sumN(by930, rest))}</b>（平日だけなら ${sign(sumN(wd, rest))}）` : '<b>9/30までの目標に届いています</b>'}
-      ・ハイアット ${nights}泊／目標${target}泊</div>
+　${Y}年9/30までのハイアット ${nights}泊／目標${target}泊</div>
     <div class="trb" role="group" aria-label="並べ替え">${[['diff', '差額順'], ['date', '日付順']].map(([v, l]) =>
       `<button type="button" aria-pressed="${trSort === v}" onclick="setTrSort('${v}')">${l}</button>`).join('')}</div>
     <div class="trg"><div class="th">日付</div><div class="th">今の予約</div><div class="th r">ハイアット</div><div class="th r">差額</div>
