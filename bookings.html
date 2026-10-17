@@ -119,6 +119,9 @@ details.pm > summary{margin:10px 4px 6px;color:var(--sub)}
 .dt-b.warn{color:#c0392b;border-color:#e3b3ac}
 .dt-n{font-size:12px;color:var(--sub);margin:6px 0}.dt-g{color:inherit}
 .dt-m{margin-top:12px;border-top:1px solid var(--line);padding-top:8px}.dt-m summary{cursor:pointer;font-size:13px;color:var(--sub)}
+.tag.pd{background:#fdecc8;color:#8a5a00}
+.dt-pd{margin:4px 0 10px;padding:10px 12px;border-radius:12px;background:#fdf3e1;color:#5a4300;font-size:13px;line-height:1.55}
+.dt-pd .dt-b{margin-top:8px;font-size:13px}
 .today{margin:0 0 12px;padding:10px 12px;border-radius:12px;background:var(--bg);border:1px solid var(--line)}
 .today .td-h{font-size:12px;color:var(--sub);margin-bottom:4px;font-weight:600}.today .td-s{font-weight:400;margin-left:4px}
 .today .td-i{font-size:13.5px;line-height:1.5;padding:4px 0;border-top:1px dashed var(--line)}.today .td-i:first-of-type{border-top:0}
@@ -353,10 +356,15 @@ async function showDetail(key){
   const telShow = j && j.phone ? String(j.phone).replace(/^\+?81[-\s]?(\d)/, '0$1') : '';
   if (tel) btn.push(`<a class="dt-b" href="tel:${esc(tel)}">電話 ${esc(telShow)}</a>`);
   btn.push(`<button type="button" class="dt-b" onclick="copyConf(this, ${esc(JSON.stringify(conf))})">予約番号をコピー</button>`);
+  const pend = !cx && r.cx_group ? (data.rows || []).filter(x => x.cx_group === r.cx_group && x.status === 'booked') : [];
+  const pendBox = pend.length ? `<div class="dt-pd"><b>キャンセルの照合保留</b>：同じホテル・同じ日程の予約が${pend.length}件あり、届いたキャンセルメールがどれのものか判別できません。ホテルの予約確認で確かめて、キャンセルされた予約を選んでください。
+    ${pend.map(x => `<button type="button" class="dt-b" onclick="resolveCx(this, ${esc(JSON.stringify(x.cx_group))}, ${esc(JSON.stringify(x.key))})">予約番号 ${esc(x.conf || x.key.split(':').pop())}${x.pay ? '・' + yen(x.pay) : ''} がキャンセルされた</button>`).join('')}</div>` : '';
+  const nw = !cx && r.refundable && r.checkout > today ? `<button type="button" class="dt-b" onclick="setNoWatch(this, ${esc(JSON.stringify(r.key))}, ${r.nowatch ? 0 : 1})">${r.nowatch ? '値下がり・振り替えの監視を再開する' : 'この予約は値下がり・振り替えを監視しない'}</button>` : '';
+  if (nw) btn.push(nw);
   const more = j ? row('支払い', esc(j.pay_ja || j.pay || '')) + row('キャンセル規定', esc(j.cancel_ja || j.cancel || '')) : '';
   // 原典：パソコンではGmailでそのメールを開ける（スマホのGmailはこのリンクを受け付けないので「元のメールを見る」で）
   const gm = !TOUCH && data.mail_acct ? `<a class="dt-g" href="https://mail.google.com/mail/?authuser=${encodeURIComponent(data.mail_acct).replace('%40', '@')}#${r.mail_id ? 'all/' + encodeURIComponent(r.mail_id) : 'search/' + encodeURIComponent('"' + conf + '"')}" target="_blank" rel="noopener">Gmailで開く →</a>` : '';
-  bodyEl.innerHTML = `<div class="dt">${base}</div>
+  bodyEl.innerHTML = `${pendBox}<div class="dt">${base}</div>
     ${btn.length ? `<div class="dt-bs">${btn.join('')}</div>` : ''}
     ${more ? `<div class="dt">${more}</div>` : ''}
     ${!cx && !L.manage && !L.modify && !L.cancel && !(PP[r.hotel] && r.channel === '公式') ? `<div class="dt-n">予約メールに変更・キャンセルのリンクがありません。${SITE[r.channel] ? 'サイトの予約確認から、予約番号で探してください。' : 'ホテルに電話するか、予約したサイトから手続きしてください。'}</div>` : ''}
@@ -376,6 +384,27 @@ async function copyConf(btn, t){
   const o = btn.textContent; btn.textContent = 'コピーしました（Gmailで検索）'; setTimeout(() => { btn.textContent = o; }, 1800);
 }
 
+async function flagCall(q){
+  const r = await fetch(GAS + '?api=flagSet&' + new URLSearchParams(q).toString() + '&k=' + encodeURIComponent(K), {credentials: 'omit', cache: 'no-store'});
+  const j = JSON.parse(await r.text()); if (j.error) throw new Error(j.error); return j;
+}
+async function resolveCx(btn, g, key){
+  if (!confirm('この予約をキャンセル済みとして記録します。ホテルの予約確認で確かめましたか？')) return;
+  btn.disabled = true;
+  try {
+    await flagCall({type: 'resolve', g, key});
+    (data.rows || []).forEach(x => { if (x.cx_group === g) { if (x.key === key) x.status = 'cancelled'; x.cx_group = ''; } });
+    closeMail(); render();
+  } catch(e) { btn.disabled = false; alert('記録できませんでした。少し時間をおいてお試しください。'); }
+}
+async function setNoWatch(btn, key, v){
+  btn.disabled = true;
+  try {
+    await flagCall({type: 'nowatch', key, v: String(v)});
+    const r = (data.rows || []).find(x => x.key === key); if (r) r.nowatch = !!v;
+    render(); showDetail(key);
+  } catch(e) { btn.disabled = false; alert('記録できませんでした。少し時間をおいてお試しください。'); }
+}
 // 「今日やること」から予約カードへ移る（その年に切り替えてから）
 function goBk(key){
   const r = (data.rows || []).find(x => x.key === key); if (!r) return;
@@ -433,6 +462,7 @@ function render(){
     else if (DUP[r.key] && !near) todo.push({p: 2, d: r.checkin, t: `重複の可能性：${md(r.checkin)} ${esc(name(r))}`, k: r.key});
     else if (what.length) todo.push({p: 3, d: fc || r.checkin, t: `${md(r.checkin)} ${esc(name(r))}　${what.join('・')}${fc ? `（期限 ${md(fc)}）` : ''}`, k: r.key});
   });
+  future.filter(r => r.cx_group).forEach(r => todo.push({p: 1, d: r.checkin, t: `キャンセルの照合保留：${md(r.checkin)} ${esc(name(r))}（どの予約のキャンセルか確認）`, k: r.key}));
   { const cc = data.cal_check || {}, n = (cc.missing || []).length + (cc.extra || []).length + (cc.wrong || []).length;
     if (n) todo.push({p: 2, d: '', t: `カレンダー（P予定）とのずれ ${n}件` }); }
   const seenK = new Set(), todoL = todo.sort((a, b) => a.p - b.p || String(a.d).localeCompare(String(b.d)))
@@ -510,7 +540,7 @@ function render(){
       l += `<div id="bk-${esc(r.key.replace(/[^\w-]/g, '_'))}" class="bk${cx ? ' cx' : ''}${sv ? ' save' : ''}${cw.length || dp.length ? ' cpw' : ''}">
         <div class="d num">${md(r.checkin)}<small>（${wd(r.checkin)}）${r.nights}泊・${r.adults}名</small></div>
         <div><div class="h"><span class="dot" style="background:${COLORS[r.hotel] || OTHER_COLOR}"></span>${esc(NAMES[r.hotel] || r.hotel_name)}${OTHER.has(r.hotel) ? '<span class="tag ot">比較対象外</span>' : ''}</div>
-          <div class="r">${esc(r.room)}${cx ? '<span class="tag cx">キャンセル</span>' : r.refundable ? '<span class="tag ok">返金可</span>' : '<span class="tag nr">返金不可</span>'}${ch}</div>
+          <div class="r">${esc(r.room)}${cx ? '<span class="tag cx">キャンセル</span>' : r.refundable ? '<span class="tag ok">返金可</span>' : '<span class="tag nr">返金不可</span>'}${ch}${!cx && r.cx_group ? '<span class="tag pd">キャンセル照合中</span>' : ''}${!cx && r.nowatch ? '<span class="tag ot">監視なし</span>' : ''}</div>
           <div class="p">${esc(r.plan)}</div></div>
         <div class="pay num">${r.pay ? yen(r.pay) : '—'}${r.nights > 1 && r.pay ? `<small>1泊 ${yen(Math.round(r.pay / r.nights))}</small>` : ''}</div>
         ${free || wl || tm ? `<div class="w">${tm}${free}${wl}</div>` : ''}
