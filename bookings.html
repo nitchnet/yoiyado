@@ -288,6 +288,7 @@ function transferTable(Y, today){
 const SITE = {'一休': ['一休の予約確認', 'https://www.ikyu.com/'], 'Expedia': ['エクスペディアの旅程', 'https://www.expedia.co.jp/trips'],
               'I Prefer': ['I Preferの予約確認', 'https://www.phgsecure.com/ibe/reservationbrandredirect.ashx?brandcode=PH']};
 const MAILC = {};
+let DSEQ = 0;
 async function getMail(id){
   if (MAILC[id]) return MAILC[id];
   const r = await fetch(GAS + '?api=mail&id=' + encodeURIComponent(id) + '&k=' + encodeURIComponent(K), {credentials: 'omit', cache: 'no-store'});
@@ -310,6 +311,7 @@ const telNo = s => { const d = String(s || '').replace(/[^\d+]/g, ''); return d.
 async function showDetail(key){
   const r = (data.rows || []).find(x => x.key === key); if (!r) return;
   mailOv();
+  const seq = ++DSEQ;  // 読み込み中に別の予約を開いたり閉じたりしたら、遅れて届いた応答は捨てる
   const conf = r.conf || r.key.split(':').pop(), cx = r.status !== 'booked';
   document.getElementById('mvsub').textContent = NAMES[r.hotel] || r.hotel_name || r.hotel;
   document.getElementById('mvmeta').textContent = `${r.channel || '公式'}　予約番号 ${conf}`;
@@ -326,7 +328,7 @@ async function showDetail(key){
   bodyEl.innerHTML = `<div class="dt">${base}<div class="dt-r"><div class="dt-k">メールから</div><div class="dt-v sub">読み込み中…</div></div></div>`;
   let j = null;
   try { if (r.mail_id) j = await getMail(r.mail_id); } catch(e) {}
-  if (document.getElementById('mvsub').textContent !== (NAMES[r.hotel] || r.hotel_name || r.hotel)) return;  // 別の予約を開き直した
+  if (seq !== DSEQ) return;
   const L = (j && j.links) || {}, btn = [];
   const a = (u, t, cls) => `<a class="dt-b${cls ? ' ' + cls : ''}" href="${esc(u)}" target="_blank" rel="noopener noreferrer">${esc(t)} →</a>`;
   const PP = {groove: ['PRGTK', 'PR'], bellustar: ['PPBTK', 'PP']};
@@ -356,7 +358,7 @@ async function showDetail(key){
         : `<div class="dt-n">${r.mail_id ? '予約メールを読み込めませんでした。少し時間をおいてお試しください。' : 'この予約は予約メールが見つかっていません。'}${gm ? '　' + gm : ''}</div>`}
     ${(j && ((j.cancel_ja && j.cancel_ja !== j.cancel) || (j.pay_ja && j.pay_ja !== j.pay))) ? '<div class="dt-n">英語の規定は日本語に訳して表示しています（正確な文面は元のメールで）。</div>' : ''}`;
 }
-function closeMail(){ const ov = document.getElementById('mailov'); if (ov) ov.style.display = 'none'; document.documentElement.style.overflow = ''; }
+function closeMail(){ DSEQ++; const ov = document.getElementById('mailov'); if (ov) ov.style.display = 'none'; document.documentElement.style.overflow = ''; }
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeMail(); });
 
 // スマホ（指で触る画面）では、Gmailのスマホ画面がメールを直接開くリンクを受け付けないので、予約番号をコピーしてGmailアプリで検索する

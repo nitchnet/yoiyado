@@ -227,6 +227,7 @@ let K = '';
   const m = location.hash.match(/k=([0-9a-f]{20,})/i);
   try { if (m) { K = m[1]; localStorage.setItem('yoiyado_k', K); } else { K = localStorage.getItem('yoiyado_k') || ''; } }
   catch(e) { if (m) K = m[1]; }
+  if (m) { try { history.replaceState(null, '', location.pathname + location.search); } catch(e) {} }
 })();
 // Apps Script の応答はまれに届かないので3回まで取り直す（検索依頼は依頼番号 cid で二重登録されない）
 const call = async (action, a) => {
