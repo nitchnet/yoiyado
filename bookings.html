@@ -100,6 +100,14 @@ details.pm > summary{margin:10px 4px 6px;color:var(--sub)}
 .bk .lk{grid-column:2/4;display:flex;gap:12px;flex-wrap:wrap;font-size:11.5px;margin-top:3px}
 .bk .lk a{color:var(--sub)}
 .bk .lk .cpy{font:inherit;font-size:11.5px;padding:0;border:0;background:none;color:var(--sub);text-decoration:underline;text-underline-offset:2px;cursor:pointer}
+#mailov{position:fixed;inset:0;background:rgba(10,14,24,.55);display:none;align-items:flex-end;justify-content:center;z-index:50}
+#mailov .mv-box{background:var(--card);color:var(--ink);width:100%;max-width:720px;max-height:88vh;border-radius:16px 16px 0 0;display:flex;flex-direction:column;box-shadow:0 -6px 24px rgba(0,0,0,.25)}
+@media (min-width:760px){#mailov{align-items:center}#mailov .mv-box{border-radius:16px}}
+#mailov .mv-hd{display:flex;gap:10px;align-items:flex-start;justify-content:space-between;padding:14px 16px 4px}
+#mailov .mv-hd b{font-size:14px;line-height:1.4}
+#mailov .mv-hd button{flex:none;font:inherit;font-size:12.5px;padding:4px 12px;border-radius:999px;border:1px solid var(--line);background:var(--bg);color:var(--ink);cursor:pointer}
+#mailov .mv-meta{font-size:11.5px;color:var(--sub);padding:0 16px 8px;border-bottom:1px solid var(--line)}
+#mailov pre{margin:0;padding:12px 16px 24px;overflow:auto;white-space:pre-wrap;word-break:break-word;font:13px/1.6 inherit;font-family:inherit}
 .trt{padding:12px 14px}
 .trt summary{display:flex;justify-content:space-between;align-items:baseline;gap:8px;cursor:pointer;font-weight:700;list-style:none}
 .trt summary::-webkit-details-marker{display:none}
@@ -264,6 +272,32 @@ function transferTable(Y, today){
   </details>`;
 }
 
+// 予約メールを宵宿の中で開く（本文の文字だけ。リンクは押せない文字のまま）
+async function showMail(id){
+  let ov = document.getElementById('mailov');
+  if (!ov) {
+    ov = document.createElement('div'); ov.id = 'mailov';
+    ov.innerHTML = '<div class="mv-box" role="dialog" aria-modal="true"><div class="mv-hd"><b id="mvsub"></b><button type="button" onclick="closeMail()" aria-label="閉じる">閉じる</button></div><div class="mv-meta" id="mvmeta"></div><pre id="mvtext"></pre></div>';
+    ov.addEventListener('click', e => { if (e.target === ov) closeMail(); });
+    document.body.appendChild(ov);
+  }
+  document.getElementById('mvsub').textContent = '読み込み中…'; document.getElementById('mvmeta').textContent = ''; document.getElementById('mvtext').textContent = '';
+  ov.style.display = 'flex'; document.documentElement.style.overflow = 'hidden';
+  try {
+    const r = await fetch(GAS + '?api=mail&id=' + encodeURIComponent(id) + '&k=' + encodeURIComponent(K), {credentials: 'omit', cache: 'no-store'});
+    const j = JSON.parse(await r.text());
+    if (j.error) throw new Error(j.error);
+    document.getElementById('mvsub').textContent = j.subject || '予約メール';
+    document.getElementById('mvmeta').textContent = `${j.from || ''}　${j.date || ''}`;
+    document.getElementById('mvtext').textContent = j.text || '';
+  } catch(e) {
+    document.getElementById('mvsub').textContent = 'メールを読み込めませんでした';
+    document.getElementById('mvtext').textContent = 'まだ取り込まれていないか、通信に失敗しました。少し時間をおいてもう一度お試しください。';
+  }
+}
+function closeMail(){ const ov = document.getElementById('mailov'); if (ov) ov.style.display = 'none'; document.documentElement.style.overflow = ''; }
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeMail(); });
+
 // スマホ（指で触る画面）では、Gmailのスマホ画面がメールを直接開くリンクを受け付けないので、予約番号をコピーしてGmailアプリで検索する
 const TOUCH = (() => { try { return matchMedia('(pointer: coarse)').matches; } catch(e) { return false; } })();
 async function copyConf(btn, t){
@@ -366,6 +400,7 @@ function render(){
       // その予約の確認ページ・予約メールへのリンク（押したときだけ開く）
       const PP = {groove: ['PRGTK', 'PR'], bellustar: ['PPBTK', 'PP']}, conf = r.conf || r.key.split(':').pop();
       const lk = [PP[r.hotel] && r.channel === '公式' ? `<a href="https://www.panpacific.com/content/pphg-revamp/ja/booking/view.html?acc-confirmation=${encodeURIComponent(conf)}&ppcode=${PP[r.hotel][0]}&brand=${PP[r.hotel][1]}" target="_blank" rel="noopener">予約の確認・変更 →</a>` : '',
+                  (r.mail_id ? `<button type="button" class="cpy mv" onclick="showMail(${esc(JSON.stringify(r.mail_id))})">予約メールを見る</button>` : ''),
                   (TOUCH ? `<button type="button" class="cpy" onclick="copyConf(this, ${esc(JSON.stringify(conf))})">予約番号をコピー</button>` : ''), (!TOUCH && data.mail_acct) ? `<a href="https://mail.google.com/mail/?authuser=${encodeURIComponent(data.mail_acct).replace('%40', '@')}#${r.mail_id ? 'all/' + encodeURIComponent(r.mail_id) : 'search/' + encodeURIComponent('"' + conf + '"')}" target="_blank" rel="noopener">予約メール →</a>` : ''].filter(Boolean).join('');
       const wl = !cx && w && w.best_pay && !sv ? `<span>今の最安 ${yen(w.best_pay)}（${esc(w.best_channel)}${wd8}）</span>` : '';
       // いまの資格で使えるチェックイン／アウト（会員ステータスで選んだ資格から）
