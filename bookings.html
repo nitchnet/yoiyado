@@ -341,7 +341,8 @@ async function showDetail(key){
     if (!btn.length && SITE[r.channel]) btn.push(a(SITE[r.channel][1], SITE[r.channel][0]));
   }
   const tel = j && j.phone ? telNo(j.phone) : '';
-  if (tel) btn.push(`<a class="dt-b" href="tel:${esc(tel)}">電話 ${esc(tel)}</a>`);
+  const telShow = j && j.phone ? String(j.phone).replace(/^\+?81[-\s]?(\d)/, '0$1') : '';
+  if (tel) btn.push(`<a class="dt-b" href="tel:${esc(tel)}">電話 ${esc(telShow)}</a>`);
   btn.push(`<button type="button" class="dt-b" onclick="copyConf(this, ${esc(JSON.stringify(conf))})">予約番号をコピー</button>`);
   const more = j ? row('支払い', esc(j.pay || '')) + row('キャンセル規定', esc(j.cancel || '')) : '';
   bodyEl.innerHTML = `<div class="dt">${base}${more}</div>
