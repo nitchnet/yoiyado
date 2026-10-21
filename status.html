@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow, noarchive">
+<meta name="referrer" content="no-referrer">
+<title>会員ステータス｜宵宿</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="theme-color" content="#1f2a44">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="宵宿">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@600;700&text=%E5%AE%B5%E5%AE%BF%E4%BC%9A%E5%93%A1%E3%82%B9%E3%83%86%E3%83%BC%E3%82%BF%E3%82%B9&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f4f1ea;--bg2:#ece7dc;--card:#fffdf9;--ink:#1c2233;--sub:#6d6a64;--line:#e4ddcf;
+  --night:#1f2a44;--night2:#2d3b5e;--gold:#b8893a;--gold-soft:#f3e7cf;
+  --ok:#2f7d5b;--ok-bg:#e5f2ea;--warn:#b0462f;--warn-bg:#fbebe5;
+  --hilton:#1d4f91;--hyatt:#7a4a2a;--keio:#2f7d5b;
+  --shadow:0 1px 2px rgba(28,34,51,.05),0 6px 20px rgba(28,34,51,.06);
+}
+@media (prefers-color-scheme: dark){:root{
+  --bg:#0f1422;--bg2:#141b2d;--card:#182033;--ink:#ece8df;--sub:#9aa0ae;--line:#2a3349;
+  --night:#0b1020;--night2:#1d2742;--gold:#d8b06a;--gold-soft:#3a3221;
+  --ok:#6cc79c;--ok-bg:#183126;--warn:#f0957a;--warn-bg:#3a231d;
+  --hilton:#7fb0f0;--hyatt:#e0a77c;--keio:#6cc79c;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.25);
+}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.65 -apple-system,BlinkMacSystemFont,"Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic UI",Meiryo,sans-serif;-webkit-font-smoothing:antialiased}
+.serif{font-family:"Shippori Mincho","Hiragino Mincho ProN","Yu Mincho",serif}
+.num{font-variant-numeric:tabular-nums}
+.hero{background:radial-gradient(120% 140% at 85% -20%,#3b4c78 0%,var(--night2) 38%,var(--night) 100%);color:#f3eee3;padding:20px 16px 70px;position:relative;overflow:hidden}
+.top{max-width:720px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;gap:10px;position:relative;z-index:1}
+.back{color:#d8b06a;text-decoration:none;font-size:13px;font-weight:700;border:1px solid #ffffff30;border-radius:999px;padding:5px 12px;background:#ffffff10}
+.ttl{max-width:720px;margin:14px auto 0;position:relative;z-index:1}
+.ttl h1{margin:0;font-size:26px;letter-spacing:.1em;font-weight:700}
+.ttl p{margin:6px 0 0;font-size:12.5px;color:#c9cbd6;letter-spacing:.03em}
+main{max-width:720px;margin:-52px auto 0;padding:0 14px 36px;position:relative;z-index:2}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;margin-bottom:14px;box-shadow:var(--shadow)}
+h2{font-size:16px;margin:0 0 10px;letter-spacing:.04em;display:flex;align-items:center;gap:8px}
+h2 .n{font-size:11px;color:var(--gold);border:1px solid var(--gold);border-radius:999px;padding:0 8px;font-weight:700}
+h3{font-size:14.5px;margin:14px 0 6px;display:flex;align-items:center;gap:7px}
+.dot{width:9px;height:9px;border-radius:50%;flex:none;display:inline-block}
+.hl{background:var(--hilton)}.hy{background:var(--hyatt)}.ke{background:var(--keio)}.gh{background:#d0603c}.ip{background:#a07cc5}.kp{background:#3f8a5f}.bs{background:#8a7a3a}.no{background:#9b6b3f}.cp{background:#8c8c8c}
+.rules{display:grid;gap:8px}
+.rule{display:grid;grid-template-columns:62px minmax(0,1fr);gap:8px;align-items:start;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.rule .d{font-weight:700;font-size:13px;color:var(--gold)}
+.rule .h{font-weight:700}
+.rule .x{font-size:12.5px;color:var(--sub);margin-top:2px}
+.tw{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 -4px}
+table{border-collapse:collapse;width:100%;font-size:13px;min-width:0}
+th,td{padding:7px 6px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+th{font-size:11.5px;color:var(--sub);font-weight:600;letter-spacing:.04em;white-space:nowrap}
+td.t{font-weight:700;white-space:nowrap}
+td.me{font-weight:700}
+tr.mine td{background:var(--gold-soft)}
+.tag{display:inline-block;font-size:10.5px;padding:0 6px;border-radius:6px;font-weight:700;margin-left:4px;vertical-align:1px}
+.tag.ok{color:var(--ok);background:var(--ok-bg)}
+.tag.nr{color:var(--warn);background:var(--warn-bg)}
+.tag.me{color:var(--gold);background:var(--gold-soft)}
+ul.b{margin:4px 0 0;padding-left:1.1em}
+ul.b li{margin:2px 0}
+.tier{border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-top:8px;background:var(--bg)}
+.tier.mine{border:1.5px solid var(--gold);background:linear-gradient(180deg,var(--gold-soft),var(--bg) 80%)}
+.tier .nm{font-weight:700;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.tier .cond{font-size:12px;color:var(--sub)}
+.note{font-size:12px;color:var(--sub);margin-top:8px}
+footer{max-width:720px;margin:0 auto;padding:0 16px 28px;text-align:center;font-size:11px;color:var(--sub);letter-spacing:.06em}
+footer a{color:inherit}
+/* 進捗（予約台帳から自動計算） */
+.yrs{margin-left:auto;display:inline-flex;gap:4px}
+.yrs button{font:inherit;font-size:12px;padding:3px 10px;border-radius:999px;border:1px solid var(--line);background:var(--bg);color:var(--sub);cursor:pointer}
+.yrs button[aria-pressed="true"]{background:var(--night2);color:#fff;border-color:var(--night2)}
+@media (prefers-color-scheme: dark){.yrs button[aria-pressed="true"],.pg button.sv{background:var(--gold);color:#1a1f2e;border-color:var(--gold)}}
+.hyo{margin-top:8px;padding-top:7px;border-top:1px dashed var(--line)}
+.hyc{margin-top:6px;display:grid;gap:4px;font-size:12px}
+.hyc > div{display:grid;grid-template-columns:76px minmax(0,1fr);gap:6px;padding:5px 8px;border-radius:8px;background:var(--card);border:1px solid var(--line)}
+.hyc small{display:block;color:var(--sub);font-size:11px}
+.hyset{margin-top:8px;font-size:12px}
+.hyset summary{cursor:pointer;color:var(--sub)}
+.hyset .g{display:grid;grid-template-columns:1fr;gap:4px;margin:6px 0}
+.hyset label{display:flex;align-items:center;gap:6px;justify-content:space-between}
+.hyset input{width:84px;font:inherit;font-size:12px;padding:2px 6px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);text-align:right}
+.hyset label small{width:44px;color:var(--sub)}
+.pg{border:1px solid var(--line);border-radius:12px;padding:11px 12px;margin-top:10px;background:var(--bg)}
+.pg .t{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}
+.pg .t b{font-size:14.5px}
+.pg .t .v{font-weight:700;font-variant-numeric:tabular-nums}
+.pg .t .v small{font-weight:500;color:var(--sub);font-size:12px}
+.pg .bar{position:relative;height:8px;border-radius:999px;background:var(--bg2);overflow:hidden;margin:8px 0 6px}
+.pg .bar i{position:absolute;left:0;top:0;bottom:0;border-radius:999px}
+.pg .bar i.done{background:var(--gold)}
+.pg .bar i.plan{background:var(--gold);opacity:.35}
+.pg .s{font-size:12px;color:var(--sub);line-height:1.6}
+.pg .s b{color:var(--ink)}
+.pg.ok{border-color:var(--gold)}
+.pg input{font:inherit;font-size:14px;width:9em;padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink)}
+.pg button.sv{font:inherit;font-size:12.5px;padding:6px 12px;border-radius:8px;border:0;background:var(--night2);color:#fff;cursor:pointer;margin-left:4px}
+.pg-empty{color:var(--sub);font-size:13px}
+.pg .br{display:flex;gap:9px;align-items:flex-start;font-size:13px;line-height:1.55;padding:7px 0;border-top:1px dashed var(--line)}
+.pg .br:first-of-type{border-top:0}
+.pg .br .ic{flex:none;width:20px;height:20px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;margin-top:1px;border:1.5px solid var(--line);color:var(--sub)}
+.pg .br.done .ic{background:var(--gold);border-color:var(--gold);color:#fff}
+.pg .br.plan .ic{border-color:var(--gold);color:var(--gold)}
+.pg .br b{font-size:13.5px}
+.pg .br small{color:var(--sub);font-size:11.5px;margin-left:6px}
+.pg .br.plan{color:var(--ink)}
+.pg .br.none{color:var(--sub)}
+.pg .br .xx{color:var(--sub);font-size:11.5px}
+.tag.now{color:#fff;background:var(--gold)}
+.pg .t .lv{font-size:12.5px;color:var(--sub);margin-left:6px;font-weight:500}
+.pg .t .lv b{font-size:12.5px;color:var(--ink);background:var(--gold-soft);border:1px solid var(--gold);border-radius:999px;padding:0 7px}
+.pg .t .lv b.un{border-style:dashed}
+.pg .t .lv small{margin-left:4px;color:var(--gold);font-weight:700}
+.pg .t .nm2{display:flex;align-items:baseline;flex-wrap:wrap;gap:2px 0;flex-basis:100%}
+.oth{font-size:12.5px;color:var(--sub);margin-top:10px;padding:8px 12px;border:1px dashed var(--line);border-radius:12px}
+.oth b{color:var(--ink)}
+.tr{border-top:1px dashed var(--line);padding:9px 0}
+.tr:first-child{border-top:0;padding-top:2px}
+.tr .tn{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.tr .tn b{font-size:13.5px}
+.tr .tb{font-size:13px;font-weight:700;padding:2px 10px;border-radius:999px;border:1px solid var(--gold);background:var(--gold-soft);color:var(--ink);white-space:nowrap}
+.tr .tb.un{border-style:dashed;color:var(--sub)}
+.tr .ts{font-size:11.5px;color:var(--sub);margin-top:1px}
+.tr .th{font-size:12.5px;color:var(--gold);font-weight:700;margin-top:4px}
+.tr .tp{font-size:12.5px;margin-top:3px}
+.tr .tx{font-size:12px;color:var(--sub);margin-top:2px}
+.hero{background:radial-gradient(120% 140% at 85% -20%,#3b4c78 0%,var(--night2) 38%,var(--night) 100%);color:#f3eee3;padding:22px 16px 74px;position:relative;overflow:hidden}
+.hero::after{content:"";position:absolute;inset:0;background-image:radial-gradient(1px 1px at 12% 30%,#fff8 50%,transparent 51%),radial-gradient(1px 1px at 72% 18%,#fff6 50%,transparent 51%),radial-gradient(1.5px 1.5px at 88% 62%,#fff5 50%,transparent 51%),radial-gradient(1px 1px at 40% 70%,#fff4 50%,transparent 51%),radial-gradient(1px 1px at 58% 40%,#fff5 50%,transparent 51%);pointer-events:none}
+.brand{max-width:720px;margin:0 auto;display:flex;align-items:center;gap:12px;position:relative;z-index:1}
+.brand svg{flex:none;filter:drop-shadow(0 2px 6px rgba(0,0,0,.25))}
+.brand .wm{display:flex;flex-direction:column;line-height:1.1}
+.brand .jp{font-size:28px;font-weight:700;letter-spacing:.12em}
+.brand .en{font-size:10.5px;letter-spacing:.42em;color:#d8b06a;margin-top:4px;font-weight:600}
+.tagline{max-width:720px;margin:14px auto 0;font-size:13px;color:#c9cbd6;position:relative;z-index:1;letter-spacing:.04em}
+
+.hero .tagline{line-height:1.6}
+.tabs{max-width:720px;margin:14px auto 0;position:relative;z-index:1}
+.tabs nav{display:inline-flex;gap:2px;padding:4px;max-width:100%;border-radius:999px;background:#ffffff14;border:1px solid #ffffff2e}
+.tabs a{font-size:12.5px;font-weight:700;letter-spacing:.02em;padding:7px 11px;border-radius:999px;text-decoration:none;color:#d9dbe5;white-space:nowrap}
+.tabs a:hover{color:#fff}
+.tabs a[aria-current]{background:#f3eee3;color:#1f2a44}
+.tabs a:focus-visible{outline:2px solid #d8b06a;outline-offset:2px}
+</style>
+</head>
+<body>
+<header class="hero">
+    <div class="brand">
+    <!-- ロゴ：宵の三日月が宿の屋根にかかる -->
+    <svg width="46" height="46" viewBox="0 0 64 64" aria-hidden="true">
+      <defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f1d9a3"/><stop offset="1" stop-color="#c8963f"/></linearGradient></defs>
+      <rect x="2" y="2" width="60" height="60" rx="16" fill="#ffffff14" stroke="#ffffff30"/>
+      <path d="M41 13a12 12 0 1 0 11 16.5A10 10 0 0 1 41 13z" fill="url(#lg)"/>
+      <path d="M12 37 L30 25 L48 37" fill="none" stroke="#f3eee3" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M17 35 V50 H43 V35" fill="none" stroke="#f3eee3" stroke-width="3.2" stroke-linejoin="round"/>
+      <rect x="26.5" y="40" width="7" height="10" rx="1.5" fill="url(#lg)"/>
+    </svg>
+    <div class="wm"><span class="jp serif">宵宿</span><span class="en">YOIYADO</span></div>
+  </div>
+  <div class="tagline">今夜の一泊を、いちばん賢く。会員価格をその場で比べる。</div>
+<div class="tabs"><nav aria-label="ページ切り替え"><a href="./">料金比較</a><a href="bookings.html">予約</a><a href="status.html" aria-current="page">会員ステータス</a><a href="campaigns.html">キャンペーン</a></nav></div>
+<script src="swipe.js" defer></script>
+
+  <div class="ttl">
+    <h1 class="serif">会員ステータス</h1>
+    <p>ヒルトン・ハイアット・京王プラザ・GHA・I Preferの資格と、チェックイン／チェックアウト。2026年10月7日時点</p>
+  </div>
+</header>
+<main>
+
+<section class="card" id="progress">
+  <h2>資格と進捗<span class="yrs" id="yrs"></span></h2>
+  <div id="prog-body" class="pg-empty">読み込み中…</div>
+</section>
+
+<section class="card">
+  <h2><span class="n">1</span>泊まり方のルール</h2>
+  <div class="rules">
+    <div class="rule"><div class="d">平日</div><div><div class="h"><span class="dot hy"></span> ハイアット／<span class="dot ke"></span> 京王プラザ</div><div class="x">京王との差が3,000円くらいまでなら、ステータスのためにハイアット リージェンシー（公式・返金可）。グローバリスト（年60泊）と将来の永年資格を取りにいく。差がそれより大きければ京王へ。ただし、ハイアット・京王がどちらも1泊7万円を超える日や、安い方でもホテルグルーヴ新宿のキングより1.5万円以上高い日は、<span class="dot gh"></span> グルーヴ新宿へ</div></div></div>
+    <div class="rule"><div class="d">土曜</div><div><div class="h"><span class="dot hy"></span> ハイアット／<span class="dot ke"></span> 京王プラザ（14:00にチェックインできる方）</div><div class="x">土曜は14時から部屋に入れるホテルを優先。ハイアット リージェンシー（公式）か京王プラザの安い方へ。ほかの月より宿泊料が高くなる土曜は、<span class="dot hl"></span> ヒルトン東京の無料宿泊（カード特典・金土日に使える）を使う。年4回くらいは、<span class="dot no"></span> ホテルニューオータニ（I Prefer・新江戸スタンダード→新江戸デラックスにほぼ確約でアップグレード）にも泊まる</div></div></div>
+    <div class="rule"><div class="d">特別な日</div><div><div class="h"><span class="dot hy"></span> パーク ハイアット／グランド ハイアット／<span class="dot bs"></span> BELLUSTAR／<span class="dot kp"></span> キンプトン新宿／<span class="dot cp"></span> キャピトルホテル東急</div><div class="x">ハイアットはグローバリストのスイート確約特典（年5回〜）を使う。キャピトル東急は2027年4月からGHAの対象になる想定（チタニウムの3ブランド目）</div></div></div>
+    <div class="rule"><div class="d">予約前</div><div><div class="h">料金比較で一度確認する</div><div class="x">ポイントや資格を貯めるのは公式予約だけ（一休などは対象外）</div></div></div>
+  </div>
+</section>
+
+<section class="card">
+  <h2><span class="n">2</span>チェックイン／チェックアウト</h2>
+  <div class="tw"><table>
+    <tr><th>ホテル・資格</th><th>イン</th><th>アウト</th><th>延長</th></tr>
+    <tr><td colspan="4" style="padding-top:10px"><b><span class="dot hl"></span> ヒルトン東京</b></td></tr>
+    <tr data-p="hilton" data-t="メンバー"><td>一般会員・シルバー</td><td class="t num">15:00</td><td class="t num">11:00</td><td>—</td></tr>
+    <tr data-p="hilton" data-t="ゴールド"><td>ゴールド</td><td class="t num">15:00</td><td class="t num">11:00</td><td>リクエスト制・空室次第</td></tr>
+    <tr data-p="hilton" data-t="ダイヤモンド"><td>ダイヤモンド<span class="tag me">目標</span></td><td class="t num">15:00</td><td class="t num">11:00</td><td>リクエスト制・空室次第</td></tr>
+    <tr><td colspan="4" style="padding-top:10px"><b><span class="dot hy"></span> ハイアット リージェンシー 東京</b></td></tr>
+    <tr data-p="hyatt" data-t="メンバー"><td>一般会員</td><td class="t num">14:00</td><td class="t num">11:00</td><td>—</td></tr>
+    <tr data-p="hyatt" data-t="ディスカバリスト"><td>ディスカバリスト・エクスプローリスト</td><td class="t num">14:00</td><td class="t num">14:00頃</td><td>空室次第</td></tr>
+    <tr data-p="hyatt" data-t="グローバリスト"><td>グローバリスト<span class="tag me">目標</span></td><td class="t num">14:00</td><td class="t num">16:00</td><td><span class="tag ok">依頼で付与</span></td></tr>
+    <tr><td colspan="4" style="padding-top:10px"><b><span class="dot hy"></span> パーク ハイアット 東京</b></td></tr>
+    <tr data-p="hyatt_ph" data-t="メンバー"><td>一般会員</td><td class="t num">15:00</td><td class="t num">12:00</td><td>—</td></tr>
+    <tr data-p="hyatt_ph" data-t="グローバリスト"><td>グローバリスト<span class="tag me">目標</span></td><td class="t num">15:00</td><td class="t num">16:00</td><td><span class="tag ok">依頼で付与</span></td></tr>
+    <tr><td colspan="4" style="padding-top:10px"><b><span class="dot ke"></span> 京王プラザホテル（公式予約）</b></td></tr>
+    <tr data-p="keio" data-t="ブルーム"><td>ブルーム</td><td class="t num">14:00</td><td class="t num">11:00</td><td>延長なし</td></tr>
+    <tr data-p="keio" data-t="プライム"><td>プライム（年10万円以上）</td><td class="t num">14:00</td><td class="t num">13:00</td><td>会員特典</td></tr>
+    <tr data-p="keio" data-t="ロイヤル"><td>ロイヤル（年30万円以上）</td><td class="t num">14:00</td><td class="t num">15:00</td><td>会員特典</td></tr>
+    <tr><td colspan="4" style="padding-top:10px"><b><span class="dot ip"></span> I Prefer予約（京王プラザ・ニューオータニ）</b></td></tr>
+    <tr data-p="iprefer" data-t="チタニウム"><td>京王プラザ・チタニウム</td><td class="t num">14:00</td><td class="t num">11:00</td><td>早めの入室・延長とも空室次第</td></tr>
+    <tr data-p="iprefer" data-t="チタニウム"><td>ニューオータニ ザ・メイン・チタニウム</td><td class="t num">15:00</td><td class="t num">12:00</td><td>早めの入室・延長とも空室次第</td></tr>
+    <tr><td colspan="4" style="padding-top:10px"><b><span class="dot gh"></span> GHA DISCOVERY（公式予約）</b></td></tr>
+    <tr data-p="gha" data-t="シルバー"><td>グルーヴ・シルバー／ゴールド</td><td class="t num">15:00</td><td class="t num">11:00</td><td>—</td></tr>
+    <tr data-p="gha" data-t="シルバー"><td>BELLUSTAR・シルバー／ゴールド</td><td class="t num">15:00</td><td class="t num">12:00</td><td>—</td></tr>
+    <tr data-p="gha" data-t="プラチナ"><td>プラチナ（GHAの各ホテル）</td><td class="t num">15:00</td><td class="t num">15:00</td><td>会員特典</td></tr>
+    <tr data-p="gha" data-t="チタニウム"><td>チタニウム（GHAの各ホテル）</td><td class="t num">11:00</td><td class="t num">16:00</td><td>会員特典</td></tr>
+    <tr><td colspan="4" style="padding-top:10px"><b><span class="dot kp"></span> キンプトン新宿東京</b></td></tr>
+    <tr data-p="kimpton" data-t="—"><td>標準（IHGの資格は未管理）</td><td class="t num">15:00</td><td class="t num">11:00</td><td>15:00まで有料（宿泊代の30%）</td></tr>
+  </table></div>
+  <p class="note">「いま」の印は、上の「いまの資格」に合わせて付きます。早めの入室（アーリーチェックイン）はGHAチタニウム以外は保証なし。ヒルトンのダイヤモンドで日曜にゆっくりしたいときは、チェックイン時に延長をお願いしておく。I Prefer・一休・Expedia経由の予約では、京王ロイヤルやGHAなどホテル側の会員特典は使えない前提で見ておく。</p>
+
+  <h3 style="margin-top:16px">スマホでチェックイン・スマホキー</h3>
+  <div class="tw"><table>
+    <tr><th>ホテル</th><th>スマホでイン</th><th>スマホキー</th><th>使い方・条件</th></tr>
+    <tr><td><span class="dot hl"></span> ヒルトン東京</td><td><span class="tag ok">○</span></td><td><span class="tag ok">○</span></td><td>Hilton Honorsアプリ・公式予約。到着前にフロア図から部屋を選べる。キーは当日部屋の準備ができると届き、登録した端末だけで使える。本人確認でフロントに寄るよう言われることがある</td></tr>
+    <tr><td><span class="dot ke"></span> 京王プラザ</td><td>△ 事前登録</td><td>×</td><td>NEC Smooth Check-inアプリで事前に情報と顔を登録し、当日はフロントの端末で顔認証（QRでも可）してカードキーを受け取る</td></tr>
+    <tr><td><span class="dot hy"></span> ハイアット リージェンシー／パーク ハイアット</td><td>未確認</td><td>未確認</td><td>World of Hyattアプリは対応ホテルでチェックインとスマホキー（Apple Walletにも対応）を提供。東京の2軒が対応しているかは未確認</td></tr>
+    <tr><td><span class="dot kp"></span> キンプトン新宿</td><td>未確認</td><td>未確認</td><td>IHG Oneアプリにチェックイン機能はあるが、ホテルごとに異なる</td></tr>
+    <tr><td><span class="dot ip"></span> ニューオータニ ザ・メイン</td><td>未確認</td><td>未確認</td><td>会員特典に「クイックチェックイン／アウト」があるが、スマホでできるかは不明</td></tr>
+    <tr><td><span class="dot gh"></span> グルーヴ／BELLUSTAR</td><td>未確認</td><td>未確認</td><td>館内のセルフチェックイン機・エクスプレスチェックイン／アウトの記載はあるが、スマホ対応の記載はない</td></tr>
+  </table></div>
+  <p class="note">2026-10-07時点で公式に確認できたのはヒルトン東京と京王プラザだけ。スマホでのチェックアウトはどのホテルも未確認。ほかは予約後にアプリに「チェックイン」ボタンが出るかで確かめる。</p>
+</section>
+
+<section class="card">
+  <h2><span class="n">3</span>資格の取り方と特典</h2>
+
+  <h3><span class="dot hl"></span> ヒルトン・オナーズ</h3>
+  <div class="tier" data-p="hilton" data-t="ゴールド"><div class="nm"><span>ゴールド</span><span class="cond">25泊／15滞在／6,000ドル。またはヒルトン・アメックスを持つ</span></div>
+    <ul class="b"><li>朝食（ブランド・地域による）またはお食事クレジット</li><li>空室次第のアップグレード</li><li>宿泊ポイント80%増し</li></ul></div>
+  <div class="tier" data-p="hilton" data-t="ダイヤモンド"><div class="nm"><span>ダイヤモンド <span class="tag me">目標</span></span><span class="cond">50泊／25滞在／11,500ドル。<b>またはプレミアムカードで年200万円</b></span></div>
+    <ul class="b"><li><b>エグゼクティブラウンジ</b>（ヒルトン東京は37階・17:30〜19:30）</li><li>朝食2名分</li><li>空室次第のアップグレード（スイートも対象）</li><li>宿泊ポイント100%増し・48時間前までの客室保証・プレミアムWi-Fi</li><li>レイトチェックアウトはリクエスト制</li></ul></div>
+  <p class="note">有効期限：取った年の残りと翌年いっぱい（2026年に取れば2027年12月末まで）。永年資格はライフタイム・ダイヤモンド（ダイヤモンド通算10年＋1,000泊または20万ドル）まで。</p>
+
+  <h3><span class="dot hy"></span> ワールド オブ ハイアット</h3>
+  <div class="tier"><div class="nm"><span>ディスカバリスト／エクスプローリスト</span><span class="cond">10泊／30泊</span></div>
+    <ul class="b"><li>空室次第のアップグレード・レイトチェックアウト（14時頃）</li></ul></div>
+  <div class="tier" data-p="hyatt" data-t="グローバリスト"><div class="nm"><span>グローバリスト <span class="tag me">目標</span></span><span class="cond">暦年60泊（または基本ポイント10万）</span></div>
+    <ul class="b"><li><b>スイート確約特典</b>：40泊・50泊の選択特典で計3回＋60泊で2回＝最大5回（70泊以降は10泊ごとに1回）。1回で同じホテル最大7連泊・予約時にスタンダードスイートを確約。パーク ハイアット東京も対象（2026年7月時点）</li><li><b>16:00のレイトチェックアウト</b>（依頼で付与）</li><li>クラブラウンジ（リージェンシークラブ）と朝食。ラウンジのないパーク ハイアットは朝食</li><li>空室次第のアップグレード（スタンダードスイートまで）・ポイント30%増し</li></ul></div>
+  <p class="note">有効期限：取った年・翌年・翌々年の2月末まで。スイート特典も翌々年の2月末まで。<b>ライフタイム・グローバリスト＝累計の基本ポイント100万</b>（対象利用約20万ドル）。</p>
+
+  <h3><span class="dot ke"></span> 京王プラザ エグゼクティブカード</h3>
+  <div class="tier" data-p="keio" data-t="プライム"><div class="nm"><span>ブルーム／プライム</span><span class="cond">入会／年10万円以上</span></div>
+    <ul class="b"><li>ポイント2pt／3pt（100円あたり）。プライムは13:00まで延長</li></ul></div>
+  <div class="tier" data-p="keio" data-t="ロイヤル"><div class="nm"><span>ロイヤル</span><span class="cond">3月〜翌2月に30万円以上（起算月は3月）</span></div>
+    <ul class="b"><li><b>15:00のレイトチェックアウト</b></li><li>公式の会員料金（約10%引き）・ポイント5pt（100円あたり）・誕生月のボーナス</li><li>ラウンジは部屋に付く：デラックスセレクト＝SKY PLAZA IBASHO（47階・17:00〜22:00・お酒あり）／プレミアグラン＝クラブラウンジ（シャンパーニュ）＋IBASHO</li></ul></div>
+
+  <h3><span class="dot gh"></span> GHA DISCOVERY（グルーヴ＝PARKROYAL・BELLUSTAR＝Pan Pacific・キャピトル東急＝東急ホテルズ）</h3>
+  <div class="tier" data-p="gha" data-t="シルバー"><div class="nm"><span>シルバー／ゴールド</span><span class="cond">入会／2滞在または1,000ドル</span></div>
+    <ul class="b"><li>D$（GHAのポイント）4%／5%還元・会員料金・Wi-Fi・誕生日特典</li><li>延長・アップグレードの特典はなし</li></ul></div>
+  <div class="tier" data-p="gha" data-t="プラチナ"><div class="nm"><span>プラチナ <span class="tag me">2026年の目標</span></span><span class="cond">1〜12月に<b>2ブランド</b>（または10泊・5,000ドル）</span></div>
+    <ul class="b"><li><b>15:00までのレイトチェックアウト</b></li><li>1カテゴリー上へのアップグレード（空室次第）・ウェルカム特典</li><li>D$ 6%還元</li><li>2026年はグルーヴ＋BELLUSTARの2ブランドで取る。資格は2つ目のブランドに泊まり終えてから付く見込み（BELLUSTAR 12/5の宿泊後）</li></ul></div>
+  <div class="tier" data-p="gha" data-t="チタニウム"><div class="nm"><span>チタニウム <span class="tag me">2027年の目標</span></span><span class="cond">1〜12月に<b>3ブランド</b>（または30泊・15,000ドル）</span></div>
+    <ul class="b"><li><b>11:00からのアーリーチェックイン・16:00までのレイトチェックアウト</b></li><li>2カテゴリー上へのアップグレード（空室次第）</li><li>一部ブランドで朝食無料（グルーヴ・BELLUSTAR・キャピトル東急で付くかは未確認）・D$ 7%還元</li><li>2027年は、グルーヴ（PARKROYAL）・BELLUSTAR（Pan Pacific）・キャピトル東急（東急ホテルズ）に<b>公式予約で1泊ずつ</b>すれば3ブランド。キャピトル東急は4月の加盟後の宿泊だけ数える想定</li></ul></div>
+  <p class="note">有効期限：取った年の残りと翌年いっぱい（公式規約）。公式予約のみ対象（Expedia・一休経由は数えない）。<b>東急ホテルズが2027年4月からGHAに加盟</b>する予定。キャピトルホテル東急がグルーヴ・BELLUSTARと別ブランドとして入ると仮定して、2027年はチタニウムを狙う（加盟の形が分かったら見直す）。</p>
+
+  <h3><span class="dot ip"></span> I Prefer（京王プラザ・ニューオータニ ザ・メイン）</h3>
+  <div class="tier" data-p="iprefer" data-t="チタニウム"><div class="nm"><span>チタニウム</span><span class="cond">12か月で5万ポイント（最上位）</span></div>
+    <ul class="b"><li>アップグレード・アーリーチェックイン・レイトチェックアウト（いずれも空室次第）</li><li>飲食特典・ポイント50%増し</li><li>朝食・ラウンジは付かない。特典の運用はホテルによってばらつきがある</li><li>京王はI Prefer予約だとSuperior Plus Twin→デラックスプラス ダブル／デラックスセレクト キング、ニューオータニはスタンダード→デラックス ダブルへのアップグレードが付く</li></ul></div>
+
+  <h3>予約サイト</h3>
+  <p class="note" style="margin-top:2px">一休.com・Expediaの会員ランクは予約サイト側の特典（ポイント・割引）で、ホテル側の資格・延長には効かない。今後Expediaを使わなくなると、ゴールドの維持は難しくなる見込み。</p>
+</section>
+
+<section class="card">
+  <h2><span class="n">4</span>ラウンジの比較</h2>
+  <div class="tw"><table>
+    <tr><th>ラウンジ</th><th>入れる人</th><th>夜の時間</th><th>お酒・食事</th></tr>
+    <tr><td><span class="dot hl"></span> ヒルトン東京 エグゼクティブラウンジ</td><td>ダイヤモンド</td><td class="num">17:30〜19:30</td><td>泡はシャンドン（2022年）・フードが多い</td></tr>
+    <tr><td><span class="dot hy"></span> ハイアット リージェンシー リージェンシークラブ</td><td>グローバリスト</td><td class="num">17:00〜19:00</td><td>2025年7月改装でフード充実・銘柄は未確認</td></tr>
+    <tr><td><span class="dot ke"></span> 京王プラザ クラブラウンジ</td><td>プレミアグラン</td><td class="num">17:30〜19:30</td><td>シャンパーニュ（パイパー・エドシック）</td></tr>
+    <tr><td><span class="dot ke"></span> 京王プラザ SKY PLAZA IBASHO</td><td>デラックスセレクト・プレミアグラン</td><td class="num">17:00〜22:00</td><td>スパークリング・余市・ビール・カクテル</td></tr>
+    <tr><td><span class="dot hy"></span> パーク ハイアット 東京</td><td>—</td><td>—</td><td>クラブラウンジなし（ピーク ラウンジは有料）</td></tr>
+  </table></div>
+</section>
+
+</main>
+<footer>YOIYADO · 各社公式・比較記事より（2026-10-05時点）。制度は変わることがあります · <a href="./">料金比較へ</a></footer>
+<script src="tiers.js"></script>
+<script>
+// 進捗：予約台帳（個人Gmailの予約メールから毎朝作成）を年ごとに集計する。
+// ステータスの泊数・金額に数えるのはホテル公式の予約だけ（一休・Expedia など第三者サイト経由は対象外）。
+const GAS = "https://script.google.com/macros/s/AKfycbyXS4tQgx8U95EG5EUJd3H47_saO_Ny35XWZBWxyNY-2ck8QBLOmgAzSm6HtN7twnRXaFGf/exec";
+let K = '', D = null, YEAR = new Date().getFullYear();
+try { K = localStorage.getItem('yoiyado_k') || ''; } catch(e) {}
+const yen = n => '¥' + Math.round(n).toLocaleString('ja-JP');
+const md = s => Number(s.slice(5,7)) + '/' + Number(s.slice(8,10));
+const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+async function api(params){
+  for (let i = 0; i < 3; i++) {
+    try {
+      const r = await fetch(GAS + '?' + new URLSearchParams(Object.assign({k: K}, params)), {credentials: 'omit', cache: 'no-store'});
+      const t = await r.text();
+      if (t.trim().startsWith('{')) return JSON.parse(t);
+    } catch(e) {}
+    await new Promise(res => setTimeout(res, 1200 * (i + 1)));
+  }
+  throw new Error('通信に失敗しました');
+}
+
+// 資格の表示：見出し用の「いま → 目標」と、下の表・資格カードへの「いま」印
+function lv(key, goal, note){
+  const t = currentTiers(D.manual)[key], src = tierSource(D.manual, key);
+  const cur = `<b class="${src ? '' : 'un'}">${esc(t)}</b>`;
+  return `<span class="lv">${t === goal ? `${cur} 維持` : `${cur} → ${esc(goal)}`}${note ? `<small>${esc(note)}</small>` : ''}</span>`;
+}
+
+function ghaNote(){
+  const t = currentTiers(D.manual).gha, pr = ghaProjection(D.rows || [])[String(new Date().getFullYear())] || {};
+  if (pr.titanium && t !== 'チタニウム') return `${md(pr.titanium)}〜チタニウム見込み`;
+  if (pr.platinum && (t === 'シルバー' || t === 'ゴールド')) return `${md(pr.platinum)}〜プラチナ見込み`;
+  return '';
+}
+
+function renderTiers(){
+  const tiers = currentTiers(D.manual);
+  // 下の表・資格カードに「いま」の印を付ける
+  document.querySelectorAll('[data-p]').forEach(el => {
+    const k = el.dataset.p === 'hyatt_ph' ? 'hyatt' : el.dataset.p;
+    const on = tiers[k] === el.dataset.t || (k === 'hyatt' && el.dataset.t === 'ディスカバリスト' && tiers.hyatt === 'エクスプローリスト')
+      || (k === 'hilton' && el.dataset.t === 'メンバー' && tiers.hilton === 'シルバー')
+      || (k === 'keio' && el.dataset.t === 'プライム' && el.tagName !== 'TR' && tiers.keio === 'ブルーム')
+      || (k === 'gha' && el.dataset.t === 'シルバー' && tiers.gha === 'ゴールド');
+    el.classList.toggle('mine', on);
+    const first = el.tagName === 'TR' ? el.querySelector('td') : el.querySelector('.nm > span');
+    let tag = first && first.querySelector('.tag.now');
+    if (on && first && !tag) first.insertAdjacentHTML('beforeend', '<span class="tag now">いま</span>');
+    if (!on && tag) tag.remove();
+  });
+}
+
+
+function bar(done, plan, goal){
+  const d = Math.min(100, done / goal * 100), p = Math.min(100 - d, plan / goal * 100);
+  return `<div class="bar"><i class="done" style="width:${d}%"></i><i class="plan" style="left:${d}%;width:${p}%"></i></div>`;
+}
+
+function render(){
+  const today = new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 10);
+  const rows = (D.rows || []).filter(r => r.status === 'booked' && r.checkin && r.checkin.slice(0, 4) === String(YEAR));
+  const direct = r => r.channel === '公式';
+  const stayed = r => r.checkout <= today;
+  const sum = (list, f) => list.reduce((a, r) => a + f(r), 0);
+  const cy = new Date().getFullYear();
+  const monthsLeft = YEAR > cy ? 12 : YEAR < cy ? 1 : 12 - new Date().getMonth();   // 今月を含む残り月数
+  let h = '';
+
+  // ハイアット グローバリスト：公式予約の宿泊数 60泊
+  const hy = rows.filter(r => HYATT_HOTELS.includes(r.hotel)), hyD = hy.filter(direct), hyX = hy.filter(r => !direct(r));
+  const hyDone = sum(hyD.filter(stayed), r => r.nights), hyPlan = sum(hyD.filter(r => !stayed(r)), r => r.nights);
+  const hyRest = Math.max(0, 60 - hyDone - hyPlan);
+  h += `<div class="pg${hyDone + hyPlan >= 60 ? ' ok' : ''}"><div class="t"><span class="nm2"><b>ハイアット</b>${lv('hyatt', 'グローバリスト')}</span><span class="v">${hyDone}<small>泊済み</small> ＋ ${hyPlan}<small>泊予約</small> ／ 60泊</span></div>
+    ${bar(hyDone, hyPlan, 60)}<div class="s">${hyRest ? `あと <b>${hyRest}泊</b>（残り月で割ると月 <b>${Math.ceil(hyRest / monthsLeft)}泊</b>）` : '<b>予約分を含めて達成見込み</b>'}
+    ${hyX.length ? `・一休／Expedia経由の${sum(hyX, r => r.nights)}泊は対象外` : ''}</div>${hyattOutlook(today)}</div>`;
+
+  // ヒルトン ダイヤモンド：ヒルトン・アメックス・プレミアムの年間利用額 200万円（暦年）
+  const m = ((D.manual || {})[YEAR] || {}), spend = m.hilton_card_spend || 0;
+  const hl = rows.filter(r => r.hotel === 'hilton' && direct(r));
+  h += `<div class="pg${spend >= 2e6 ? ' ok' : ''}"><div class="t"><span class="nm2"><b>ヒルトン</b>${lv('hilton', 'ダイヤモンド')}</span><span class="v">${yen(spend)} <small>／ ${yen(2e6)}</small></span></div>
+    ${bar(spend, 0, 2e6)}<div class="s">ヒルトン・アメックス・プレミアムの${YEAR}年の利用額（1〜12月）。${spend < 2e6 ? `あと <b>${yen(2e6 - spend)}</b>` : '<b>達成</b>'}
+    ・公式予約のヒルトン宿泊 ${sum(hl, r => r.nights)}泊<br>
+    マネーフォワードの明細から自動で取り込み（毎週月・木の朝）${m.hilton_card_spend_at ? `・${new Date(m.hilton_card_spend_at).toLocaleDateString('ja-JP')} 更新` : ''}</div></div>`;
+
+  // 京王プラザ ロイヤル：年間利用金額 30万円以上（税別）。公式予約の宿泊のみ（代理店経由は対象外）。
+  // 集計は起算月の3月から翌2月まで（会員ページの「起算月 3月」）
+  const ke = (D.rows || []).filter(r => r.status === 'booked' && r.hotel === 'keio' && direct(r)
+    && r.checkin >= `${YEAR}-03-01` && r.checkin < `${YEAR + 1}-03-01`);
+  const net = r => Math.max(0, (r.pay || 0) - 200 * r.adults * r.nights) / 1.1;   // 宿泊税と消費税を除いた概算
+  const keDone = sum(ke.filter(stayed), net), kePlan = sum(ke.filter(r => !stayed(r)), net);
+  h += `<div class="pg${keDone + kePlan >= 3e5 ? ' ok' : ''}"><div class="t"><span class="nm2"><b>京王プラザ</b>${lv('keio', 'ロイヤル')}</span><span class="v">${yen(keDone)}<small>利用済み</small> ＋ ${yen(kePlan)}<small>予約</small> ／ ${yen(3e5)}</span></div>
+    ${bar(keDone, kePlan, 3e5)}<div class="s">${YEAR}年3月〜${YEAR + 1}年2月の公式予約の宿泊額（税別の概算）。レストラン・バーの利用は含みません</div></div>`;
+
+  // GHA DISCOVERY：2026年はプラチナ（2ブランド）、2027年はチタニウム（3ブランド。キャピトル東急は4月の加盟後の宿泊だけ）
+  // ブランドごとに「宿泊済み／予約済み（泊まれば達成）／未予約」を出し、同じブランドを重ねて予約しなくて済むようにする
+  const GHA = [{key: 'groove', brand: 'PARKROYAL', hotel: 'ホテルグルーヴ新宿'}, {key: 'bellustar', brand: 'Pan Pacific', hotel: 'BELLUSTAR'}]
+    .concat(YEAR >= 2027 ? [{key: 'capitol', brand: '東急ホテルズ・4月〜', hotel: 'キャピトルホテル東急'}] : []);
+  const gGoal = GHA.length, gTier = gGoal >= 3 ? 'チタニウム' : 'プラチナ';
+  const ds = list => list.map(r => md(r.checkin)).join('・');
+  let gDone = 0, gPlan = 0, rest = [];
+  const lines = GHA.map(b => {
+    const d = rows.filter(r => r.hotel === b.key && ghaEligible(r)), x = rows.filter(r => r.hotel === b.key && !direct(r));
+    const st = d.filter(stayed), bk = d.filter(r => !stayed(r));
+    let mark, txt;
+    if (st.length) { gDone++; mark = 'done'; txt = `宿泊済み（${ds(st)}）`; }
+    else if (bk.length) { gPlan++; mark = 'plan'; txt = `公式で予約済み（${ds(bk)}）。泊まれば達成`; }
+    else { rest.push(b.hotel); mark = 'none'; txt = '未予約'; }
+    return `<div class="br ${mark}"><span class="ic">${mark === 'done' ? '✓' : mark === 'plan' ? '◐' : '○'}</span><span><b>${b.hotel}</b><small>${b.brand}</small><br>${txt}${x.length ? `<span class="xx">（${[...new Set(x.map(r => r.channel))].join('・')}経由の${x.length}件は対象外）</span>` : ''}</span></div>`;
+  }).join('');
+  h += `<div class="pg${gDone + gPlan >= gGoal ? ' ok' : ''}"><div class="t"><span class="nm2"><b>GHA DISCOVERY</b>${lv('gha', gTier, ghaNote())}</span><span class="v">${gDone}<small>ブランド宿泊</small> ＋ ${gPlan}<small>予約</small> ／ ${gGoal}ブランド</span></div>
+    ${bar(gDone, gPlan, gGoal)}${lines}<div class="s">${rest.length ? `あとは <b>${rest.join('・')}</b> を公式で1泊予約すれば、予約分を含めて達成見込み` : '<b>予約分を含めて達成見込み</b>。これ以上の予約は不要です'}</div></div>`;
+
+
+  const tiers = currentTiers(D.manual);
+  h += `<div class="oth">ほかの資格：I Prefer <b>${esc(tiers.iprefer)}</b>・一休 <b>${esc(tiers.ikyu)}</b>・Expedia <b>${esc(tiers.expedia)}</b></div>`;
+  const un = PROGRAMS.filter(p => !tierSource(D.manual, p.key)).map(p => p.name.replace(/（.*）/, ''));
+  h += `<div class="s" style="margin-top:8px;font-size:11.5px;color:var(--sub)">資格は毎朝6時にメールから確認（京王は会員ページ・10/7確認）${un.length ? `。未確認：${esc(un.join('・'))}` : ''}。泊数・金額は予約台帳から計算。濃い色は宿泊済み、薄い色は予約済み。</div>`;
+  document.getElementById('prog-body').innerHTML = h;
+  renderTiers();
+  document.getElementById('prog-body').className = '';
+  const ys = [new Date().getFullYear(), new Date().getFullYear() + 1];
+  document.getElementById('yrs').innerHTML = ys.map(y => `<button type="button" aria-pressed="${y === YEAR}" onclick="YEAR=${y};render()">${y}</button>`).join('');
+}
+
+// ハイアット60泊の見込み（年ごと）：9/30までに63泊（60泊＋予備）。振り替え候補は毎朝7時台に hyatt_plan.py が調べる
+const HY_EXCLUDE = [2026];   // 年内に60泊へ届かないため振り替えの対象外
+const WDJ = '日月火水木金土';
+function hyattOutlook(today){
+  const hp = D.hyatt || {}, st = D.settings || {}, target = Number(st.hyatt_target || 63), y = YEAR;
+  const hy = (D.rows || []).filter(r => r.status === 'booked' && HYATT_HOTELS.includes(r.hotel) && r.channel === '公式' && r.checkin && r.checkin.slice(0, 4) === String(y));
+  const n930 = hy.filter(r => r.checkin <= `${y}-09-30`), total = hy.reduce((a, r) => a + r.nights, 0);
+  const done = n930.filter(r => r.checkout <= today).reduce((a, r) => a + r.nights, 0);
+  const plan = n930.filter(r => r.checkout > today).reduce((a, r) => a + r.nights, 0);
+  const proj = done + plan, rest = Math.max(0, target - proj);
+  let mode, modeTxt;
+  if (HY_EXCLUDE.includes(y)) { mode = 'off'; modeTxt = '振り替えの対象外（年内に60泊へ届かないため）'; }
+  else if (today > `${y}-12-31`) { mode = 'off'; modeTxt = '終了'; }
+  else if (today <= `${y}-09-30`) { mode = proj >= target ? 'done' : 'normal'; modeTxt = mode === 'done' ? '目標到達（振り替えの照会は止めて、監視に回す）' : '通常モード（京王・グルーヴの平日を、＋' + yen(st.hyatt_margin || 5000) + 'までならハイアットへ）'; }
+  else { mode = total >= 60 ? 'done' : 'rescue'; modeTxt = mode === 'done' ? '60泊到達' : '救済モード（10〜12月も候補・＋' + yen(st.hyatt_rescue_margin || 10000) + 'まで）'; }
+  const cands = (hp.transfer || []).filter(t => t.year === y && t.ok).sort((a, b) => a.checkin < b.checkin ? -1 : 1);
+  const checkedN = (hp.transfer || []).filter(t => t.year === y && t.checked).length;
+  const HN = {keio: '京王', iprefer: '京王（I Prefer）', groove: 'グルーヴ'};
+  const wd = s => WDJ[new Date(s + 'T00:00:00+09:00').getDay()];
+  const autoOff = Number(hp.auto_max ?? st.hyatt_auto ?? 10) === 0;
+  let h = `<div class="s hyo"><b>9/30までの見込み</b>：${proj}泊 ／ 目標${target}泊${mode === 'off' ? `（${esc(modeTxt)}）` : `${rest ? `・あと <b>${rest}泊</b>` : '・<b>目標に届く見込み</b>'}。${esc(modeTxt)}`}</div>`;
+  if (mode === 'normal' || mode === 'rescue') {
+    h += `<div class="s" style="margin-top:6px"><b>振り替え候補 ${cands.length}件</b>${autoOff ? '（自動照会を止めているため、いまは調べていません）' : `（これまでに${checkedN}日分を確認）${cands.length ? '' : '。見つかったら一覧とメールでお知らせします'}`}</div>`;
+    if (cands.length) h += `<div class="hyc">${cands.map(t => `<div><span class="num">${md(t.checkin)}（${wd(t.checkin)}）</span><span>${esc(HN[t.hotel] || t.hotel)} ${yen(t.booked_pay)} → ハイアット ${yen(t.pay)}（<b>${t.diff >= 0 ? '+' + yen(t.diff) : '−' + yen(-t.diff)}</b>）<small>期限 ${md(t.free_cancel_until)}・${md(t.checked)}確認${t.mode === 'rescue' ? '・救済' : ''}</small></span></div>`).join('')}</div>`;
+  }
+  // 照会の状況（直近7日・目的別）と停止
+  const now16 = new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 16);
+  const stop = hp.stop_hold ? 'hold' : '';  // 承認まで止まったまま
+  const wk = hp.week || [], tot = k => wk.reduce((a, d) => a + (d[k] || 0), 0);
+  h += `<div class="s" style="margin-top:6px">${stop ? `<b style="color:var(--warn)">ハイアット取得停止中（再開には承認が必要）</b>。` : ''}ハイアットへの照会（直近7日）：手動 ${tot('manual')}・振り替え ${tot('transfer')}・監視 ${tot('monitor')}回${hp.used_today && hp.date === today ? `（今日 自動 ${(hp.used_today.transfer || 0) + (hp.used_today.monitor || 0)}／${hp.auto_max}回）` : ''}。毎週月曜に週報メール</div>`;
+  h += `<details class="hyset"><summary>ハイアット照会の設定</summary><div class="g">${HY_SET.map(([k, label, unit]) =>
+    `<label>${label}<input type="number" inputmode="numeric" value="${Number(st[k] ?? '')}" onchange="saveSetting('${k}', this)"><small>${unit}</small></label>`).join('')}</div>
+    <div class="s">変えると翌朝の処理から使います。手動検索の上限はなく、目安を超えると料金比較に警告が出ます。</div></details>`;
+  return h;
+}
+const HY_SET = [['hyatt_auto', '自動照会の上限', '回/日'], ['hyatt_split_transfer', 'うち振り替え候補', '回'],
+  ['hyatt_jun30_nights', '6/30時点でこれ未満なら振り替えに全振り', '泊'], ['hyatt_target', '9/30までの目標', '泊'],
+  ['hyatt_margin', '振り替え：元の予約＋', '円'], ['hyatt_rescue_margin', '救済モード：元の予約＋', '円'],
+  ['hyatt_gap_min', '自動の間隔（最短）', '秒'], ['hyatt_gap_max', '自動の間隔（最長）', '秒'],
+  ['hyatt_min_gap', '照会どうしの最低間隔', '秒'], ['hyatt_manual_warn', '手動照会の目安', '回/日'],
+  ['hyatt_nr_days', '返金不可チェック：チェックインの', '日前から'],
+  ['hyatt_near_days', '振り替えの巡回：宿泊日まで', '日以内は'], ['hyatt_near_every', '　→ 何日に1回', '日'],
+  ['hyatt_mid_days', '振り替えの巡回：宿泊日まで', '日以内は'], ['hyatt_mid_every', '　→ 何日に1回', '日'],
+  ['hyatt_far_every', '振り替えの巡回：それより先は', '日に1回']];
+async function saveSetting(k, el){
+  try {
+    const r = await api({api: 'settingSet', name: k, value: el.value});
+    if (r.ok) { D.settings = r.settings; try { localStorage.setItem(LEDGER_MEMO, JSON.stringify(D)); } catch(e) {} el.style.borderColor = 'var(--ok)'; }
+    else { alert('この値は使えません（範囲外）'); el.value = (D.settings || {})[k]; }
+  } catch(e) { alert('保存できませんでした。'); }
+}
+
+async function saveSpend(){
+  const v = Number(String(document.getElementById('hsp').value).replace(/[^\d]/g, ''));
+  try {
+    const r = await api({api: 'statusSet', year: YEAR, field: 'hilton_card_spend', value: v});
+    if (r.ok) { D.manual = r.manual; try { localStorage.setItem(LEDGER_MEMO, JSON.stringify(D)); } catch(e) {} render(); }
+  } catch(e) { alert('保存できませんでした。'); }
+}
+
+// 予約台帳は毎朝1回しか変わらないので、この端末の控え（予約ページと共用）をまず即座に表示し、裏で最新に差し替える
+const LEDGER_MEMO = 'yoiyado_ledger';
+async function loadLedger(){
+  if (!K) { document.getElementById('prog-body').textContent = '料金比較のページで合言葉を設定すると、ここに進捗が出ます。'; return; }
+  let memo = null;
+  try { memo = localStorage.getItem(LEDGER_MEMO); } catch(e) {}
+  if (memo) { try { D = JSON.parse(memo); render(); } catch(e) { memo = null; } }
+  try {
+    const j = await api({api: 'ledger'});
+    const t = JSON.stringify(j);
+    try { localStorage.setItem(LEDGER_MEMO, t); } catch(e) {}
+    if (!D || t !== JSON.stringify(D)) { D = j; render(); }
+  } catch(e) {
+    if (!D) document.getElementById('prog-body').textContent = '進捗を読み込めませんでした。少し時間をおいて開き直してください。';
+  }
+}
+loadLedger();
+// ホーム画面から開いた宵宿は裏で開いたままになり、戻っても再読み込みされない。画面に戻ったら最新を取り直す
+let lastLoad = Date.now();
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && Date.now() - lastLoad > 30000) { lastLoad = Date.now(); loadLedger(); }
+});
+</script>
+</body>
+</html>
