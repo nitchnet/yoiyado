@@ -255,6 +255,11 @@ const SHORT = {keio:'京王', iprefer:'京王 I Prefer', newotani:'ニューオ�
 const COLORS = {keio:'#7a5c9e', iprefer:'#a07cc5', newotani:'#9b6b3f', groove:'#d0603c', bellustar:'#8a7a3a', hilton:'#2f5fa8', hyatt:'#5b8c9c', kimpton:'#3f8a5f'};
 const ORDER = ['keio','iprefer','newotani','groove','bellustar','hilton','hyatt','kimpton'];
 const yen = n => '¥' + Number(n).toLocaleString('ja-JP');
+// 実質の値段（2026-10-25）：支払額から、戻るポイントの価値を引いて比べる（hyatt_plan.py と同じ率）。
+// 京王（公式）は5%・1pt=1円、ハイアット（公式）は滞在合計100円につき約2.6pt（10月の4泊の実績）・1pt=2.25円
+const PT_BACK = {keio: [0.05, 1], hyatt: [0.026, 2.25]};
+const backOf = (h, pay, ch) => (!ch || ch === '公式') && PT_BACK[h] ? Math.round(pay * PT_BACK[h][0] * PT_BACK[h][1]) : 0;
+const effOf = (h, pay, ch) => pay - backOf(h, pay, ch);
 const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const BTN_IDLE = '<span class="moon">☾</span>空室と会員価格を探す';
 let cur = null, timer = null, started = 0;
@@ -339,7 +344,7 @@ function myBooking(c){
   if (nightsSum !== nightsOf(c.date, c.checkout)) return null;
   const free = rows.map(r => r.free_cancel_until || '').filter(Boolean).sort()[0] || '';
   const refundable = rows.every(r => r.refundable);
-  return {rows, pay: rows.reduce((a, r) => a + r.pay, 0), refundable, free,
+  return {rows, pay: rows.reduce((a, r) => a + r.pay, 0), eff: rows.reduce((a, r) => a + effOf(r.hotel, r.pay, r.channel), 0), refundable, free,
           canRebook: refundable && (!free || todayJst() <= free)};
 }
 function mineCard(mb, main, loading){
@@ -350,11 +355,11 @@ function mineCard(mb, main, loading){
   if (loading && !main.length) h += '<div class="mr">比べています…</div>';
   else if (main.length) {
     const b = main[0];
-    if (b.pay < mb.pay) {
-      h += `<div class="mr down">▼ <b>${yen(mb.pay - b.pay)}安く</b>取り直せます：${esc(NAMES[b.hotel])} ${esc(b.label)} ${yen(b.pay)}</div>`;
+    if (b.eff < mb.eff) {
+      h += `<div class="mr down">▼ 実質<b>${yen(mb.eff - b.eff)}安く</b>取り直せます：${esc(NAMES[b.hotel])} ${esc(b.label)} ${yen(b.pay)}</div>`;
       if (!mb.canRebook) h += `<div class="mr ng">ただし、いまの予約は${mb.refundable ? '無料キャンセルの期限を過ぎています' : '返金不可'}（取り直すとキャンセル料がかかります）</div>`;
     } else {
-      h += `<div class="mr ok">✓ いまの予約が最安です${b.pay > mb.pay ? `（次に安い ${esc(NAMES[b.hotel])} より${yen(b.pay - mb.pay)}安い）` : ''}</div>`;
+      h += `<div class="mr ok">✓ いまの予約が実質で最安です${b.eff > mb.eff ? `（次に安い ${esc(NAMES[b.hotel])} より実質${yen(b.eff - mb.eff)}安い）` : ''}</div>`;
     }
   }
   return h + '</section>';
@@ -498,11 +503,18 @@ function render(){
 
   let offers = [];
   Object.values(cur.results || {}).forEach(r => (r.offers || []).forEach(o => offers.push(Object.assign({hotel:r.hotel}, o))));
-  offers.sort((a,b) => a.pay - b.pay);
+  offers.forEach(o => { o.back = backOf(o.hotel, o.pay); o.eff = o.pay - o.back; });
+  // チェックインまで7日以内は、返金不可も含めた最安を基本にする（返金不可で予約してよい期間。2026-10-25 西村氏）
+  const near = nightsOf(todayJst(), cur.date) <= 7;
+  if (near) offers.filter(o => o.alt).forEach(a => {
+    const m = offers.find(m => !m.alt && m.hotel === a.hotel && m.target === a.target);
+    if (m && a.eff < m.eff) { delete a.alt; m.alt = true; }
+  });
+  offers.sort((a,b) => a.eff - b.eff);
   const main = offers.filter(o => !o.alt);
-  const min = main.length ? main[0].pay : 0;
+  const min = main.length ? main[0].eff : 0;
   // BEST は比較対象の部屋だけで決める（「ほかの部屋」は対象の部屋が満室のホテルの参考）
-  const minT = (main.find(o => !o.other) || {}).pay;
+  const minT = (main.find(o => !o.other) || {}).eff;
   const mb = myBooking(cur);
   if (mb) h += mineCard(mb, main, loading);
   if (!loading) h += ruleCard(cur, main);
@@ -516,18 +528,19 @@ function render(){
     h += '<div class="list">';
     let rank = 0;
     list.forEach(o => {
-      const isBest = !o.alt && !o.other && o.pay === minT;
+      const isBest = !o.alt && !o.other && o.eff === minT;
       if (!o.alt) rank++;
       const parent = o.alt ? list.find(m => !m.alt && m.hotel === o.hotel && m.target === o.target) : null;
-      const sub = o.alt ? `返金可より${yen(parent.pay - o.pay)}安い` : (o.pay > min && min ? `最安 +${yen(o.pay - min)}` : '');
+      const sub = o.alt ? (o.pay < parent.pay ? `返金可より${yen(parent.pay - o.pay)}安い` : `返金不可より${yen(o.pay - parent.pay)}高い`) : (o.eff > min && min ? `実質の最安 +${yen(o.eff - min)}` : '');
       h += `<article class="offer${isBest ? ' best' : ''}${o.alt ? ' alt' : ''}">
         ${isBest ? '<span class="best-badge">BEST</span>' : ''}
         <div class="rk serif num">${o.alt ? '↳' : rank}</div>
         <div class="hotel"><span class="dot" style="background:${COLORS[o.hotel]}"></span>${esc(NAMES[o.hotel])}</div>
         <div class="price"><div class="p serif num">${yen(o.pay)}</div>
+          ${o.back ? `<div class="per num">実質 ${yen(o.eff)}<small>（ポイント ${yen(o.back)}分）</small></div>` : ''}
           ${nights > 1 ? `<div class="per num">1泊 ${yen(Math.round(o.pay / nights))}</div>` : ''}
           ${sub ? `<div class="diff num">${sub}</div>` : ''}
-          ${mb ? `<div class="vs num ${o.pay < mb.pay ? 'down' : ''}">${o.pay < mb.pay ? `いまの予約より${yen(mb.pay - o.pay)}安い` : o.pay > mb.pay ? `いまの予約より${yen(o.pay - mb.pay)}高い` : 'いまの予約と同額'}</div>` : ''}</div>
+          ${mb ? `<div class="vs num ${o.eff < mb.eff ? 'down' : ''}">${o.eff < mb.eff ? `いまの予約より実質${yen(mb.eff - o.eff)}安い` : o.eff > mb.eff ? `いまの予約より実質${yen(o.eff - mb.eff)}高い` : 'いまの予約と実質同額'}</div>` : ''}</div>
         <div class="room">${esc(o.label)}</div>
         <div class="tags">${o.other ? '<span class="tag ot">対象の部屋は満室</span>' : ''}${o.refundable === false ? '<span class="tag nr">返金不可</span>' : '<span class="tag ok">返金可</span>'}${o.meal ? '<span class="tag meal">朝食付き</span>' : ''}</div>
         <div class="plan">${esc(o.plan)}${o.note ? '<br>' + esc(o.note) : ''}</div>
@@ -545,20 +558,22 @@ function render(){
 // 平日：ハイアットと京王の差が3,000円くらいまでならハイアット、それより大きければ京王。ただし両方1泊7万円超、
 //       または安い方でもグルーヴのキングより1.5万円以上高ければグルーヴ。土曜：14時インのハイアットか京王の安い方
 function ruleCard(c, main){
-  const nights = c.nights || 1, best = h => { const o = main.filter(o => o.hotel === h && !o.other && o.refundable !== false).sort((a, b) => a.pay - b.pay)[0]; return o ? o.pay : null; };
+  const nights = c.nights || 1, best = h => { const o = main.filter(o => o.hotel === h && !o.other).sort((a, b) => a.eff - b.eff)[0]; return o ? o.eff : null; };
   const hy = best('hyatt'), ke = best('keio'), gr = best('groove');
   if (hy == null && ke == null) return '';
   const sat = new Date(c.date + 'T00:00:00').getDay() === 6, per = v => v / nights;
   let pick = '', why = '';
   if (sat) {
-    if (hy != null && (ke == null || hy <= ke)) { pick = 'hyatt'; why = ke != null ? `京王より${yen(ke - hy)}安い・14時イン` : '14時イン'; }
-    else { pick = 'keio'; why = hy != null ? `ハイアットより${yen(hy - ke)}安い・14時イン` : '14時イン'; }
+    if (hy != null && (ke == null || hy <= ke)) { pick = 'hyatt'; why = ke != null ? `京王より実質${yen(ke - hy)}安い・14時イン` : '14時イン'; }
+    else { pick = 'keio'; why = hy != null ? `ハイアットより実質${yen(hy - ke)}安い・14時イン` : '14時イン'; }
     why += '（料金の高い土曜はヒルトンの無料宿泊も）';
   } else {
+    // 金額は実質（ポイントの価値を引いた額）
     const lo = Math.min(...[hy, ke].filter(v => v != null));
     if (gr != null && ((hy == null || per(hy) > 70000) && (ke == null || per(ke) > 70000) || lo - gr >= 15000 * nights)) { pick = 'groove'; why = `ハイアット・京王が高い日（グルーヴのキング ${yen(gr)}）`; }
-    else if (hy != null && (ke == null || hy - ke <= 3000 * nights)) { pick = 'hyatt'; why = ke == null ? '京王は満室' : hy <= ke ? `京王より${yen(ke - hy)}安い` : `京王との差 +${yen(hy - ke)}（3,000円以内）`; }
-    else { pick = 'keio'; why = hy == null ? 'ハイアットは満室' : `ハイアットとの差 ${yen(hy - ke)}（3,000円超）`; }
+    // 京王・ハイアットの差は実質で（京王5%・ハイアット約5.9%のポイントを引いた額）
+    else if (hy != null && (ke == null || hy - ke <= 3000 * nights)) { pick = 'hyatt'; why = ke == null ? '京王は満室' : hy <= ke ? `京王より実質${yen(ke - hy)}安い` : `京王との差 実質+${yen(hy - ke)}（3,000円以内）`; }
+    else { pick = 'keio'; why = hy == null ? 'ハイアットは満室' : `ハイアットとの差 実質${yen(hy - ke)}（3,000円超）`; }
   }
   return `<section class="card rule"><span class="lb">いつもの選び方では</span><b><span class="dot" style="background:${COLORS[pick]}"></span>${esc(NAMES[pick])}</b><span class="why">${esc(why)}</span></section>`;
 }
