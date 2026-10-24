@@ -511,7 +511,7 @@ function tonightCard(r, future, today){
   const ev = evs.map(e => `${esc(e.t)} ${esc(e.kind)}${e.place ? `（<a href="${esc(route(e.place + ' 東京', 'transit'))}" target="_blank" rel="noopener">${esc(e.place)}</a>）` : ''}`).join('　');
   const dest = (r.hotel_name || nm) + ' 東京';
   return `<div class="tn"><div class="t1"><span class="dot" style="background:${COLORS[r.hotel] || OTHER_COLOR}"></span>今夜：${esc(nm)}</div>
-    <div class="t2">${st.ci ? `イン <b>${esc(st.ci)}</b>・アウト <b>明朝 ${esc(st.co)}</b>　` : ''}${esc(shortRoom(r))}${r.pay ? '・' + yen(r.pay) : ''}${ev ? `<br>${ev}` : ''}</div>
+    <div class="t2">${st.ci ? `イン <b>${esc(st.ci)}</b>・アウト <b>明朝 ${esc(st.co)}</b><br>` : ''}${esc(shortRoom(r))}${r.pay ? '・' + yen(r.pay) : ''}${ev ? `<br>${ev}` : ''}</div>
     <div class="tb"><a class="go" href="${esc(route(dest, 'transit'))}" target="_blank" rel="noopener">経路</a>
       <a id="tn-tel" href="#" onclick="return false">電話</a>
       <button type="button" onclick="showDetail(${esc(JSON.stringify(r.key))})">詳細</button></div>
