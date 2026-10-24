@@ -381,7 +381,7 @@ let ptEdit = '';
 function ptNow(key){
   const a = (((D.manual || {}).tiers_auto) || {})[key] || {}, m = (D.points || {})[key];
   const mail = a.pts != null ? {pts: a.pts, date: a.pts_date, src: 'メール', exp: a.pts_exp || ''} : null;
-  const hand = m ? {pts: m.pts, date: m.date, src: '手入力', exp: mail ? mail.exp : ''} : null;
+  const hand = m ? {pts: m.pts, date: m.date, src: m.src || '手入力', exp: m.exp || (mail ? mail.exp : '')} : null;
   if (mail && hand) return hand.date >= mail.date ? hand : mail;
   return hand || mail;
 }
@@ -403,7 +403,7 @@ function renderPoints(){
     return `<div class="pk"${old ? ' style="opacity:.55"' : ''}><div class="pk-m"><b>${esc(p.name)}</b><small>${sub}${old ? '（古い）' : ''}</small></div>
       <div class="pk-s num"><b>${val}</b></div>
       <button type="button" class="pk-e" onclick="ptEdit='${p.key}';renderPoints()">入力</button></div>`;
-  }).join('') + '<div class="note">毎朝6時に各社のメールから読み取ります。ハイアットとニューオータニはメールに残高が載らないことがあるので、変わったら「入力」で直してください。</div>';
+  }).join('') + '<div class="note">ハイアット以外は週2回（月・木の朝）、ログインしたままの会員ページから読みます。ログインが切れたときや会員ページのない日は、毎朝のメールの値を使います。ハイアットは会員ページを自動で開けないため、メールの値です。</div>';
 }
 async function ptSave(key, clear){
   const n = clear ? '' : document.getElementById('pt-n').value.trim(), d = clear ? '' : document.getElementById('pt-d').value;
