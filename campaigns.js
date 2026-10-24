@@ -31,7 +31,15 @@ function cpEnd(c) {
   const d = new Date(c.received + 'T00:00:00Z'); d.setUTCDate(d.getUTCDate() + 45);
   return d.toISOString().slice(0, 10);
 }
-const cpExpired = c => cpEnd(c) < cpToday();
+// 予約期間が終わったものも期限切れ（もう予約できないため・2026-10-24）
+const cpExpired = c => cpEnd(c) < cpToday() || (!!c.booking_end && c.booking_end < cpToday());
+// 同じ案内（同じ制度・同じ名前）が何通も来たときは、新しい1件にまとめる
+const cpSameKey = c => (c.source || '') + '|' + String(c.name || '').replace(/[\s　・:：|｜\-–—()（）【】\[\]「」]/g, '').toLowerCase();
+function cpDedupe(list) {
+  const by = {};
+  list.forEach(c => { const k = cpSameKey(c); (by[k] = by[k] || []).push(c); });
+  return Object.values(by).map(g => { g.sort((a, b) => (a.received || '') < (b.received || '') ? 1 : -1); return Object.assign({}, g[0], { dup: g.length - 1 }); });
+}
 
 // このキャンペーンの対象になりうる今後の予約（宿泊期間が重なる・ホテルと予約経路が合う）
 function cpMatches(c, rows) {

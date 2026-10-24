@@ -10,6 +10,14 @@
   const file = location.pathname.split('/').pop();
   const idx = file === 'bookings.html' ? 1 : file === 'status.html' ? 2 : file === 'campaigns.html' ? 3 : 0;
   const SCROLL_KEY = 'yoiyado_scroll_' + PAGES[idx].key, IN_KEY = 'yoiyado_swipe_in';
+  // 2026-10-24 宵宿を開いたとき（その起動で最初の表示）に、最後に見ていたタブを開く。日程つき・合言葉の設定用リンクなどで来たときは除く
+  try {
+    const first = !sessionStorage.getItem('yoiyado_started');
+    sessionStorage.setItem('yoiyado_started', '1');
+    const last = localStorage.getItem('yoiyado_last_tab');
+    if (idx === 0 && first && !location.search && !location.hash && last && last !== './' && PAGES.some(p => p.href === last)) { location.replace(last); return; }
+    localStorage.setItem('yoiyado_last_tab', PAGES[idx].href);
+  } catch (e) {}
   const ss = {
     get: k => { try { return sessionStorage.getItem(k); } catch (e) { return null; } },
     set: (k, v) => { try { sessionStorage.setItem(k, v); } catch (e) {} },
@@ -75,6 +83,8 @@
     const t = e.touches[0];
     if (t.clientX <= EDGE || t.clientX >= window.innerWidth - EDGE) return;
     if (ignoreTarget(e.target)) return;
+    const ov = document.getElementById('mailov');
+    if (ov && ov.style.display !== 'none') return;
     sx = t.clientX; sy = t.clientY; armed = true;
   }, { passive: true });
   addEventListener('touchcancel', () => { armed = false; }, { passive: true });

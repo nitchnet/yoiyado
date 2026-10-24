@@ -43,6 +43,19 @@ body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.65 -apple-system
 .ttl h1{margin:0;font-size:26px;letter-spacing:.1em;font-weight:700}
 .ttl p{margin:6px 0 0;font-size:12.5px;color:#c9cbd6;letter-spacing:.03em}
 main{max-width:720px;margin:-52px auto 0;padding:0 14px 36px;position:relative;z-index:2}
+.pk{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:4px 10px;align-items:center;padding:8px 0;border-top:1px solid var(--line)}
+.pk:first-child{border-top:0}
+.pk.near .pk-s small{color:var(--warn);font-weight:700}
+.pk-m b{font-size:14px}.pk-m small{display:block;color:var(--sub);font-size:11.5px}
+.pk-p{font-size:11px;color:var(--sub);margin-left:6px}
+.pk-s{text-align:right;font-size:12px;color:var(--sub)}.pk-s b{color:var(--ink);font-size:15px}.pk-s small{display:block}
+.pk-e,.pk-add,.pk-b button{font:inherit;font-size:12.5px;padding:6px 12px;border-radius:999px;border:1px solid var(--line);background:var(--bg);color:var(--ink);cursor:pointer}
+.pk-add{margin-top:8px;width:100%;padding:9px}
+.pk-f{display:grid;gap:8px;padding:10px 0;border-top:1px solid var(--line)}
+.pk-f input,.pk-f select{font:inherit;font-size:14px;padding:7px 9px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);min-width:0}
+.pk-r{display:flex;flex-wrap:wrap;gap:8px;align-items:center}.pk-r label{font-size:12.5px;color:var(--sub);display:flex;gap:4px;align-items:center}
+.pk-r input[type=number]{width:4.5em}
+.pk-b{display:flex;gap:8px}.pk-b .pri{background:var(--ink);color:var(--card);border-color:var(--ink)}.pk-b .del{margin-left:auto;color:var(--warn)}
 .card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;margin-bottom:14px;box-shadow:var(--shadow)}
 h2{font-size:16px;margin:0 0 10px;letter-spacing:.04em;display:flex;align-items:center;gap:8px}
 h2 .n{font-size:11px;color:var(--gold);border:1px solid var(--gold);border-radius:999px;padding:0 8px;font-weight:700}
@@ -166,7 +179,7 @@ footer a{color:inherit}
   </div>
   <div class="tagline">今夜の一泊を、いちばん賢く。会員価格をその場で比べる。</div>
 <div class="tabs"><nav aria-label="ページ切り替え"><a href="./">料金比較</a><a href="bookings.html">予約</a><a href="status.html" aria-current="page">会員ステータス</a><a href="campaigns.html">キャンペーン</a></nav></div>
-<script src="swipe.js" defer></script>
+<script src="swipe.js?v=b8d3c9fe" defer></script>
 
   <div class="ttl">
     <h1 class="serif">会員ステータス</h1>
@@ -178,6 +191,11 @@ footer a{color:inherit}
 <section class="card" id="progress">
   <h2>資格と進捗<span class="yrs" id="yrs"></span></h2>
   <div id="prog-body" class="pg-empty">読み込み中…</div>
+</section>
+
+<section class="card" id="perks">
+  <h2>持っている特典</h2>
+  <div id="perk-body" class="pg-empty">読み込み中…</div>
 </section>
 
 <section class="card">
@@ -289,7 +307,7 @@ footer a{color:inherit}
 
 </main>
 <footer>YOIYADO · 各社公式・比較記事より（2026-10-05時点）。制度は変わることがあります · <a href="./">料金比較へ</a></footer>
-<script src="tiers.js"></script>
+<script src="tiers.js?v=90ecd826"></script>
 <script>
 // 進捗：予約台帳（個人Gmailの予約メールから毎朝作成）を年ごとに集計する。
 // ステータスの泊数・金額に数えるのはホテル公式の予約だけ（一休・Expedia など第三者サイト経由は対象外）。
@@ -343,6 +361,51 @@ function renderTiers(){
   });
 }
 
+
+// 持っている特典（2026-10-24）：無料宿泊・アップグレード券など。種類・残り・期限を本人が入れる。
+// 期限の60日前から、予約ページの「今日やること」に出す
+const PERK_PROG = ['ヒルトン', 'ハイアット', '京王プラザ', 'GHA', 'I Prefer', 'その他'];
+let perkEdit = -1;  // 編集中の行（-1：なし、PERKS.length：新規）
+function perkList(){ return (D && D.perks) || []; }
+function renderPerks(){
+  const el = document.getElementById('perk-body'); if (!el || !D) return;
+  const today = new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 10);
+  const list = perkList().map((x, i) => Object.assign({i}, x)).sort((a, b) => (a.exp || '9999') < (b.exp || '9999') ? -1 : 1);
+  const days = d => Math.round((new Date(d + 'T00:00:00+09:00') - new Date(today + 'T00:00:00+09:00')) / 864e5);
+  const form = i => { const x = perkList()[i] || {name: '', prog: 'ヒルトン', n: 1, exp: '', memo: ''};
+    return `<div class="pk-f"><input id="pk-name" placeholder="名前（例：週末無料宿泊）" value="${esc(x.name)}" maxlength="60">
+      <div class="pk-r"><select id="pk-prog">${PERK_PROG.map(v => `<option${v === x.prog ? ' selected' : ''}>${v}</option>`).join('')}</select>
+      <label>残り <input id="pk-n" type="number" min="0" max="99" value="${Number(x.n) || 0}"></label>
+      <label>期限 <input id="pk-exp" type="date" value="${esc(x.exp)}"></label></div>
+      <input id="pk-memo" placeholder="メモ（使う予定の日など）" value="${esc(x.memo)}" maxlength="120">
+      <div class="pk-b"><button type="button" class="pri" onclick="perkSave(${i})">保存</button><button type="button" onclick="perkEdit=-1;renderPerks()">やめる</button>
+      ${i < perkList().length ? `<button type="button" class="del" onclick="perkDel(${i})">削除</button>` : ''}</div></div>`; };
+  el.className = '';
+  el.innerHTML = (list.length ? list.map(x => perkEdit === x.i ? form(x.i) : `<div class="pk${x.exp && days(x.exp) <= 60 && x.n > 0 ? ' near' : ''}">
+      <div class="pk-m"><b>${esc(x.name)}</b><span class="pk-p">${esc(x.prog)}</span>${x.memo ? `<small>${esc(x.memo)}</small>` : ''}</div>
+      <div class="pk-s num">残り <b>${Number(x.n) || 0}</b>${x.exp ? `<small>${md(x.exp)}まで${days(x.exp) >= 0 ? `（あと${days(x.exp)}日）` : '（期限切れ）'}</small>` : ''}</div>
+      <button type="button" class="pk-e" onclick="perkEdit=${x.i};renderPerks()">編集</button></div>`).join('') : '<div class="pg-empty">まだありません。無料宿泊やアップグレード券を持ったら追加してください。期限の60日前から予約ページの「今日やること」に出ます。</div>')
+    + (perkEdit === perkList().length ? form(perkList().length) : `<button type="button" class="pk-add" onclick="perkEdit=${perkList().length};renderPerks()">＋ 特典を追加</button>`);
+}
+async function perkPut(list){
+  try {
+    const r = await api({api: 'perkSet', perks: JSON.stringify(list)});
+    if (!r.ok) throw new Error(r.error || 'failed');
+    D.perks = r.perks; perkEdit = -1; renderPerks();
+    try { localStorage.setItem('yoiyado_ledger', JSON.stringify(D)); } catch(e) {}
+  } catch(e) { alert('保存できませんでした。少し時間をおいてお試しください。'); }
+}
+function perkSave(i){
+  const v = id => document.getElementById(id).value.trim();
+  if (!v('pk-name')) { alert('名前を入れてください'); return; }
+  const list = perkList().slice();
+  list[i] = {name: v('pk-name'), prog: v('pk-prog'), n: Number(v('pk-n')) || 0, exp: v('pk-exp'), memo: v('pk-memo')};
+  perkPut(list);
+}
+function perkDel(i){
+  if (!confirm('この特典を削除しますか？')) return;
+  perkPut(perkList().filter((_, j) => j !== i));
+}
 
 function bar(done, plan, goal){
   const d = Math.min(100, done / goal * 100), p = Math.min(100 - d, plan / goal * 100);
@@ -410,6 +473,7 @@ function render(){
   h += `<div class="s" style="margin-top:8px;font-size:11.5px;color:var(--sub)">資格は毎朝6時にメールから確認（京王は会員ページ・10/7確認）${un.length ? `。未確認：${esc(un.join('・'))}` : ''}。泊数・金額は予約台帳から計算。濃い色は宿泊済み、薄い色は予約済み。</div>`;
   document.getElementById('prog-body').innerHTML = h;
   renderTiers();
+  renderPerks();
   document.getElementById('prog-body').className = '';
   const ys = [new Date().getFullYear(), new Date().getFullYear() + 1];
   document.getElementById('yrs').innerHTML = ys.map(y => `<button type="button" aria-pressed="${y === YEAR}" onclick="YEAR=${y};render()">${y}</button>`).join('');

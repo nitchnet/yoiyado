@@ -137,6 +137,10 @@ details.cond p{margin:6px 0 0;line-height:1.7}
 
 /* ---------- いまの予約との比較 ---------- */
 .card.mine{border:1.5px solid var(--gold);padding:12px 14px}
+.card.rule{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px;padding:10px 14px}
+.card.rule .lb{font-size:12px;font-weight:700;color:var(--gold);letter-spacing:.06em}
+.card.rule b{display:inline-flex;align-items:center;gap:6px}.card.rule .why{font-size:12.5px;color:var(--sub)}
+.card.linkin{font-size:13.5px}
 .mine .mh{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
 .mine .lb{font-size:12px;font-weight:700;color:var(--gold);letter-spacing:.08em}
 .mine .mp{font-size:19px;font-weight:700}
@@ -193,7 +197,7 @@ footer{max-width:720px;margin:0 auto;padding:0 16px 28px;text-align:center;font-
   </div>
   <div class="tagline">今夜の一泊を、いちばん賢く。会員価格をその場で比べる。</div>
 <div class="tabs"><nav aria-label="ページ切り替え"><a href="./" aria-current="page">料金比較</a><a href="bookings.html">予約</a><a href="status.html">会員ステータス</a><a href="campaigns.html">キャンペーン</a></nav></div>
-<script src="swipe.js" defer></script>
+<script src="swipe.js?v=b8d3c9fe" defer></script>
 </header>
 
 <main>
@@ -501,6 +505,7 @@ function render(){
   const minT = (main.find(o => !o.other) || {}).pay;
   const mb = myBooking(cur);
   if (mb) h += mineCard(mb, main, loading);
+  if (!loading) h += ruleCard(cur, main);
   // 順位は返金可（基本）で付け、返金不可の安いプランは同じ部屋の直下に添える
   const list = [];
   main.forEach(m => {
@@ -536,15 +541,61 @@ function render(){
   out.innerHTML = h;
 }
 
+// 泊まり方のルール（会員ステータスの「泊まり方のルール」と同じ。2026-10-24）で、どこに泊まるかを1行で添える
+// 平日：ハイアットと京王の差が3,000円くらいまでならハイアット、それより大きければ京王。ただし両方1泊7万円超、
+//       または安い方でもグルーヴのキングより1.5万円以上高ければグルーヴ。土曜：14時インのハイアットか京王の安い方
+function ruleCard(c, main){
+  const nights = c.nights || 1, best = h => { const o = main.filter(o => o.hotel === h && !o.other && o.refundable !== false).sort((a, b) => a.pay - b.pay)[0]; return o ? o.pay : null; };
+  const hy = best('hyatt'), ke = best('keio'), gr = best('groove');
+  if (hy == null && ke == null) return '';
+  const sat = new Date(c.date + 'T00:00:00').getDay() === 6, per = v => v / nights;
+  let pick = '', why = '';
+  if (sat) {
+    if (hy != null && (ke == null || hy <= ke)) { pick = 'hyatt'; why = ke != null ? `京王より${yen(ke - hy)}安い・14時イン` : '14時イン'; }
+    else { pick = 'keio'; why = hy != null ? `ハイアットより${yen(hy - ke)}安い・14時イン` : '14時イン'; }
+    why += '（料金の高い土曜はヒルトンの無料宿泊も）';
+  } else {
+    const lo = Math.min(...[hy, ke].filter(v => v != null));
+    if (gr != null && ((hy == null || per(hy) > 70000) && (ke == null || per(ke) > 70000) || lo - gr >= 15000 * nights)) { pick = 'groove'; why = `ハイアット・京王が高い日（グルーヴのキング ${yen(gr)}）`; }
+    else if (hy != null && (ke == null || hy - ke <= 3000 * nights)) { pick = 'hyatt'; why = ke == null ? '京王は満室' : hy <= ke ? `京王より${yen(ke - hy)}安い` : `京王との差 +${yen(hy - ke)}（3,000円以内）`; }
+    else { pick = 'keio'; why = hy == null ? 'ハイアットは満室' : `ハイアットとの差 ${yen(hy - ke)}（3,000円超）`; }
+  }
+  return `<section class="card rule"><span class="lb">いつもの選び方では</span><b><span class="dot" style="background:${COLORS[pick]}"></span>${esc(NAMES[pick])}</b><span class="why">${esc(why)}</span></section>`;
+}
+
+// 予約ページから日程を受け取る（./?in=YYYY-MM-DD&out=YYYY-MM-DD&a=2）。検索ボタンは自分で押す（照会を勝手に増やさない）
+function fromLink(){
+  const q = new URLSearchParams(location.search), i = q.get('in'), o = q.get('out'), a = q.get('a');
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(i || '')) return false;
+  document.getElementById('date').value = i; lastIn = i; syncOut();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(o || '') && o > i) { document.getElementById('checkout').value = o; showNights(); }
+  if (/^[1-3]$/.test(a || '')) document.getElementById('adults').value = a;
+  history.replaceState(null, '', location.pathname + location.hash);
+  saveLast(null); cur = null; render();
+  const n = document.getElementById('out');
+  n.innerHTML = '<div class="card linkin">予約ページから日程を入れました。<b>「空室と会員価格を探す」</b>を押すと検索します。</div>';
+  return true;
+}
+// 次に予約のない夜（料金比較を開いたときの日付の初期値）
+function nextFree(){
+  let led = null; try { led = JSON.parse(localStorage.getItem('yoiyado_ledger') || 'null'); } catch(e) {}
+  const rows = ((led && led.rows) || []).filter(r => r.status === 'booked' && r.checkin && r.checkout);
+  for (let i = 1; i < 120; i++) {
+    const d = new Date(Date.now() + 9 * 3600e3 + i * 864e5).toISOString().slice(0, 10);
+    if (!rows.some(r => r.checkin <= d && d < r.checkout)) return d;
+  }
+  return null;
+}
+
 // 初期化は全ての定義の後で行う（const/let を定義前に使うとスクリプト全体が止まるため）
 (function init(){
   document.getElementById('go').innerHTML = BTN_IDLE;
   const t = new Date(Date.now() + 9*3600e3 + 86400e3);
-  document.getElementById('date').value = t.toISOString().slice(0,10);
+  document.getElementById('date').value = nextFree() || t.toISOString().slice(0,10);  // 次に予約のない夜（2026-10-24）
   syncOut();
   try { const a = localStorage.getItem('cmp_adults'); if (a) document.getElementById('adults').value = a; } catch(e) {}
   try { document.getElementById('showAlt').checked = localStorage.getItem('cmp_show_nr') === '1'; } catch(e) {}
-  restoreLast();
+  if (!fromLink()) restoreLast();
   loadHist();
   loadBookings();
   // ホーム画面から開いた宵宿は裏で開いたままになるので、画面に戻ったら検索履歴を取り直す

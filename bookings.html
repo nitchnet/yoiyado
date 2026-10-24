@@ -154,6 +154,38 @@ details.pm > summary{margin:10px 4px 6px;color:var(--sub)}
 .empty{color:var(--sub);font-size:13px;text-align:center;padding:10px}
 footer{max-width:720px;margin:0 auto;padding:0 16px 28px;text-align:center;font-size:11px;color:var(--sub);letter-spacing:.06em}
 @media (max-width:380px){.bk{grid-template-columns:64px minmax(0,1fr) auto}.sum .v{font-size:19px}}
+/* 2026-10-24 使いやすさの改善（3つのAIの提案から） */
+.bk .h{font-size:14.5px;color:var(--ink);font-weight:700}
+.bk .r{font-weight:500;font-size:12.5px;color:var(--sub)}
+.bk .ft{grid-column:1/4;display:flex;align-items:center;gap:8px;margin-top:6px}
+.bk .ft .ev{flex:1;min-width:0;font-size:12px;color:var(--sub);overflow-wrap:anywhere}
+.bk .ft .ev b{color:var(--ink);font-weight:600}
+.bk .db{flex:none;font:inherit;font-size:13px;font-weight:600;min-height:40px;padding:6px 16px;border-radius:999px;border:1px solid var(--line);background:var(--bg);color:var(--ink);cursor:pointer}
+.chips .chip{cursor:pointer;font:inherit;font-size:12px;color:var(--ink)}
+.chips .chip.on{background:var(--night2);color:#fff;border-color:var(--night2)}
+@media (prefers-color-scheme: dark){.chips .chip.on{background:var(--gold);color:#1a1f2e;border-color:var(--gold)}}
+.chips{mask-image:linear-gradient(90deg,#000 85%,transparent);-webkit-mask-image:linear-gradient(90deg,#000 85%,transparent)}
+.fb{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:12px 4px 0;padding:8px 12px;border-radius:10px;background:var(--gold-soft);font-size:13px}
+.fb button{font:inherit;font-size:12.5px;padding:4px 12px;border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer}
+.today .td-m a{color:inherit}
+.tn{margin:2px 0 8px;padding:10px 12px;border-radius:12px;background:var(--card);border:1px solid var(--gold)}
+.tn .t1{display:flex;align-items:center;gap:6px;font-weight:700;font-size:14.5px}
+.tn .t2{font-size:12.5px;color:var(--sub);margin-top:2px}.tn .t2 b{color:var(--ink)}
+.tn .tb{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin-top:8px}
+.tn .tb a,.tn .tb button{font:inherit;font-size:12px;text-align:center;padding:8px 2px;min-height:38px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);text-decoration:none;cursor:pointer}
+.tn .t3{font-size:12.5px;margin-top:8px;padding-top:6px;border-top:1px dashed var(--line)}.tn .t3 a{color:inherit;font-weight:600}
+.d14{display:grid;grid-template-columns:repeat(14,minmax(0,1fr));gap:2px;margin:0 0 12px}
+.d14 a{display:flex;flex-direction:column;align-items:center;gap:1px;padding:4px 0 5px;border-radius:8px;text-decoration:none;color:var(--sub);font-size:10px;line-height:1.2}
+.d14 a b{font-size:12px;color:var(--ink);font-weight:600}
+.d14 a i{width:9px;height:9px;border-radius:50%;border:1px dashed var(--line);margin-top:2px}
+.d14 a.bk1 i{border:0}.d14 a.sat b{color:#3d6ab0}.d14 a.sun b{color:#c0392b}
+.d14 a.tdy{background:var(--gold-soft)}
+.bk .rb{grid-column:1/4;margin-top:6px;padding:8px 10px;border-radius:10px;background:var(--ok-bg);font-size:12.5px;line-height:1.6}
+.bk .rb ol{margin:2px 0 4px;padding-left:1.4em}.bk .rb li.dn{color:var(--sub);text-decoration:line-through}
+.bk .rb button,.bk .sv .rbb{font:inherit;font-size:12px;padding:4px 12px;border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer;margin:4px 6px 0 0}
+.dt-bs .dt-b.nwb{background:var(--bg);color:var(--sub);border-color:var(--line);font-size:13px}
+.spk{margin:10px 0 2px}.spk svg{width:100%;height:84px;display:block}
+.spk .lg{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:11px;color:var(--sub)}.spk .lg i{display:inline-block;width:14px;height:2px;vertical-align:3px;margin-right:4px}
 .hero{background:radial-gradient(120% 140% at 85% -20%,#3b4c78 0%,var(--night2) 38%,var(--night) 100%);color:#f3eee3;padding:22px 16px 74px;position:relative;overflow:hidden}
 .hero::after{content:"";position:absolute;inset:0;background-image:radial-gradient(1px 1px at 12% 30%,#fff8 50%,transparent 51%),radial-gradient(1px 1px at 72% 18%,#fff6 50%,transparent 51%),radial-gradient(1.5px 1.5px at 88% 62%,#fff5 50%,transparent 51%),radial-gradient(1px 1px at 40% 70%,#fff4 50%,transparent 51%),radial-gradient(1px 1px at 58% 40%,#fff5 50%,transparent 51%);pointer-events:none}
 .brand{max-width:720px;margin:0 auto;display:flex;align-items:center;gap:12px;position:relative;z-index:1}
@@ -188,7 +220,7 @@ footer{max-width:720px;margin:0 auto;padding:0 16px 28px;text-align:center;font-
   </div>
   <div class="tagline">今夜の一泊を、いちばん賢く。会員価格をその場で比べる。</div>
 <div class="tabs"><nav aria-label="ページ切り替え"><a href="./">料金比較</a><a href="bookings.html" aria-current="page">予約</a><a href="status.html">会員ステータス</a><a href="campaigns.html">キャンペーン</a></nav></div>
-<script src="swipe.js" defer></script>
+<script src="swipe.js?v=b8d3c9fe" defer></script>
 
   <div class="ttl">
     <h1 class="serif">予約一覧</h1>
@@ -201,8 +233,8 @@ footer{max-width:720px;margin:0 auto;padding:0 16px 28px;text-align:center;font-
   <div id="list"></div>
 </main>
 <footer>YOIYADO · 金額は税・サービス料・宿泊税込みの滞在合計</footer>
-<script src="tiers.js"></script>
-<script src="campaigns.js"></script>
+<script src="tiers.js?v=90ecd826"></script>
+<script src="campaigns.js?v=6422cd5d"></script>
 <script>
 const GAS = "https://script.google.com/macros/s/AKfycbyXS4tQgx8U95EG5EUJd3H47_saO_Ny35XWZBWxyNY-2ck8QBLOmgAzSm6HtN7twnRXaFGf/exec";
 const NAMES = {keio:'京王プラザ', iprefer:'京王プラザ（I Prefer）', newotani:'ニューオータニ ザ・メイン（I Prefer）', groove:'ホテルグルーヴ', hilton:'ヒルトン東京', hyatt:'ハイアット リージェンシー', kimpton:'キンプトン新宿', bellustar:'BELLUSTAR TOKYO',
@@ -315,6 +347,8 @@ function mailOv(){
     document.body.appendChild(ov);
   }
   ov.style.display = 'flex'; document.documentElement.style.overflow = 'hidden';
+  // スマホの「戻る」で詳細を閉じる（2026-10-24）
+  if (!(history.state && history.state.yd)) history.pushState({yd: 1}, '');
   return ov;
 }
 const telNo = s => { const d = String(s || '').replace(/[^\d+]/g, ''); return d.startsWith('81') ? '0' + d.slice(2) : d.startsWith('+81') ? '0' + d.slice(3) : d; };
@@ -323,7 +357,7 @@ async function showDetail(key){
   mailOv();
   const seq = ++DSEQ;  // 読み込み中に別の予約を開いたり閉じたりしたら、遅れて届いた応答は捨てる
   const conf = r.conf || r.key.split(':').pop(), cx = r.status !== 'booked';
-  document.getElementById('mvsub').textContent = NAMES[r.hotel] || r.hotel_name || r.hotel;
+  document.getElementById('mvsub').textContent = `${md(r.checkin)}（${wd(r.checkin)}）${NAMES[r.hotel] || r.hotel_name || r.hotel}`;
   document.getElementById('mvmeta').textContent = `${r.channel || '公式'}　予約番号 ${conf}`;
   const today = new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 10);
   const st = !cx && r.checkout > today ? stayTimes(r, currentTiers(data.manual), ghaProjection(data.rows || [])) : null;
@@ -359,21 +393,30 @@ async function showDetail(key){
   const pend = !cx && r.cx_group ? (data.rows || []).filter(x => x.cx_group === r.cx_group && x.status === 'booked') : [];
   const pendBox = pend.length ? `<div class="dt-pd"><b>キャンセルの照合保留</b>：同じホテル・同じ日程の予約が${pend.length}件あり、届いたキャンセルメールがどれのものか判別できません。ホテルの予約確認で確かめて、キャンセルされた予約を選んでください。
     ${pend.map(x => `<button type="button" class="dt-b" onclick="resolveCx(this, ${esc(JSON.stringify(x.cx_group))}, ${esc(JSON.stringify(x.key))})">予約番号 ${esc(x.conf || x.key.split(':').pop())}${x.pay ? '・' + yen(x.pay) : ''} がキャンセルされた</button>`).join('')}</div>` : '';
-  const nw = !cx && r.refundable && r.checkout > today ? `<button type="button" class="dt-b" onclick="setNoWatch(this, ${esc(JSON.stringify(r.key))}, ${r.nowatch ? 0 : 1})">${r.nowatch ? '値下がり・振り替えの監視を再開する' : 'この予約は値下がり・振り替えを監視しない'}</button>` : '';
-  if (nw) btn.push(nw);
+  const nw = !cx && r.refundable && r.checkout > today ? `<button type="button" class="dt-b nwb" onclick="setNoWatch(this, ${esc(JSON.stringify(r.key))}, ${r.nowatch ? 0 : 1})">${r.nowatch ? '値下がり・振り替えの監視を再開する' : 'この予約は値下がり・振り替えを監視しない'}</button>` : '';
+  // ほかのホテルと比べる（料金比較に日程を入れて開く。検索は料金比較で押す・A3）
+  if (!cx && r.checkout > today) btn.push(`<a class="dt-b" href="./?in=${r.checkin}&out=${r.checkout}&a=${r.adults || 2}">この日程でほかのホテルと比べる</a>`);
   const more = j ? row('支払い', esc(j.pay_ja || j.pay || '')) + row('キャンセル規定', esc(j.cancel_ja || j.cancel || '')) : '';
   // 原典：パソコンではGmailでそのメールを開ける（スマホのGmailはこのリンクを受け付けないので「元のメールを見る」で）
   const gm = !TOUCH && data.mail_acct ? `<a class="dt-g" href="https://mail.google.com/mail/?authuser=${encodeURIComponent(data.mail_acct).replace('%40', '@')}#${r.mail_id ? 'all/' + encodeURIComponent(r.mail_id) : 'search/' + encodeURIComponent('"' + conf + '"')}" target="_blank" rel="noopener">Gmailで開く →</a>` : '';
   bodyEl.innerHTML = `${pendBox}<div class="dt">${base}</div>
     ${btn.length ? `<div class="dt-bs">${btn.join('')}</div>` : ''}
     ${more ? `<div class="dt">${more}</div>` : ''}
+    ${spark(r)}
     ${!cx && !L.manage && !L.modify && !L.cancel && !(PP[r.hotel] && r.channel === '公式') ? `<div class="dt-n">予約メールに変更・キャンセルのリンクがありません。${SITE[r.channel] ? 'サイトの予約確認から、予約番号で探してください。' : 'ホテルに電話するか、予約したサイトから手続きしてください。'}</div>` : ''}
     ${!cx && L.cancel ? '<div class="dt-n">キャンセルはホテルのページで確定するまで行われません。</div>' : ''}
     ${j ? `<details class="dt-m"><summary>元のメールを見る</summary>${gm ? `<div class="dt-n">${gm}</div>` : ''}<div class="mv-meta">${esc(j.subject || '')}<br>${esc(j.from || '')}　${esc(j.date || '')}</div><pre>${esc(j.text || '')}</pre></details>`
         : `<div class="dt-n">${r.mail_id ? '予約メールを読み込めませんでした。少し時間をおいてお試しください。' : 'この予約は予約メールが見つかっていません。'}${gm ? '　' + gm : ''}</div>`}
-    ${(j && ((j.cancel_ja && j.cancel_ja !== j.cancel) || (j.pay_ja && j.pay_ja !== j.pay))) ? '<div class="dt-n">英語の規定は日本語に訳して表示しています（正確な文面は元のメールで）。</div>' : ''}`;
+    ${(j && ((j.cancel_ja && j.cancel_ja !== j.cancel) || (j.pay_ja && j.pay_ja !== j.pay))) ? '<div class="dt-n">英語の規定は日本語に訳して表示しています（正確な文面は元のメールで）。</div>' : ''}
+    ${nw ? `<div class="dt-bs" style="margin-top:18px">${nw}</div>` : ''}`;
 }
-function closeMail(){ DSEQ++; const ov = document.getElementById('mailov'); if (ov) ov.style.display = 'none'; document.documentElement.style.overflow = ''; }
+function closeMail(fromPop){
+  DSEQ++; const ov = document.getElementById('mailov');
+  const open = ov && ov.style.display !== 'none';
+  if (ov) ov.style.display = 'none'; document.documentElement.style.overflow = '';
+  if (open && !fromPop && history.state && history.state.yd) history.back();
+}
+addEventListener('popstate', () => { const ov = document.getElementById('mailov'); if (ov && ov.style.display !== 'none') closeMail(true); });
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeMail(); });
 
 // スマホ（指で触る画面）では、Gmailのスマホ画面がメールを直接開くリンクを受け付けないので、予約番号をコピーしてGmailアプリで検索する
@@ -398,6 +441,7 @@ async function resolveCx(btn, g, key){
   } catch(e) { btn.disabled = false; alert('記録できませんでした。少し時間をおいてお試しください。'); }
 }
 async function setNoWatch(btn, key, v){
+  if (v && !confirm('この予約を、値下がり・振り替えの監視から外しますか？（あとで再開できます）')) return;
   btn.disabled = true;
   try {
     await flagCall({type: 'nowatch', key, v: String(v)});
@@ -405,9 +449,118 @@ async function setNoWatch(btn, key, v){
     render(); showDetail(key);
   } catch(e) { btn.disabled = false; alert('記録できませんでした。少し時間をおいてお試しください。'); }
 }
+// ---- 2026-10-24 使いやすさの改善（3つのAIの提案から）
+let hotelFilter = '', todoAll = false, hashDone = false;
+function setHotel(k){ hotelFilter = hotelFilter === k ? '' : k; render(); }
+// 部屋名を短く：ハイアットの英語の管理名は「キング・17〜26階」、ほかは括弧と英語の補足を落として22字まで
+function shortRoom(r){
+  const x = String(r.room || '');
+  if (HYATT_HOTELS.includes(r.hotel) && /King|Queen|Twin|Double/i.test(x)) {
+    const bed = /King/i.test(x) ? 'キング' : 'ツイン';
+    const fl = x.match(/Floor\s*(\d+)\s*-\s*(\d+)/i);
+    return bed + (fl ? `・${fl[1]}〜${fl[2]}階` : /High/i.test(x) ? '・高層階' : '');
+  }
+  if (r.hotel === 'newotani' && /Standard|Deluxe/i.test(x))  // ニューオータニ（I Prefer）は英語の部屋名を日本語に
+    return (/Shin-?Edo|Garden/i.test(x) ? '新江戸' : 'ザ・メイン ') + (/Deluxe/i.test(x) ? 'デラックス' : 'スタンダード') + (/Twin/i.test(x) ? 'ツイン' : 'ダブル');
+  const t = x.replace(/[（(][^）)]*[）)]/g, '').replace(/\s+-\s+.*$/, '').trim();
+  return t.length > 22 ? t.slice(0, 22) + '…' : t;
+}
+// 取り直し中（B1）
+const RB = () => ((data && data.flags) || {}).rebook || {};
+function rbNew(r){  // 取り直しを始めた後に届いた、同じ日の別の予約
+  const f = RB()[r.key]; if (!f) return null;
+  const since = Date.parse(f.at) - 6 * 3600e3;
+  return (data.rows || []).find(x => x.status === 'booked' && x.key !== r.key && x.checkin === r.checkin && Number(x.updated) >= since) || null;
+}
+function rbStart(r, kind, to){
+  if (r.status !== 'booked' || RB()[r.key]) return '';
+  return `<br><button type="button" class="rbb" onclick="rbSet(${esc(JSON.stringify(r.key))}, 1, '${kind}', ${esc(JSON.stringify(to))})">取り直しを始める</button>`;
+}
+function rbBox(r, today){
+  const f = RB()[r.key]; if (!f || r.status !== 'booked') return '';
+  const nb = rbNew(r);
+  return `<div class="rb"><b>取り直し中</b>（${esc(f.to || '')}）
+    <ol><li class="${nb ? 'dn' : ''}">新しい予約を取る${nb ? `（届きました：${esc(NAMES[nb.hotel] || nb.hotel_name)} ${nb.pay ? yen(nb.pay) : ''}）` : '（予約メールが届くと自動で✓）'}</li>
+    <li>この予約をキャンセルする${r.free_cancel_until ? `（無料キャンセル ${md(r.free_cancel_until)}まで）` : ''}。キャンセルのメールが届くと完了</li></ol>
+    ${nb ? `<button type="button" onclick="showDetail(${esc(JSON.stringify(r.key))})">この予約の詳細（キャンセルへ）</button>` : ''}<button type="button" onclick="rbSet(${esc(JSON.stringify(r.key))}, 0)">取り直しをやめる</button></div>`;
+}
+async function rbSet(key, v, kind, to){
+  try {
+    await flagCall(Object.assign({type: 'rebook', key, v: String(v)}, v ? {kind, to} : {}));
+    data.flags = data.flags || {}; data.flags.rebook = data.flags.rebook || {};
+    if (v) data.flags.rebook[key] = {at: new Date().toISOString(), kind, to}; else delete data.flags.rebook[key];
+    render();
+  } catch(e) { alert('記録できませんでした。少し時間をおいてお試しください。'); }
+}
+// 今夜の宿（15時以降・A2）
+function tonightCard(r, future, today){
+  const tiers = currentTiers(data.manual), st = stayTimes(r, tiers, ghaProjection(data.rows || [])) || {};
+  const tm = new Date(Date.parse(today + 'T00:00:00+09:00') + 864e5 + 9 * 3600e3).toISOString().slice(0, 10);
+  const conf = r.conf || r.key.split(':').pop(), nm = NAMES[r.hotel] || r.hotel_name;
+  const nx = r.checkout > tm ? null : future.find(x => x.checkin === tm);
+  const t3 = r.checkout > tm ? '明日：<b>連泊</b>（同じホテル）'
+    : nx ? (nx.hotel === r.hotel ? '明日：同じホテル（別の予約）' : `明日：<b>${esc(NAMES[nx.hotel] || nx.hotel_name)}</b>へ移動${(stayTimes(nx, tiers, ghaProjection(data.rows || [])) || {}).ci ? `（イン ${stayTimes(nx, tiers, ghaProjection(data.rows || [])).ci}）` : ''}`)
+    : `明日の宿は未予約　<a href="./?in=${tm}&out=${new Date(Date.parse(tm + 'T00:00:00Z') + 864e5).toISOString().slice(0, 10)}&a=${r.adults || 2}">この日程で比べる →</a>`;
+  const ev = ((data.eve || {})[today] || []).map(e => `${esc(e.t)} ${esc(e.kind)}${e.place ? `（${esc(e.place)}）` : ''}`).join('　');
+  return `<div class="tn"><div class="t1"><span class="dot" style="background:${COLORS[r.hotel] || OTHER_COLOR}"></span>今夜：${esc(nm)}</div>
+    <div class="t2">${st.ci ? `イン <b>${esc(st.ci)}</b>・アウト <b>明朝 ${esc(st.co)}</b>　` : ''}${esc(shortRoom(r))}${r.pay ? '・' + yen(r.pay) : ''}${ev ? `<br>${ev}` : ''}</div>
+    <div class="tb"><button type="button" onclick="copyConf(this, ${esc(JSON.stringify(conf))})">番号コピー</button>
+      <a id="tn-tel" href="#" onclick="return false">電話</a>
+      <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(r.hotel_name || nm)}" target="_blank" rel="noopener">地図</a>
+      <button type="button" onclick="showDetail(${esc(JSON.stringify(r.key))})">詳細</button></div>
+    <div class="t3">${t3}</div></div>`;
+}
+async function fillTonightTel(){
+  const a = document.getElementById('tn-tel'); if (!a || a.dataset.done) return;
+  a.dataset.done = '1';
+  const today = new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 10);
+  const r = (data.rows || []).find(x => x.status === 'booked' && x.checkin <= today && today < x.checkout);
+  try { const j = r && r.mail_id ? await getMail(r.mail_id) : null; const t = j && j.phone ? telNo(j.phone) : '';
+    if (t) { a.href = 'tel:' + t; a.onclick = null; } else a.style.opacity = .4; } catch(e) { a.style.opacity = .4; }
+}
+// これからの14日間（B2）：その夜の宿の色。空いている夜は点線の丸。押すと予約へ、空きなら料金比較へ
+function strip14(future, today){
+  let h = '<div class="d14" aria-label="これからの14日間">';
+  for (let i = 0; i < 14; i++) {
+    const d = new Date(Date.parse(today + 'T00:00:00Z') + i * 864e5).toISOString().slice(0, 10);
+    const n = new Date(Date.parse(d + 'T00:00:00Z') + 864e5).toISOString().slice(0, 10);
+    const r = future.find(x => x.checkin <= d && d < x.checkout), w = new Date(d + 'T00:00:00').getDay();
+    const cls = (r ? 'bk1 ' : '') + (w === 6 ? 'sat ' : w === 0 ? 'sun ' : '') + (i === 0 ? 'tdy' : '');
+    const href = r ? '#' : `./?in=${d}&out=${n}&a=2`;
+    h += `<a class="${cls}" href="${href}" ${r ? `onclick="goBk(${esc(JSON.stringify(r.key))});return false"` : ''} title="${md(d)} ${r ? esc(NAMES[r.hotel] || r.hotel_name) : '未予約'}">${'日月火水木金土'[w]}<b>${Number(d.slice(8))}</b><i style="${r ? `background:${COLORS[r.hotel] || OTHER_COLOR}` : ''}"></i></a>`;
+  }
+  return h + '</div>';
+}
+// 料金の推移（C2）：調べた日ごとの、同じ部屋の今の最安・返金不可・ハイアット（振り替え候補）と、予約の金額
+function spark(r){
+  const pts = ((data.hist || {})[r.key] || []).filter(p => p[1] != null || p[2] != null || p[3] != null);
+  if (pts.length < 2 || !r.pay) return '';
+  const vals = pts.flatMap(p => [p[1], p[2], p[3]]).filter(v => v != null).concat([r.pay]);
+  const lo = Math.min(...vals), hi = Math.max(...vals), W = 300, H = 70, pad = 4;
+  const x = i => pad + i * (W - pad * 2) / (pts.length - 1), y = v => H - pad - (hi === lo ? 0.5 : (v - lo) / (hi - lo)) * (H - pad * 2);
+  const line = (i, col, dash) => { const seg = pts.map((p, j) => p[i] != null ? `${x(j).toFixed(1)},${y(p[i]).toFixed(1)}` : null).filter(Boolean);
+    // 点が少ないうちは線にならないので、各点に丸も打つ
+    return (seg.length > 1 ? `<polyline fill="none" stroke="${col}" stroke-width="2" ${dash ? 'stroke-dasharray="4 3"' : ''} points="${seg.join(' ')}"/>` : '')
+      + seg.map(xy => `<circle cx="${xy.split(',')[0]}" cy="${xy.split(',')[1]}" r="3" fill="${col}"/>`).join(''); };
+  const has = i => pts.some(p => p[i] != null);
+  return `<div class="spk"><div class="dt-k">料金の推移（${md(pts[0][0])}〜${md(pts[pts.length - 1][0])}・${pts.length}回）</div>
+    <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="料金の推移">
+      <line x1="0" x2="${W}" y1="${y(r.pay).toFixed(1)}" y2="${y(r.pay).toFixed(1)}" stroke="#9a9a9a" stroke-width="1" stroke-dasharray="2 3"/>
+      ${line(1, '#b8893a')}${line(2, '#b0462f', true)}${line(3, '#3d6ab0')}</svg>
+    <div class="lg"><span><i style="background:#9a9a9a"></i>予約 ${yen(r.pay)}</span>${has(1) ? '<span><i style="background:#b8893a"></i>今の最安</span>' : ''}${has(2) ? '<span><i style="background:#b0462f"></i>返金不可</span>' : ''}${has(3) ? '<span><i style="background:#3d6ab0"></i>ハイアット</span>' : ''}<span>${yen(lo)}〜${yen(hi)}</span></div></div>`;
+}
+// まとめメールの「宵宿で見る」（bookings.html#b=予約キー）から来たら、その予約へ移って詳細を開く（A4）
+function handleHash(){
+  if (hashDone || !data) return;
+  const m = location.hash.match(/^#b=(.+)$/); hashDone = true; if (!m) return;
+  const k = decodeURIComponent(m[1]);
+  history.replaceState(null, '', location.pathname);
+  setTimeout(() => { goBk(k); setTimeout(() => showDetail(k), 500); }, 100);
+}
 // 「今日やること」から予約カードへ移る（その年に切り替えてから）
 function goBk(key){
   const r = (data.rows || []).find(x => x.key === key); if (!r) return;
+  if (hotelFilter && r.hotel !== hotelFilter) { hotelFilter = ''; render(); }
   if (r.checkin && r.checkin.slice(0, 4) !== yearSel) { yearSel = r.checkin.slice(0, 4); render(); }
   const el = document.getElementById('bk-' + key.replace(/[^\w-]/g, '_')); if (!el) return;
   const d = el.closest('details'); if (d) d.open = true;
@@ -441,7 +594,7 @@ function render(){
   const DUP = {};
   const same = h => h === 'iprefer' ? 'keio' : h;
   future.forEach(a => future.forEach(b => {
-    if (a !== b && same(a.hotel) === same(b.hotel) && a.checkin < b.checkout && b.checkin < a.checkout) (DUP[a.key] = DUP[a.key] || []).push(b);
+    if (a !== b && !RB()[a.key] && !RB()[b.key] && same(a.hotel) === same(b.hotel) && a.checkin < b.checkout && b.checkin < a.checkout) (DUP[a.key] = DUP[a.key] || []).push(b);
   }));
   const dupDays = [...new Set(future.filter(r => DUP[r.key]).map(r => r.checkin))].sort();
   const hp = data.hyatt || {}, nrDays = Number((data.settings || {}).hyatt_nr_days || 7);
@@ -462,15 +615,28 @@ function render(){
     else if (DUP[r.key] && !near) todo.push({p: 2, d: r.checkin, t: `重複の可能性：${md(r.checkin)} ${esc(name(r))}`, k: r.key});
     else if (what.length) todo.push({p: 3, d: fc || r.checkin, t: `${md(r.checkin)} ${esc(name(r))}　${what.join('・')}${fc ? `（期限 ${md(fc)}）` : ''}`, k: r.key});
   });
+  // 無料キャンセル期限が今日・明日の予約は、候補の有無にかかわらず必ず出す（2026-10-24）
+  future.forEach(r => { const fc = r.free_cancel_until;
+    if (r.refundable && fc && fc >= today && fc <= addDays(1)) todo.push({p: 1, d: fc, t: `無料キャンセル期限が<b>${fc === today ? '今日' : '明日'}</b>：${md(r.checkin)} ${esc(name(r))} ${r.pay ? yen(r.pay) : ''}`, k: r.key}); });
+  // 取り直し中（B1）
+  future.filter(r => RB()[r.key]).forEach(r => { const nb = rbNew(r);
+    todo.push({p: 1, d: r.free_cancel_until || r.checkin, t: nb ? `取り直し：${md(r.checkin)} 新しい予約が届きました。<b>元の予約（${esc(name(r))}）をキャンセル</b>${r.free_cancel_until ? `（期限 ${md(r.free_cancel_until)}）` : ''}` : `取り直し中：${md(r.checkin)} ${esc(name(r))}（新しい予約のメール待ち）`, k: r.key}); });
+  // 持っている特典の期限（60日前から・C3）
+  (data.perks || []).forEach(x => { if (x.exp && x.n > 0 && x.exp >= today && x.exp <= addDays(60)) todo.push({p: 2, d: x.exp, t: `特典の期限 ${md(x.exp)}：${esc(x.name)}（残り${x.n}）`, href: 'status.html#perks'}); });
   future.filter(r => r.cx_group).forEach(r => todo.push({p: 1, d: r.checkin, t: `キャンセルの照合保留：${md(r.checkin)} ${esc(name(r))}（どの予約のキャンセルか確認）`, k: r.key}));
   { const cc = data.cal_check || {}, n = (cc.missing || []).length + (cc.extra || []).length + (cc.wrong || []).length;
     if (n) todo.push({p: 2, d: '', t: `カレンダー（P予定）とのずれ ${n}件` }); }
   const seenK = new Set(), todoL = todo.sort((a, b) => a.p - b.p || String(a.d).localeCompare(String(b.d)))
     .filter(x => !x.k || x.info || (!seenK.has(x.k) && seenK.add(x.k)));
-  const acts = todoL.filter(x => !x.info), shown = todoL.filter(x => x.info).concat(acts.slice(0, 3));
+  const acts = todoL.filter(x => !x.info), lim = todoAll ? acts.length : 3;
+  const tonight = future.find(r => r.checkin <= today && today < r.checkout);
+  const nowHM = new Date(Date.now() + 9 * 3600e3).toISOString().slice(11, 16);
+  const shown = (tonight && nowHM >= '15:00' ? [] : todoL.filter(x => x.info)).concat(acts.slice(0, lim));
   const todayBox = `<div class="today" role="region" aria-label="今日やること"><div class="td-h">今日やること${STALE ? '<span class="td-s">（保存済みのデータ）</span>' : ''}</div>
-    ${shown.map(x => `<div class="td-i${x.info ? ' info' : ''}">${x.k ? `<a href="#" onclick="goBk(${esc(JSON.stringify(x.k))});return false">${x.t}</a>` : x.t}</div>`).join('')}
-    ${acts.length ? (acts.length > 3 ? `<div class="td-m">ほか${acts.length - 3}件は下の予約カードに出ています</div>` : '') : '<div class="td-i none">今日の操作はありません</div>'}</div>`;
+    ${tonight && nowHM >= '15:00' ? tonightCard(tonight, future, today) : ''}
+    ${shown.map(x => `<div class="td-i${x.info ? ' info' : ''}">${x.k ? `<a href="#" onclick="goBk(${esc(JSON.stringify(x.k))});return false">${x.t}</a>` : x.href ? `<a href="${esc(x.href)}">${x.t}</a>` : x.t}</div>`).join('')}
+    ${acts.length ? (acts.length > 3 ? `<div class="td-m"><a href="#" onclick="todoAll=!todoAll;render();return false">${todoAll ? '3件だけ表示' : `ほか${acts.length - 3}件も表示`}</a></div>` : '') : '<div class="td-i none">今日の操作はありません</div>'}</div>
+    ${strip14(future, today)}`;
   let h = (STALE ? `<div class="sum2 dup">⚠ <b>最新の予約データを取得できませんでした</b>。この端末に保存したデータ（台帳の更新 ${fmtT(data.built)}）を表示しています。料金や期限は古い可能性があります</div>` : '') + todayBox + `<div class="filters" role="group" aria-label="表示する年">
       ${years.map(v => `<button type="button" aria-pressed="${v === Y}" onclick="setYear('${v}')">${v}年</button>`).join('')}
       <button type="button" class="cxb" aria-pressed="${showCx}" onclick="toggleCx()">キャンセルも表示</button></div>
@@ -479,8 +645,8 @@ function render(){
       <div><div class="k">泊数</div><div class="v num">${nights}<small>泊</small></div></div>
       <div><div class="k">合計</div><div class="v money num serif">${yen(total)}</div>${avg ? `<div class="avg num">1泊平均 ${yen(avg)}</div>` : ''}</div></div>
     <div class="sub2">${dn ? `泊まり済み ${dn}泊・${yen(done.reduce((a, r) => a + (r.pay || 0), 0))}` : ''}${dn && pn ? '　' : ''}${pn ? `これから ${pn}泊・${yen(plan.reduce((a, r) => a + (r.pay || 0), 0))}` : ''}</div>
-    <div class="chips">${Object.entries(byHotel).sort((a, b) => b[1][1] - a[1][1]).map(([k, v]) =>
-      `<span class="chip"><span class="dot" style="background:${COLORS[k] || OTHER_COLOR}"></span>${esc(NAMES[k] || k)} ${v[1]}泊</span>`).join('')}</div>
+    <div class="chips" data-noswipe>${Object.entries(byHotel).sort((a, b) => b[1][1] - a[1][1]).map(([k, v]) =>
+      `<button type="button" class="chip${hotelFilter === k ? ' on' : ''}" aria-pressed="${hotelFilter === k}" onclick="setHotel('${k}')"><span class="dot" style="background:${COLORS[k] || OTHER_COLOR}"></span>${esc(NAMES[k] || k)} ${v[1]}泊</button>`).join('')}</div>
     ${dupDays.length ? `<div class="sum2 dup">⚠ 重複の可能性：<b>${dupDays.map(d => md(d)).join('、')}</b>（同じホテルで泊まる日が重なる予約があります）</div>` : ''}
     ${saves.length ? `<div class="sum2">取り直すと安くなる予約：<b>${saves.length}件・合計 ${yen(saveTotal)}</b></div>` :
       (Object.keys(W).length ? `<div class="sum2">取り直すと安くなる予約はありません（返金可の予約を毎朝確認しています）</div>` : '')}
@@ -504,12 +670,13 @@ function render(){
       日前から（毎朝7時台）</div>`;
   document.getElementById('summary').innerHTML = h;
 
-  const rows = all.filter(r => r.checkin && r.checkin.slice(0, 4) === Y && (showCx || r.status === 'booked'))
+  const rows = all.filter(r => r.checkin && r.checkin.slice(0, 4) === Y && (showCx || r.status === 'booked') && (!hotelFilter || r.hotel === hotelFilter))
                   .sort((a, b) => a.checkin < b.checkin ? -1 : 1);
-  if (!rows.length) { document.getElementById('list').innerHTML = `<div class="card empty">${Y}年の予約はありません。</div>`; return; }
+  const fbar = hotelFilter ? `<div class="fb"><span>絞り込み中：<b>${esc(NAMES[hotelFilter] || hotelFilter)}</b>・${rows.length}件</span><button type="button" onclick="setHotel('')">すべて表示</button></div>` : '';
+  if (!rows.length) { document.getElementById('list').innerHTML = fbar + `<div class="card empty">${Y}年の予約はありません。</div>`; return; }
   const groups = {};
   rows.forEach(r => { const m = r.checkin.slice(0, 7); (groups[m] = groups[m] || []).push(r); });
-  let l = '';
+  let l = fbar;
   const tiers = currentTiers(data.manual), proj = ghaProjection(data.rows || []);
   // 要登録キャンペーンで、まだ「登録済み」にしていないもの（キャンペーンのタブと同じ判定）
   const CW = CPD ? cpWarningsByBooking(CPD.campaigns, data.rows || [], CPD.status) : {};
@@ -528,9 +695,12 @@ function render(){
       const wd8 = w && w.checked && w.checked.slice(0, 10) !== today ? `・${md(w.checked)}時点` : '';
       // その予約の確認ページ・予約メールへのリンク（押したときだけ開く）
       const PP = {groove: ['PRGTK', 'PR'], bellustar: ['PPBTK', 'PP']}, conf = r.conf || r.key.split(':').pop();
-      const lk = [PP[r.hotel] && r.channel === '公式' ? `<a href="https://www.panpacific.com/content/pphg-revamp/ja/booking/view.html?acc-confirmation=${encodeURIComponent(conf)}&ppcode=${PP[r.hotel][0]}&brand=${PP[r.hotel][1]}" target="_blank" rel="noopener">予約の確認・変更 →</a>` : '',
-                  `<button type="button" class="cpy mv" onclick="showDetail(${esc(JSON.stringify(r.key))})">予約の詳細</button>`].filter(Boolean).join('');
-      const wl = !cx && w && w.best_pay && !sv ? `<span>今の最安 ${yen(w.best_pay)}（${esc(w.best_channel)}${wd8}）</span>` : '';
+      // 外部リンク（予約の確認・変更）は予約の詳細の中だけに置き、カードには大きい「詳細」ボタンだけ（押し間違い防止・2026-10-24）
+      const evs = !cx ? ((data.eve || {})[r.checkin] || []) : [];
+      const evl = evs.length ? `<span class="ev">${evs.slice(0, 2).map(e => `<b>${esc(e.t)}</b> ${esc(e.kind)}${e.place ? `（${esc(e.place)}）` : ''}`).join('　')}</span>` : '<span class="ev"></span>';
+      const lk = `<div class="ft">${evl}<button type="button" class="db" onclick="showDetail(${esc(JSON.stringify(r.key))})">詳細</button></div>`;
+      // 「今の最安」は予約より安いときだけ（高い料金は判断に使えないため・2026-10-24）
+      const wl = !cx && w && w.best_pay && !sv && w.best_pay < r.pay ? `<span>今の最安 ${yen(w.best_pay)}（${esc(w.best_channel)}${wd8}）</span>` : '';
       // いまの資格で使えるチェックイン／アウト（会員ステータスで選んだ資格から）
       const st = !cx && r.checkout > today ? stayTimes(r, tiers, proj) : null;
       const tm = st && st.co ? `<span class="tm">イン ${st.ci}・<b>アウト ${st.co}</b>${st.why ? `（${esc(st.why)}${st.how ? '・' + esc(st.how) : ''}）` : ''}</span>` : '';
@@ -540,19 +710,20 @@ function render(){
       l += `<div id="bk-${esc(r.key.replace(/[^\w-]/g, '_'))}" class="bk${cx ? ' cx' : ''}${sv ? ' save' : ''}${cw.length || dp.length ? ' cpw' : ''}">
         <div class="d num">${md(r.checkin)}<small>（${wd(r.checkin)}）${r.nights}泊・${r.adults}名</small></div>
         <div><div class="h"><span class="dot" style="background:${COLORS[r.hotel] || OTHER_COLOR}"></span>${esc(NAMES[r.hotel] || r.hotel_name)}${OTHER.has(r.hotel) ? '<span class="tag ot">比較対象外</span>' : ''}</div>
-          <div class="r">${esc(r.room)}${cx ? '<span class="tag cx">キャンセル</span>' : r.refundable ? '<span class="tag ok">返金可</span>' : '<span class="tag nr">返金不可</span>'}${ch}${!cx && r.cx_group ? '<span class="tag pd">キャンセル照合中</span>' : ''}${!cx && r.nowatch ? '<span class="tag ot">監視なし</span>' : ''}</div>
-          <div class="p">${esc(r.plan)}</div></div>
+          <div class="r">${esc(shortRoom(r))}${cx ? '<span class="tag cx">キャンセル</span>' : r.refundable ? '<span class="tag ok">返金可</span>' : '<span class="tag nr">返金不可</span>'}${ch}${!cx && r.cx_group ? '<span class="tag pd">キャンセル照合中</span>' : ''}${!cx && r.nowatch ? '<span class="tag ot">監視なし</span>' : ''}</div>
+          </div>
         <div class="pay num">${r.pay ? yen(r.pay) : '—'}${r.nights > 1 && r.pay ? `<small>1泊 ${yen(Math.round(r.pay / r.nights))}</small>` : ''}</div>
         ${free || wl || tm ? `<div class="w">${tm}${free}${wl}</div>` : ''}
-        ${lk ? `<div class="lk">${lk}</div>` : ''}
+        ${lk}
+        ${rbBox(r, today)}
         ${sv ? `<div class="sv">▼ <b>${yen(w.save)}安く</b>取り直せます：${esc(w.best_channel)}［${esc(w.best_kind)}］${esc(w.best_room)} ${yen(w.best_pay)}<br>
-          ${esc(w.best_plan)}　<a href="${esc(w.best_url)}" target="_blank" rel="noopener">予約ページへ →</a></div>` : ''}
+          ${esc(w.best_plan)}　<a href="${esc(w.best_url)}" target="_blank" rel="noopener">予約ページへ →</a>${rbStart(r, 'save', `${w.best_channel} ${yen(w.best_pay)}`)}</div>` : ''}
         ${!cx && r.refundable && w && w.nr_ok ? `<div class="sv nr">返金不可にすると <b>${yen(w.nr_save)}安い</b>（${yen(w.nr_pay)}・${esc(w.nr_plan)}）。期限 ${md(w.free_cancel_until)}（${wd(w.free_cancel_until)}）まで（締切の時刻は「予約の詳細」のキャンセル規定で確認）<br>
           <small>返金不可は予約時に全額がかかり、返金されません。新しく予約 → 予約ページへの反映を確認 → いまの予約をキャンセル</small>
-          <a href="${esc(w.nr_url)}" target="_blank" rel="noopener">ハイアットで見る →</a></div>` : ''}
+          <a href="${esc(w.nr_url)}" target="_blank" rel="noopener">ハイアットで見る →</a>${rbStart(r, 'nr', `返金不可 ${yen(w.nr_pay)}`)}</div>` : ''}
         ${tr ? `<div class="sv tr">ハイアットに振り替え可（<b>${tr.diff >= 0 ? '+' + yen(tr.diff) : '−' + yen(-tr.diff)}</b>・${yen(tr.pay)}）${tr.mode === 'rescue' ? '・救済モード' : ''}。元の予約の無料キャンセル期限 ${md(tr.free_cancel_until)}<br>
           <small>ハイアットを予約 → 予約ページへの反映を確認 → この予約をキャンセル（${md(tr.checked)} 時点の料金）</small>
-          <a href="${esc(tr.url)}" target="_blank" rel="noopener">ハイアットで見る →</a></div>` : ''}
+          <a href="${esc(tr.url)}" target="_blank" rel="noopener">ハイアットで見る →</a>${rbStart(r, 'transfer', `ハイアット ${yen(tr.pay)}`)}</div>` : ''}
         ${dp.length ? `<div class="cw">⚠ 重複の可能性：同じ日に${esc(NAMES[r.hotel] || r.hotel_name)}の予約がほかに${dp.length}件あります（予約番号 ${esc(r.key.split(':').pop())}）。不要ならホテルのサイトでキャンセルしてください</div>` : ''}
         ${cw.length ? `<div class="cw">⚠ 要登録のキャンペーン：${cw.slice(0, 3).map(c => `<a href="campaigns.html">${esc(c.name)}</a>${c.registration_deadline ? `（登録 ${md(c.registration_deadline)}まで）` : ''}`).join('、')}${cw.length > 3 ? ` ほか${cw.length - 3}件` : ''}。未登録です</div>` : ''}
       </div>`;
@@ -561,6 +732,8 @@ function render(){
   });
   document.getElementById('list').innerHTML = l;
   document.getElementById('trtable').innerHTML = transferTable(Y, today);
+  fillTonightTel();
+  handleHash();
 }
 
 let CPD = null;

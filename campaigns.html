@@ -112,7 +112,7 @@ footer{max-width:720px;margin:0 auto;padding:0 16px 28px;text-align:center;font-
   </div>
   <div class="tagline">今夜の一泊を、いちばん賢く。会員価格をその場で比べる。</div>
 <div class="tabs"><nav aria-label="ページ切り替え"><a href="./">料金比較</a><a href="bookings.html">予約</a><a href="status.html">会員ステータス</a><a href="campaigns.html" aria-current="page">キャンペーン</a></nav></div>
-<script src="swipe.js" defer></script>
+<script src="swipe.js?v=b8d3c9fe" defer></script>
 
   <div class="ttl">
     <h1 class="serif">キャンペーン</h1>
@@ -124,7 +124,7 @@ footer{max-width:720px;margin:0 auto;padding:0 16px 28px;text-align:center;font-
   <div id="list"></div>
 </main>
 <footer>YOIYADO · メールの内容をAIで要約しています。条件は元メールで確認してください。リンクは自動で開きません</footer>
-<script src="campaigns.js"></script>
+<script src="campaigns.js?v=6422cd5d"></script>
 <script>
 const GAS = "https://script.google.com/macros/s/AKfycbyXS4tQgx8U95EG5EUJd3H47_saO_Ny35XWZBWxyNY-2ck8QBLOmgAzSm6HtN7twnRXaFGf/exec";
 const NAMES = {keio:'京王プラザ', iprefer:'京王プラザ（I Prefer）', newotani:'ニューオータニ', groove:'ホテルグルーヴ', bellustar:'BELLUSTAR', hilton:'ヒルトン東京',
@@ -187,7 +187,7 @@ function card(c, rows, st){
   if (c.conditions) meta.push(['条件', c.conditions]);
   const btn = (v, label, cls) => `<button type="button"${cls ? ` class="${cls}"` : ''} aria-pressed="${s === v}" onclick="setStatus(${esc(JSON.stringify(c.id))},'${v}')">${label}</button>`;
   return `<article class="cp${warn.length ? ' warn' : ''}">
-    <div class="top"><span class="tag k-${esc(c.kind)}">${CP_KIND[c.kind] || ''}</span>${reg}<span>${esc(CP_SOURCE_NAME[c.source] || c.source)}・${md(c.received)}受信</span></div>
+    <div class="top"><span class="tag k-${esc(c.kind)}">${CP_KIND[c.kind] || ''}</span>${reg}<span>${esc(CP_SOURCE_NAME[c.source] || c.source)}・${c.received && c.received.slice(0, 4) !== cpToday().slice(0, 4) ? c.received.slice(0, 4) + '/' : ''}${md(c.received)}受信${c.dup ? `（同じ案内 ほか${c.dup}通）` : ''}</span></div>
     <div class="nm">${esc(c.name)}</div>
     ${c.summary ? `<div class="sm">${esc(c.summary)}</div>` : ''}
     <dl class="meta">${meta.map(([k, v]) => `<dt>${k}</dt><dd>${esc(v)}</dd>`).join('')}</dl>
@@ -199,7 +199,8 @@ function card(c, rows, st){
 
 function render(){
   const rows = (LED && LED.rows) || [], st = CP.status || {};
-  const live = (CP.campaigns || []).filter(c => !cpExpired(c) && cpStatus(c, st) !== 'na');
+  const live0 = (CP.campaigns || []).filter(c => !cpExpired(c) && cpStatus(c, st) !== 'na');
+  const live = typeof cpDedupe === 'function' ? cpDedupe(live0) : live0;  // 古い campaigns.js が残っていても止まらないように
   const hiddenNa = (CP.campaigns || []).filter(c => !cpExpired(c) && cpStatus(c, st) === 'na');
   const groups = {1: [], 2: [], 3: [], 4: [], 5: []};
   live.forEach(c => groups[cpRank(c, rows, st)].push(c));
