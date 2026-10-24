@@ -193,6 +193,11 @@ footer a{color:inherit}
   <div id="prog-body" class="pg-empty">読み込み中…</div>
 </section>
 
+<section class="card" id="points">
+  <h2>ポイント残高</h2>
+  <div id="pt-body" class="pg-empty">読み込み中…</div>
+</section>
+
 <section class="card" id="perks">
   <h2>持っている特典</h2>
   <div id="perk-body" class="pg-empty">読み込み中…</div>
@@ -362,6 +367,55 @@ function renderTiers(){
 }
 
 
+// ポイント残高（2026-10-24）：メールから毎朝読んだ値（tiers_auto[制度].pts）と、手入力（POINTS）の日付の新しい方を出す。
+// 基準日が30日より前なら灰色。失効は分かる制度だけ小さく添える
+const PT_PROG = [
+  {key: 'hyatt', name: 'ワールド オブ ハイアット', unit: 'pt'},
+  {key: 'hilton', name: 'ヒルトン・オナーズ', unit: 'pt'},
+  {key: 'keio', name: 'プラザTHANKS（京王）', unit: 'pt', yen: 1},
+  {key: 'iprefer', name: 'I Prefer', unit: 'pt'},
+  {key: 'newotani', name: 'ニューオータニクラブ', unit: 'pt'},
+  {key: 'gha', name: 'GHA DISCOVERY', unit: 'D$'},
+];
+let ptEdit = '';
+function ptNow(key){
+  const a = (((D.manual || {}).tiers_auto) || {})[key] || {}, m = (D.points || {})[key];
+  const mail = a.pts != null ? {pts: a.pts, date: a.pts_date, src: 'メール', exp: a.pts_exp || ''} : null;
+  const hand = m ? {pts: m.pts, date: m.date, src: '手入力', exp: mail ? mail.exp : ''} : null;
+  if (mail && hand) return hand.date >= mail.date ? hand : mail;
+  return hand || mail;
+}
+function renderPoints(){
+  const el = document.getElementById('pt-body'); if (!el || !D) return;
+  const today = new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 10);
+  const age = d => Math.round((new Date(today) - new Date(d)) / 864e5);
+  el.className = '';
+  el.innerHTML = PT_PROG.map(p => {
+    const v = ptNow(p.key);
+    if (ptEdit === p.key) return `<div class="pk-f"><b>${esc(p.name)}</b>
+      <div class="pk-r"><label>残高 <input id="pt-n" type="number" min="0" style="width:8em" value="${v ? v.pts : ''}"></label>
+      <label>時点 <input id="pt-d" type="date" value="${today}"></label></div>
+      <div class="pk-b"><button type="button" class="pri" onclick="ptSave('${p.key}')">保存</button><button type="button" onclick="ptEdit='';renderPoints()">やめる</button>
+      ${(D.points || {})[p.key] ? `<button type="button" class="del" onclick="ptSave('${p.key}',true)">手入力を消す</button>` : ''}</div></div>`;
+    const old = v && age(v.date) > 30;
+    const val = v ? (p.unit === 'D$' ? `D$${v.pts.toLocaleString()}` : `${v.pts.toLocaleString()}<small> pt</small>`) : '<small>未入力</small>';
+    const sub = v ? `${md(v.date)}時点・${v.src}${p.yen && v.pts ? `・${yen(v.pts * p.yen)}分` : ''}${v.exp ? `・${esc(v.exp)}` : ''}` : 'メールに残高が載らないので手入力';
+    return `<div class="pk"${old ? ' style="opacity:.55"' : ''}><div class="pk-m"><b>${esc(p.name)}</b><small>${sub}${old ? '（古い）' : ''}</small></div>
+      <div class="pk-s num"><b>${val}</b></div>
+      <button type="button" class="pk-e" onclick="ptEdit='${p.key}';renderPoints()">入力</button></div>`;
+  }).join('') + '<div class="note">毎朝6時に各社のメールから読み取ります。ハイアットとニューオータニはメールに残高が載らないことがあるので、変わったら「入力」で直してください。</div>';
+}
+async function ptSave(key, clear){
+  const n = clear ? '' : document.getElementById('pt-n').value.trim(), d = clear ? '' : document.getElementById('pt-d').value;
+  if (!clear && (n === '' || !d)) { alert('残高と時点を入れてください'); return; }
+  try {
+    const r = await api({api: 'pointSet', prog: key, pts: n, date: d});
+    if (!r.ok) throw new Error(r.error || 'failed');
+    D.points = r.points; ptEdit = ''; renderPoints();
+    try { localStorage.setItem('yoiyado_ledger', JSON.stringify(D)); } catch(e) {}
+  } catch(e) { alert('保存できませんでした。少し時間をおいてお試しください。'); }
+}
+
 // 持っている特典（2026-10-24）：無料宿泊・アップグレード券など。種類・残り・期限を本人が入れる。
 // 期限の60日前から、予約ページの「今日やること」に出す
 const PERK_PROG = ['ヒルトン', 'ハイアット', '京王プラザ', 'GHA', 'I Prefer', 'その他'];
@@ -473,6 +527,7 @@ function render(){
   h += `<div class="s" style="margin-top:8px;font-size:11.5px;color:var(--sub)">資格は毎朝6時にメールから確認（京王は会員ページ・10/7確認）${un.length ? `。未確認：${esc(un.join('・'))}` : ''}。泊数・金額は予約台帳から計算。濃い色は宿泊済み、薄い色は予約済み。</div>`;
   document.getElementById('prog-body').innerHTML = h;
   renderTiers();
+  renderPoints();
   renderPerks();
   document.getElementById('prog-body').className = '';
   const ys = [new Date().getFullYear(), new Date().getFullYear() + 1];
