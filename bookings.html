@@ -515,7 +515,6 @@ function tonightCard(r, future, today){
     <div class="tb"><a class="go" href="${esc(route(dest, 'transit'))}" target="_blank" rel="noopener">経路</a>
       <a id="tn-tel" href="#" onclick="return false">電話</a>
       <button type="button" onclick="showDetail(${esc(JSON.stringify(r.key))})">詳細</button></div>
-    <div class="tn-n">タクシーは、経路の画面の「タクシー」からGOを呼べます（行き先はそのまま）。予約番号は「詳細」に</div>
     ${t3 ? `<div class="t3">${t3}</div>` : ''}</div>`;
 }
 async function fillTonightTel(){
