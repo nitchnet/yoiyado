@@ -363,7 +363,10 @@ function awardOf(key){
   const a = ((data.hyatt || {}).award || []).find(a => a.k === key);
   if (!a || !a.points || !a.cash) return null;
   const eff = a.cash - backOf('hyatt', a.cash);
-  return Object.assign({eff, yp: eff / a.points}, a);
+  // ハイアット以外の予約は、今の予約（実質）と比べた価値も出す（ポイント泊にすれば今の予約の分が浮く）
+  const r = (data.rows || []).find(r => r.key === key);
+  const cur = r && r.hotel !== 'hyatt' && r.pay ? r.pay - backOf(r.hotel, r.pay, r.channel) : null;
+  return Object.assign({eff, yp: eff / a.points, cur, yp2: cur != null ? cur / a.points : null}, a);
 }
 function hyattBal(){
   const m = (data.points || {}).hyatt, t = ((data.manual || {}).tiers_auto || {}).hyatt;
@@ -373,7 +376,8 @@ function hyattBal(){
 const awardUrl = a => `https://www.hyatt.com/ja-JP/shop/rooms/tyoty?checkinDate=${a.checkin}&checkoutDate=${a.checkout}&rooms=1&adults=2&kids=0&rateFilter=woh`;
 function awardLine(a){
   const bal = hyattBal(), short = bal ? a.points - bal.pts : null;
-  return `ポイント泊なら <b>${a.points.toLocaleString('ja-JP')}pt</b>（1pt≈${a.yp.toFixed(1)}円・現金なら実質${yen(a.eff)}）。`
+  return `ハイアットのポイント泊なら <b>${a.points.toLocaleString('ja-JP')}pt</b>（ハイアットの現金 実質${yen(a.eff)}と比べて1pt≈${a.yp.toFixed(1)}円`
+    + (a.yp2 != null ? `・今の予約 実質${yen(a.cur)}と比べて1pt≈${a.yp2.toFixed(1)}円` : '') + `）。`
     + (bal ? (short > 0 ? `残高 ${bal.pts.toLocaleString('ja-JP')}pt → <b>あと${short.toLocaleString('ja-JP')}pt</b>` : `残高 ${bal.pts.toLocaleString('ja-JP')}pt で足ります`)
       + `<small>（${bal.date ? md(bal.date) + '時点' : '時点不明'}）</small>` : '残高は未入力')
     + `<br><small>${md(a.checked)} 時点。税・サービス料込み（宿泊税は現地払いの可能性）</small>　<a href="${esc(awardUrl(a))}" target="_blank" rel="noopener">ハイアットで見る →</a>`;
@@ -390,8 +394,8 @@ function awardTable(today){
     ${list.map(a => { const r = live.get(a.k); return `<div class="ok">${md(a.checkin)}<small>（${dow(a.checkin)}）</small></div>
       <div>${esc(NAMES[r.hotel] || r.hotel_name)} <span class="num">${yen(r.pay)}</span></div>
       <div class="r num"><a href="${esc(awardUrl(a))}" target="_blank" rel="noopener">${(a.points / 1000).toLocaleString('ja-JP')}k</a></div>
-      <div class="r num ok">${a.yp.toFixed(1)}円<small>${md(a.checked)}</small></div>`; }).join('')}</div>
-    <div class="trs" style="margin-top:6px">1ptの価値＝同じ日のハイアット（会員料金・返金可）の実質÷必要ポイント。${AW_GOOD}円以上の日だけ。毎朝5日分ずつ調べています</div>
+      <div class="r num ok">${a.yp.toFixed(1)}円<small>${a.yp2 != null ? `今の予約比 ${a.yp2.toFixed(1)}円` : md(a.checked)}</small></div>`; }).join('')}</div>
+    <div class="trs" style="margin-top:6px">1ptの価値＝同じ日のハイアット（会員料金・返金可）の実質÷必要ポイント。${AW_GOOD}円以上の日だけ。ほかのホテルの予約は、今の予約の実質と比べた価値も小さく添えています。毎朝5日分ずつ調べています</div>
   </details>`;
 }
 
