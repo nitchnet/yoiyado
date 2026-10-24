@@ -51,6 +51,7 @@ main{max-width:720px;margin:-52px auto 0;padding:0 14px 36px;position:relative;z
 .pk-s{text-align:right;font-size:12px;color:var(--sub)}.pk-s b{color:var(--ink);font-size:15px}.pk-s small{display:block}
 .pk-e,.pk-add,.pk-b button{font:inherit;font-size:12.5px;padding:6px 12px;border-radius:999px;border:1px solid var(--line);background:var(--bg);color:var(--ink);cursor:pointer}
 .pk-add{margin-top:8px;width:100%;padding:9px}
+.pt-b{display:flex;gap:6px}.pt-b a.pk-e{text-decoration:none}
 .pk-f{display:grid;gap:8px;padding:10px 0;border-top:1px solid var(--line)}
 .pk-f input,.pk-f select{font:inherit;font-size:14px;padding:7px 9px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);min-width:0}
 .pk-r{display:flex;flex-wrap:wrap;gap:8px;align-items:center}.pk-r label{font-size:12.5px;color:var(--sub);display:flex;gap:4px;align-items:center}
@@ -369,13 +370,14 @@ function renderTiers(){
 
 // ポイント残高（2026-10-24）：メールから毎朝読んだ値（tiers_auto[制度].pts）と、手入力（POINTS）の日付の新しい方を出す。
 // 基準日が30日より前なら灰色。失効は分かる制度だけ小さく添える
+// url：会員ページ（ログインが切れていればログイン画面になる。ログイン後に戻って「入力」で直す）
 const PT_PROG = [
-  {key: 'hyatt', name: 'ワールド オブ ハイアット', unit: 'pt'},
-  {key: 'hilton', name: 'ヒルトン・オナーズ', unit: 'pt'},
-  {key: 'keio', name: 'プラザTHANKS（京王）', unit: 'pt', yen: 1},
-  {key: 'iprefer', name: 'I Prefer', unit: 'pt'},
-  {key: 'newotani', name: 'ニューオータニクラブ', unit: 'pt'},
-  {key: 'gha', name: 'GHA DISCOVERY', unit: 'D$'},
+  {key: 'hyatt', name: 'ワールド オブ ハイアット', unit: 'pt', url: 'https://www.hyatt.com/ja-JP/profile/account-overview'},
+  {key: 'hilton', name: 'ヒルトン・オナーズ', unit: 'pt', url: 'https://www.hilton.com/ja/hilton-honors/guest/my-account/'},
+  {key: 'keio', name: 'プラザTHANKS（京王）', unit: 'pt', yen: 1, url: 'https://area34.smp.ne.jp/area/p/nhki8njrjt9ripip5/3GDRjJ/login.html'},
+  {key: 'iprefer', name: 'I Prefer', unit: 'pt', url: 'https://iprefer.com/dashboard'},
+  {key: 'newotani', name: 'ニューオータニクラブ', unit: 'pt', url: 'https://member.newotani.co.jp/?locale=ja'},
+  {key: 'gha', name: 'GHA DISCOVERY', unit: 'D$', url: 'https://www.ghadiscovery.com/member/dashboard'},
 ];
 let ptEdit = '';
 function ptNow(key){
@@ -402,8 +404,8 @@ function renderPoints(){
     const sub = v ? `${md(v.date)}時点・${v.src}${p.yen && v.pts ? `・${yen(v.pts * p.yen)}分` : ''}${v.exp ? `・${esc(v.exp)}` : ''}` : 'メールに残高が載らないので手入力';
     return `<div class="pk"${old ? ' style="opacity:.55"' : ''}><div class="pk-m"><b>${esc(p.name)}</b><small>${sub}${old ? '（古い）' : ''}</small></div>
       <div class="pk-s num"><b>${val}</b></div>
-      <button type="button" class="pk-e" onclick="ptEdit='${p.key}';renderPoints()">入力</button></div>`;
-  }).join('') + '<div class="note">ハイアット以外は週2回（月・木の朝）、ログインしたままの会員ページから読みます。ログインが切れたときや会員ページのない日は、毎朝のメールの値を使います。ハイアットは会員ページを自動で開けないため、メールの値です。</div>';
+      <span class="pt-b"><a class="pk-e" href="${p.url}" target="_blank" rel="noopener">開く</a><button type="button" class="pk-e" onclick="ptEdit='${p.key}';renderPoints()">入力</button></span></div>`;
+  }).join('') + '<div class="note">毎朝、各社のメールから読み取ります。正確な値を見たいときは「開く」で会員ページへ（ログインが切れていればそこでログイン）、戻って「入力」で直してください。</div>';
 }
 async function ptSave(key, clear){
   const n = clear ? '' : document.getElementById('pt-n').value.trim(), d = clear ? '' : document.getElementById('pt-d').value;

@@ -70,6 +70,11 @@ details.pm > summary{margin:10px 4px 6px;color:var(--sub)}
 .month .s{font-size:12px;color:var(--sub);font-weight:500}
 .bk{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:11px 12px;margin-bottom:8px;display:grid;grid-template-columns:70px minmax(0,1fr) auto;gap:2px 10px;align-items:start}
 .bk.cx{opacity:.55}
+.bk.wph{overflow:hidden}
+footer .crd{margin-top:6px;font-size:10.5px;line-height:1.6}footer .crd summary{cursor:pointer}footer .crd a{color:inherit}
+.bk .ph{grid-column:1/4;margin:-11px -12px 8px;height:86px;position:relative;background:var(--bg2)}
+.bk .ph img{width:100%;height:100%;object-fit:cover;object-position:center 38%;display:block}
+.bk .ph::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0) 45%,rgba(0,0,0,.18))}
 .bk .d{font-weight:700;line-height:1.25}
 .bk .d small{display:block;font-size:11px;color:var(--sub);font-weight:500;white-space:nowrap}
 .bk .h{font-size:12px;color:var(--sub);display:flex;align-items:center;gap:6px;min-width:0}
@@ -235,7 +240,8 @@ footer{max-width:720px;margin:0 auto;padding:0 16px 28px;text-align:center;font-
   <div id="trtable"></div>
   <div id="list"></div>
 </main>
-<footer>YOIYADO · 金額は税・サービス料・宿泊税込みの滞在合計</footer>
+<footer>YOIYADO · 金額は税・サービス料・宿泊税込みの滞在合計
+<details class="crd"><summary>写真：Wikimedia Commons</summary><a href="https://commons.wikimedia.org/wiki/File:ANA-InterContinental-Hotel-Tokyo-01.jpg" target="_blank" rel="noopener">ana_ic</a>（Rs1421・CC BY-SA 3.0）・<a href="https://commons.wikimedia.org/wiki/File:2018_Toranomon_Hills_2.jpg" target="_blank" rel="noopener">andaz</a>（Kakidai・CC BY-SA 4.0）・<a href="https://commons.wikimedia.org/wiki/File:Tokyu_Kabukicho_Tower_2.jpg" target="_blank" rel="noopener">bellustar</a>（Kakidai・CC BY-SA 4.0）・<a href="https://commons.wikimedia.org/wiki/File:Tokyu-Capitol-Tower-01.jpg" target="_blank" rel="noopener">capitol</a>（Rs1421・CC BY-SA 3.0）・<a href="https://commons.wikimedia.org/wiki/File:Cerulean_Tower.JPG" target="_blank" rel="noopener">cerulean</a>（EXECUTOR・Public domain）・<a href="https://commons.wikimedia.org/wiki/File:Chinzansou.jpg" target="_blank" rel="noopener">chinzanso</a>（Hykw-a4・CC BY-SA 3.0）・<a href="https://commons.wikimedia.org/wiki/File:Grand_Hyatt_Tokyo.JPG" target="_blank" rel="noopener">grand_hyatt</a>（moore・CC BY-SA 3.0）・<a href="https://commons.wikimedia.org/wiki/File:Tokyu_Kabukicho_Tower_2.jpg" target="_blank" rel="noopener">groove</a>（Kakidai・CC BY-SA 4.0）・<a href="https://commons.wikimedia.org/wiki/File:Shinjyuku_International_Building_2009.jpg" target="_blank" rel="noopener">hilton</a>（Wiiii・CC BY-SA 3.0）・<a href="https://commons.wikimedia.org/wiki/File:Hyatt-Regency-Tokyo-01.jpg" target="_blank" rel="noopener">hyatt</a>（Rs1421・CC BY-SA 3.0）・<a href="https://commons.wikimedia.org/wiki/File:Keio_Plaza_Hotel_-01.jpg" target="_blank" rel="noopener">keio</a>（Aimaimyi・CC BY-SA 3.0）・<a href="https://commons.wikimedia.org/wiki/File:Hotel-New-Otani-The-Main-01.jpg" target="_blank" rel="noopener">newotani</a>（Rs1421・CC BY-SA 3.0）・<a href="https://commons.wikimedia.org/wiki/File:ParkHyattTokyo.JPG" target="_blank" rel="noopener">park_hyatt</a>（moore・CC BY-SA 3.0）・<a href="https://commons.wikimedia.org/wiki/File:Westin_Hotel_Tokyo.jpg" target="_blank" rel="noopener">westin</a>（Harani0403・CC BY-SA 3.0）</details></footer>
 <script src="tiers.js?v=90ecd826"></script>
 <script src="campaigns.js?v=6422cd5d"></script>
 <script>
@@ -248,6 +254,9 @@ const OTHER = new Set(['chinzanso','capitol','yuen_daita','aoyama_grand','holic_
 let OTHER_COLOR;
 const COLORS = {keio:'#7a5c9e', iprefer:'#a07cc5', newotani:'#9b6b3f', groove:'#d0603c', hilton:'#2f5fa8', hyatt:'#5b8c9c', kimpton:'#3f8a5f', bellustar:'#8a7a3a'};
 OTHER_COLOR = '#9a9a9a';
+// ホテルの写真（hotel-<key>.jpg。build_web.py が写真のあるホテルの一覧を埋める）。I Prefer の京王は京王の写真
+const IMG = new Set(["ana_ic", "andaz", "bellustar", "capitol", "cerulean", "chinzanso", "grand_hyatt", "groove", "hilton", "hyatt", "keio", "newotani", "park_hyatt", "westin"]);
+const imgOf = h => IMG.has(h) ? h : (h === 'iprefer' && IMG.has('keio') ? 'keio' : '');
 const yen = n => '¥' + Number(n).toLocaleString('ja-JP');
 const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const wd = s => '日月火水木金土'[new Date(s + 'T00:00:00').getDay()];
@@ -714,7 +723,10 @@ function render(){
       const cw = !cx && CW[r.key] ? CW[r.key] : [];
       const dp = !cx && DUP[r.key] ? DUP[r.key] : [];
       const tr = !cx && TR[r.key] && r.checkout > today ? TR[r.key] : null;
-      l += `<div id="bk-${esc(r.key.replace(/[^\w-]/g, '_'))}" class="bk${cx ? ' cx' : ''}${sv ? ' save' : ''}${cw.length || dp.length ? ' cpw' : ''}">
+      // ホテルの写真（キャンセル済みと、写真のないホテルは出さない・2026-10-24）
+      const im = !cx ? imgOf(r.hotel) : '';
+      l += `<div id="bk-${esc(r.key.replace(/[^\w-]/g, '_'))}" class="bk${cx ? ' cx' : ''}${sv ? ' save' : ''}${cw.length || dp.length ? ' cpw' : ''}${im ? ' wph' : ''}">
+        ${im ? `<div class="ph"><img src="hotel-${im}.jpg" loading="lazy" alt=""></div>` : ''}
         <div class="d num">${md(r.checkin)}<small>（${wd(r.checkin)}）${r.nights}泊・${r.adults}名</small></div>
         <div><div class="h"><span class="dot" style="background:${COLORS[r.hotel] || OTHER_COLOR}"></span>${esc(NAMES[r.hotel] || r.hotel_name)}${OTHER.has(r.hotel) ? '<span class="tag ot">比較対象外</span>' : ''}</div>
           <div class="r">${esc(shortRoom(r))}${cx ? '<span class="tag cx">キャンセル</span>' : r.refundable ? '<span class="tag ok">返金可</span>' : '<span class="tag nr">返金不可</span>'}${ch}${!cx && r.cx_group ? '<span class="tag pd">キャンセル照合中</span>' : ''}${!cx && r.nowatch ? '<span class="tag ot">監視なし</span>' : ''}</div>
