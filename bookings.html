@@ -173,6 +173,9 @@ footer{max-width:720px;margin:0 auto;padding:0 16px 28px;text-align:center;font-
 .tn .t2{font-size:12.5px;color:var(--sub);margin-top:2px}.tn .t2 b{color:var(--ink)}
 .tn .tb{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin-top:8px}
 .tn .tb a,.tn .tb button{font:inherit;font-size:12px;text-align:center;padding:8px 2px;min-height:38px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);text-decoration:none;cursor:pointer}
+.tn .tb a.go{background:var(--ink);color:var(--card);border-color:var(--ink);font-weight:600}
+.tn .tn-n{font-size:11px;color:var(--sub);margin-top:5px}
+.tn .t2 a{color:inherit}
 .tn .t3{font-size:12.5px;margin-top:8px;padding-top:6px;border-top:1px dashed var(--line)}.tn .t3 a{color:inherit;font-weight:600}
 .d14{display:grid;grid-template-columns:repeat(14,minmax(0,1fr));gap:2px;margin:0 0 12px}
 .d14 a{display:flex;flex-direction:column;align-items:center;gap:1px;padding:4px 0 5px;border-radius:8px;text-decoration:none;color:var(--sub);font-size:10px;line-height:1.2}
@@ -492,7 +495,9 @@ async function rbSet(key, v, kind, to){
     render();
   } catch(e) { alert('記録できませんでした。少し時間をおいてお試しください。'); }
 }
-// 今夜の宿（15時以降・A2）
+// 今夜の宿（2026-10-24 改：時間に関係なく「今日やること」の先頭に出し、ここで動作が終わるようにする）
+// 経路はGoogleマップの経路案内（今いる場所から）。タクシーはGoogleマップの経路の「タクシー」からGOを呼べる（行き先が引き継がれる）
+const route = (q, mode) => `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(q)}&travelmode=${mode}`;
 function tonightCard(r, future, today){
   const tiers = currentTiers(data.manual), st = stayTimes(r, tiers, ghaProjection(data.rows || [])) || {};
   const tm = new Date(Date.parse(today + 'T00:00:00+09:00') + 864e5 + 9 * 3600e3).toISOString().slice(0, 10);
@@ -501,13 +506,17 @@ function tonightCard(r, future, today){
   const t3 = r.checkout > tm ? '明日：<b>連泊</b>（同じホテル）'
     : nx ? (nx.hotel === r.hotel ? '明日：同じホテル（別の予約）' : `明日：<b>${esc(NAMES[nx.hotel] || nx.hotel_name)}</b>へ移動${(stayTimes(nx, tiers, ghaProjection(data.rows || [])) || {}).ci ? `（イン ${stayTimes(nx, tiers, ghaProjection(data.rows || [])).ci}）` : ''}`)
     : `明日の宿は未予約　<a href="./?in=${tm}&out=${new Date(Date.parse(tm + 'T00:00:00Z') + 864e5).toISOString().slice(0, 10)}&a=${r.adults || 2}">この日程で比べる →</a>`;
-  const ev = ((data.eve || {})[today] || []).map(e => `${esc(e.t)} ${esc(e.kind)}${e.place ? `（${esc(e.place)}）` : ''}`).join('　');
+  const evs = (data.eve || {})[today] || [];
+  // 会食の店があれば、店への経路も押せるようにする
+  const ev = evs.map(e => `${esc(e.t)} ${esc(e.kind)}${e.place ? `（<a href="${esc(route(e.place + ' 東京', 'transit'))}" target="_blank" rel="noopener">${esc(e.place)}</a>）` : ''}`).join('　');
+  const dest = (r.hotel_name || nm) + ' 東京';
   return `<div class="tn"><div class="t1"><span class="dot" style="background:${COLORS[r.hotel] || OTHER_COLOR}"></span>今夜：${esc(nm)}</div>
     <div class="t2">${st.ci ? `イン <b>${esc(st.ci)}</b>・アウト <b>明朝 ${esc(st.co)}</b>　` : ''}${esc(shortRoom(r))}${r.pay ? '・' + yen(r.pay) : ''}${ev ? `<br>${ev}` : ''}</div>
-    <div class="tb"><button type="button" onclick="copyConf(this, ${esc(JSON.stringify(conf))})">番号コピー</button>
+    <div class="tb"><a class="go" href="${esc(route(dest, 'transit'))}" target="_blank" rel="noopener">経路</a>
+      <a class="go" href="${esc(route(dest, 'driving'))}" target="_blank" rel="noopener">タクシー</a>
       <a id="tn-tel" href="#" onclick="return false">電話</a>
-      <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(r.hotel_name || nm)}" target="_blank" rel="noopener">地図</a>
       <button type="button" onclick="showDetail(${esc(JSON.stringify(r.key))})">詳細</button></div>
+    <div class="tn-n">タクシーは、開いた経路の「タクシー」からGOを呼べます（行き先はそのまま）。予約番号は「詳細」に</div>
     <div class="t3">${t3}</div></div>`;
 }
 async function fillTonightTel(){
@@ -631,9 +640,9 @@ function render(){
   const acts = todoL.filter(x => !x.info), lim = todoAll ? acts.length : 3;
   const tonight = future.find(r => r.checkin <= today && today < r.checkout);
   const nowHM = new Date(Date.now() + 9 * 3600e3).toISOString().slice(11, 16);
-  const shown = (tonight && nowHM >= '15:00' ? [] : todoL.filter(x => x.info)).concat(acts.slice(0, lim));
+  const shown = (tonight ? [] : todoL.filter(x => x.info)).concat(acts.slice(0, lim));
   const todayBox = `<div class="today" role="region" aria-label="今日やること"><div class="td-h">今日やること${STALE ? '<span class="td-s">（保存済みのデータ）</span>' : ''}</div>
-    ${tonight && nowHM >= '15:00' ? tonightCard(tonight, future, today) : ''}
+    ${tonight ? tonightCard(tonight, future, today) : ''}
     ${shown.map(x => `<div class="td-i${x.info ? ' info' : ''}">${x.k ? `<a href="#" onclick="goBk(${esc(JSON.stringify(x.k))});return false">${x.t}</a>` : x.href ? `<a href="${esc(x.href)}">${x.t}</a>` : x.t}</div>`).join('')}
     ${acts.length ? (acts.length > 3 ? `<div class="td-m"><a href="#" onclick="todoAll=!todoAll;render();return false">${todoAll ? '3件だけ表示' : `ほか${acts.length - 3}件も表示`}</a></div>` : '') : '<div class="td-i none">今日の操作はありません</div>'}</div>
     ${strip14(future, today)}`;
