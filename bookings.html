@@ -505,7 +505,7 @@ function tonightCard(r, future, today){
   const nx = r.checkout > tm ? null : future.find(x => x.checkin === tm);
   const t3 = r.checkout > tm ? '明日：<b>連泊</b>（同じホテル）'
     : nx ? (nx.hotel === r.hotel ? '明日：同じホテル（別の予約）' : `明日：<b>${esc(NAMES[nx.hotel] || nx.hotel_name)}</b>へ移動${(stayTimes(nx, tiers, ghaProjection(data.rows || [])) || {}).ci ? `（イン ${stayTimes(nx, tiers, ghaProjection(data.rows || [])).ci}）` : ''}`)
-    : `明日の宿は未予約　<a href="./?in=${tm}&out=${new Date(Date.parse(tm + 'T00:00:00Z') + 864e5).toISOString().slice(0, 10)}&a=${r.adults || 2}">この日程で比べる →</a>`;
+    : '';  // 明日の宿がないのはふつう（自宅に帰る夜が多い）なので何も出さない（2026-10-24 西村氏）
   const evs = (data.eve || {})[today] || [];
   // 会食の店があれば、店への経路も押せるようにする
   const ev = evs.map(e => `${esc(e.t)} ${esc(e.kind)}${e.place ? `（<a href="${esc(route(e.place + ' 東京', 'transit'))}" target="_blank" rel="noopener">${esc(e.place)}</a>）` : ''}`).join('　');
@@ -516,7 +516,7 @@ function tonightCard(r, future, today){
       <a id="tn-tel" href="#" onclick="return false">電話</a>
       <button type="button" onclick="showDetail(${esc(JSON.stringify(r.key))})">詳細</button></div>
     <div class="tn-n">タクシーは、経路の画面の「タクシー」からGOを呼べます（行き先はそのまま）。予約番号は「詳細」に</div>
-    <div class="t3">${t3}</div></div>`;
+    ${t3 ? `<div class="t3">${t3}</div>` : ''}</div>`;
 }
 async function fillTonightTel(){
   const a = document.getElementById('tn-tel'); if (!a || a.dataset.done) return;
