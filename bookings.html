@@ -171,7 +171,7 @@ footer{max-width:720px;margin:0 auto;padding:0 16px 28px;text-align:center;font-
 .tn{margin:2px 0 8px;padding:10px 12px;border-radius:12px;background:var(--card);border:1px solid var(--gold)}
 .tn .t1{display:flex;align-items:center;gap:6px;font-weight:700;font-size:14.5px}
 .tn .t2{font-size:12.5px;color:var(--sub);margin-top:2px}.tn .t2 b{color:var(--ink)}
-.tn .tb{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin-top:8px}
+.tn .tb{display:grid;grid-template-columns:2fr 1fr 1fr;gap:6px;margin-top:8px}
 .tn .tb a,.tn .tb button{font:inherit;font-size:12px;text-align:center;padding:8px 2px;min-height:38px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);text-decoration:none;cursor:pointer}
 .tn .tb a.go{background:var(--ink);color:var(--card);border-color:var(--ink);font-weight:600}
 .tn .tn-n{font-size:11px;color:var(--sub);margin-top:5px}
@@ -513,10 +513,9 @@ function tonightCard(r, future, today){
   return `<div class="tn"><div class="t1"><span class="dot" style="background:${COLORS[r.hotel] || OTHER_COLOR}"></span>今夜：${esc(nm)}</div>
     <div class="t2">${st.ci ? `イン <b>${esc(st.ci)}</b>・アウト <b>明朝 ${esc(st.co)}</b>　` : ''}${esc(shortRoom(r))}${r.pay ? '・' + yen(r.pay) : ''}${ev ? `<br>${ev}` : ''}</div>
     <div class="tb"><a class="go" href="${esc(route(dest, 'transit'))}" target="_blank" rel="noopener">経路</a>
-      <a class="go" href="${esc(route(dest, 'driving'))}" target="_blank" rel="noopener">タクシー</a>
       <a id="tn-tel" href="#" onclick="return false">電話</a>
       <button type="button" onclick="showDetail(${esc(JSON.stringify(r.key))})">詳細</button></div>
-    <div class="tn-n">タクシーは、開いた経路の「タクシー」からGOを呼べます（行き先はそのまま）。予約番号は「詳細」に</div>
+    <div class="tn-n">タクシーは、経路の画面の「タクシー」からGOを呼べます（行き先はそのまま）。予約番号は「詳細」に</div>
     <div class="t3">${t3}</div></div>`;
 }
 async function fillTonightTel(){
