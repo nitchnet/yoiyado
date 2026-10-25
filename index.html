@@ -258,8 +258,16 @@ const yen = n => '¥' + Number(n).toLocaleString('ja-JP');
 // 実質の値段（2026-10-25）：支払額から、戻るポイントの価値を引いて比べる（hyatt_plan.py と同じ率）。
 // 京王（公式）は5%・1pt=1円、ハイアット（公式）は滞在合計100円につき約2.6pt（10月の4泊の実績）・1pt=2.25円
 const PT_BACK = {keio: [0.05, 1], hyatt: [0.026, 2.25]};
-const backOf = (h, pay, ch) => (!ch || ch === '公式') && PT_BACK[h] ? Math.round(pay * PT_BACK[h][0] * PT_BACK[h][1]) : 0;
-const effOf = (h, pay, ch) => pay - backOf(h, pay, ch);
+const CB = () => BK && BK.camp_bonus;
+// キャンペーンのボーナス（2026-10-25）：毎朝メールから読んだ、いま有効で登録済みのポイントボーナス（campaigns.py の bonus_table）。
+// 宿泊日が期間内なら、1泊あたりのボーナス（倍率は基本ポイントへの上乗せ）×上限で割り引く率×1ptの円を足す
+const bonusOf = (h, pay, ci, nights, existing, award) => (CB() || []).reduce((a, c) => {
+  if (!ci || !c.hotels.includes(h) || ci < c.stay_start || ci > c.stay_end || (existing && c.new_only) || (award && !c.award_counts)) return a;
+  const base = PT_BACK[h] ? pay * PT_BACK[h][0] : 0;
+  return a + Math.round(((c.pts_night || 0) * (nights || 1) + base * (c.percent || 0) / 100) * c.factor * c.yen);
+}, 0);
+const backOf = (h, pay, ch, ci, nights, existing) => (!ch || ch === '公式') && PT_BACK[h] ? Math.round(pay * PT_BACK[h][0] * PT_BACK[h][1]) + bonusOf(h, pay, ci, nights, existing) : 0;
+const effOf = (h, pay, ch, ci, nights, existing) => pay - backOf(h, pay, ch, ci, nights, existing);
 const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const BTN_IDLE = '<span class="moon">☾</span>空室と会員価格を探す';
 let cur = null, timer = null, started = 0;
@@ -344,7 +352,7 @@ function myBooking(c){
   if (nightsSum !== nightsOf(c.date, c.checkout)) return null;
   const free = rows.map(r => r.free_cancel_until || '').filter(Boolean).sort()[0] || '';
   const refundable = rows.every(r => r.refundable);
-  return {rows, pay: rows.reduce((a, r) => a + r.pay, 0), eff: rows.reduce((a, r) => a + effOf(r.hotel, r.pay, r.channel), 0), refundable, free,
+  return {rows, pay: rows.reduce((a, r) => a + r.pay, 0), eff: rows.reduce((a, r) => a + effOf(r.hotel, r.pay, r.channel, r.checkin, r.nights, true), 0), refundable, free,
           canRebook: refundable && (!free || todayJst() <= free)};
 }
 function mineCard(mb, main, loading){
@@ -503,7 +511,7 @@ function render(){
 
   let offers = [];
   Object.values(cur.results || {}).forEach(r => (r.offers || []).forEach(o => offers.push(Object.assign({hotel:r.hotel}, o))));
-  offers.forEach(o => { o.back = backOf(o.hotel, o.pay); o.eff = o.pay - o.back; });
+  offers.forEach(o => { o.back = backOf(o.hotel, o.pay, '', cur.date, nights); o.eff = o.pay - o.back; });
   // チェックインまで7日以内は、返金不可も含めた最安を基本にする（返金不可で予約してよい期間。2026-10-25 西村氏）
   const near = nightsOf(todayJst(), cur.date) <= 7;
   if (near) offers.filter(o => o.alt).forEach(a => {
@@ -537,7 +545,7 @@ function render(){
         <div class="rk serif num">${o.alt ? '↳' : rank}</div>
         <div class="hotel"><span class="dot" style="background:${COLORS[o.hotel]}"></span>${esc(NAMES[o.hotel])}</div>
         <div class="price"><div class="p serif num">${yen(o.pay)}</div>
-          ${o.back ? `<div class="per num">実質 ${yen(o.eff)}<small>（ポイント ${yen(o.back)}分）</small></div>` : ''}
+          ${o.back ? `<div class="per num">実質 ${yen(o.eff)}<small>（ポイント ${yen(o.back)}分${bonusOf(o.hotel, o.pay, cur.date, nights) ? '・キャンペーン込み' : ''}）</small></div>` : ''}
           ${nights > 1 ? `<div class="per num">1泊 ${yen(Math.round(o.pay / nights))}</div>` : ''}
           ${sub ? `<div class="diff num">${sub}</div>` : ''}
           ${mb ? `<div class="vs num ${o.eff < mb.eff ? 'down' : ''}">${o.eff < mb.eff ? `いまの予約より実質${yen(mb.eff - o.eff)}安い` : o.eff > mb.eff ? `いまの予約より実質${yen(o.eff - mb.eff)}高い` : 'いまの予約と実質同額'}</div>` : ''}</div>

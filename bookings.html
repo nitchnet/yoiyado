@@ -276,7 +276,15 @@ function badge(r){
 const yen = n => '¥' + Number(n).toLocaleString('ja-JP');
 // 実質の値段（2026-10-25）：支払額から、戻るポイントの価値を引いた額（hyatt_plan.py・Compare.html と同じ率）
 const PT_BACK = {keio: [0.05, 1], hyatt: [0.026, 2.25]};
-const backOf = (h, pay, ch) => (!ch || ch === '公式') && PT_BACK[h] ? Math.round(pay * PT_BACK[h][0] * PT_BACK[h][1]) : 0;
+const CB = () => data && data.camp_bonus;
+// キャンペーンのボーナス（2026-10-25）：毎朝メールから読んだ、いま有効で登録済みのポイントボーナス（campaigns.py の bonus_table）。
+// 宿泊日が期間内なら、1泊あたりのボーナス（倍率は基本ポイントへの上乗せ）×上限で割り引く率×1ptの円を足す
+const bonusOf = (h, pay, ci, nights, existing, award) => (CB() || []).reduce((a, c) => {
+  if (!ci || !c.hotels.includes(h) || ci < c.stay_start || ci > c.stay_end || (existing && c.new_only) || (award && !c.award_counts)) return a;
+  const base = PT_BACK[h] ? pay * PT_BACK[h][0] : 0;
+  return a + Math.round(((c.pts_night || 0) * (nights || 1) + base * (c.percent || 0) / 100) * c.factor * c.yen);
+}, 0);
+const backOf = (h, pay, ch, ci, nights, existing) => (!ch || ch === '公式') && PT_BACK[h] ? Math.round(pay * PT_BACK[h][0] * PT_BACK[h][1]) + bonusOf(h, pay, ci, nights, existing) : 0;
 const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const wd = s => '日月火水木金土'[new Date(s + 'T00:00:00').getDay()];
 const md = s => Number(s.slice(5,7)) + '/' + Number(s.slice(8,10));
@@ -352,7 +360,7 @@ function transferTable(Y, today){
       <div>${esc(HN[t.hotel] || t.hotel)} <span class="num">${yen(t.booked_pay)}</span></div>
       <div class="r num">${t.pay != null ? `<a href="${esc(t.url || '#')}" target="_blank" rel="noopener">${yen(t.pay)}</a>` : `<small>${esc(t.reason || '未確認')}</small>`}</div>
       <div class="r num ${t.diff != null && t.diff <= Number(st.hyatt_margin || 5000) ? 'ok' : ''}">${t.diff != null ? sign(t.diff) : '—'}<small>${md(t.checked || today)}</small></div>`).join('')}</div>
-    <div class="trs" style="margin-top:6px">金額は税・サ・宿泊税込みの滞在合計。実質の差は、戻るポイントの価値（京王5%・ハイアット約5.9%）を引いて比べた差。ハイアットはキング・会員料金・返金可。各日を2日に1回調べています（右下は調べた日）。緑は+${yen(Number(st.hyatt_margin || 5000))}以内</div>
+    <div class="trs" style="margin-top:6px">金額は税・サ・宿泊税込みの滞在合計。実質の差は、戻るポイントの価値（京王5%・ハイアット約5.9%・登録済みキャンペーンのボーナス）を引いて比べた差。ハイアットはキング・会員料金・返金可。各日を2日に1回調べています（右下は調べた日）。緑は+${yen(Number(st.hyatt_margin || 5000))}以内</div>
   </details>`;
 }
 
@@ -362,10 +370,12 @@ const AW_GOOD = 3;
 function awardOf(key){
   const a = ((data.hyatt || {}).award || []).find(a => a.k === key);
   if (!a || !a.points || !a.cash) return null;
-  const eff = a.cash - backOf('hyatt', a.cash);
+  const n = Math.max(1, Math.round((new Date(a.checkout) - new Date(a.checkin)) / 864e5));
+  // ポイント泊にもキャンペーンのボーナスが付くなら、その分は現金との差に効かない
+  const eff = a.cash - backOf('hyatt', a.cash, '', a.checkin, n) + bonusOf('hyatt', a.cash, a.checkin, n, false, true);
   // ハイアット以外の予約は、今の予約（実質）と比べた価値も出す（ポイント泊にすれば今の予約の分が浮く）
   const r = (data.rows || []).find(r => r.key === key);
-  const cur = r && r.hotel !== 'hyatt' && r.pay ? r.pay - backOf(r.hotel, r.pay, r.channel) : null;
+  const cur = r && r.hotel !== 'hyatt' && r.pay ? r.pay - backOf(r.hotel, r.pay, r.channel, r.checkin, r.nights, true) : null;
   return Object.assign({eff, yp: eff / a.points, cur, yp2: cur != null ? cur / a.points : null}, a);
 }
 function hyattBal(){
