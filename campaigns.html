@@ -167,10 +167,17 @@ async function load(){
 async function setStatus(id, s){
   // 押した瞬間に表示を変え、裏で保存する
   CP.status = CP.status || {};
+  const before = CP.status[id];
   if (s === 'unknown') delete CP.status[id]; else CP.status[id] = {s, at: new Date().toISOString()};
   render();
-  try { const r = await api({api: 'campaignStatus', id, status: s}); if (r.ok) { CP.status = r.status; try { localStorage.setItem('yoiyado_campaigns', JSON.stringify(CP)); } catch(e) {} render(); } }
-  catch(e) { alert('保存できませんでした。'); }
+  let ok = false;
+  try { const r = await api({api: 'campaignStatus', id, status: s}); if (r && r.ok) { ok = true; CP.status = r.status; try { localStorage.setItem('yoiyado_campaigns', JSON.stringify(CP)); } catch(e) {} render(); } }
+  catch(e) {}
+  if (!ok) {  // 保存できなかったら表示を元に戻す（画面だけ「登録済み」のまま、比較に入らないことがないように）
+    if (before) CP.status[id] = before; else delete CP.status[id];
+    render();
+    alert('保存できませんでした。通信を確認して、もう一度押してください。');
+  }
 }
 
 function card(c, rows, st){

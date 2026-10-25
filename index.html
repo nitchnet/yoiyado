@@ -261,10 +261,17 @@ const PT_BACK = {keio: [0.05, 1], hyatt: [0.026, 2.25]};
 const CB = () => BK && BK.camp_bonus;
 // キャンペーンのボーナス（2026-10-25）：毎朝メールから読んだ、いま有効で登録済みのポイントボーナス（campaigns.py の bonus_table）。
 // 宿泊日が期間内なら、1泊あたりのボーナス（倍率は基本ポイントへの上乗せ）×上限で割り引く率×1ptの円を足す
+// 2026-10-25 作り直し：1滞在ごと＝1回・1泊ごと＝×泊数・n泊ごと＝1泊あたり points/n・倍率＝基本ポイントへの上乗せ（ポイント泊は0）。
+// すでにある予約は上限を平均で割り引く（factor）、これから取る予約は上限の残り（room）まで。受付期間（booking_end）を過ぎたら新しい予約には付けない
+const TODAY_ = () => new Date().toLocaleDateString('sv-SE');
 const bonusOf = (h, pay, ci, nights, existing, award) => (CB() || []).reduce((a, c) => {
-  if (!ci || !c.hotels.includes(h) || ci < c.stay_start || ci > c.stay_end || (existing && c.new_only) || (award && !c.award_counts)) return a;
-  const base = PT_BACK[h] ? pay * PT_BACK[h][0] : 0;
-  return a + Math.round(((c.pts_night || 0) * (nights || 1) + base * (c.percent || 0) / 100) * c.factor * c.yen);
+  if (!ci || !c.hotels.includes(h) || ci < c.stay_start || ci > c.stay_end || (award && !c.award_counts)) return a;
+  if (existing ? c.new_only : (c.booking_end && TODAY_() > c.booking_end)) return a;
+  const n = nights || 1, base = award || !PT_BACK[h] ? 0 : pay * PT_BACK[h][0];
+  let pts = c.unit === 'night' ? c.points * n : c.unit === 'stay' ? c.points : c.unit === 'every_n_nights' ? c.points * n / (c.n || 1)
+    : c.unit === 'percent' ? base * c.percent / 100 : 0;
+  pts = existing ? pts * (c.factor == null ? 1 : c.factor) : (c.room == null ? pts : Math.min(pts, c.room));
+  return a + Math.round(pts * c.yen);
 }, 0);
 const backOf = (h, pay, ch, ci, nights, existing) => (!ch || ch === '公式') && PT_BACK[h] ? Math.round(pay * PT_BACK[h][0] * PT_BACK[h][1]) + bonusOf(h, pay, ci, nights, existing) : 0;
 const effOf = (h, pay, ch, ci, nights, existing) => pay - backOf(h, pay, ch, ci, nights, existing);
@@ -364,7 +371,8 @@ function mineCard(mb, main, loading){
   else if (main.length) {
     const b = main[0];
     if (b.eff < mb.eff) {
-      h += `<div class="mr down">▼ 実質<b>${yen(mb.eff - b.eff)}安く</b>取り直せます：${esc(NAMES[b.hotel])} ${esc(b.label)} ${yen(b.pay)}</div>`;
+      h += `<div class="mr down">▼ 実質<b>${yen(mb.eff - b.eff)}安く</b>取り直せます：${esc(NAMES[b.hotel])} ${esc(b.label)} ${yen(b.pay)}${b.refundable === false ? '（返金不可）' : ''}</div>`;
+      if (b.refundable === false) h += `<div class="mr ng">取り直し先は返金不可の料金です（予約後のキャンセル・変更はできません）</div>`;
       if (!mb.canRebook) h += `<div class="mr ng">ただし、いまの予約は${mb.refundable ? '無料キャンセルの期限を過ぎています' : '返金不可'}（取り直すとキャンセル料がかかります）</div>`;
     } else {
       h += `<div class="mr ok">✓ いまの予約が実質で最安です${b.eff > mb.eff ? `（次に安い ${esc(NAMES[b.hotel])} より実質${yen(b.eff - mb.eff)}安い）` : ''}</div>`;
@@ -640,6 +648,8 @@ function saveKey(){
   if (!/^[0-9a-f]{20,}$/i.test(v)) return showSetup('合言葉の形式が正しくありません。');
   K = v; try { localStorage.setItem('yoiyado_k', K); } catch(e) {}
   document.getElementById('out').innerHTML = '';
+  // 設定したらすぐ予約・履歴を読み込む（読み直さないと比較にキャンペーン・いまの予約が入らなかった）
+  try { if (typeof loadHist === 'function') loadHist(); if (typeof loadBookings === 'function') loadBookings(); if (typeof restoreLast === 'function') restoreLast(); } catch(e) {}
 }
 if (!K) showSetup();
 </script>

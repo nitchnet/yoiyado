@@ -279,10 +279,17 @@ const PT_BACK = {keio: [0.05, 1], hyatt: [0.026, 2.25]};
 const CB = () => data && data.camp_bonus;
 // キャンペーンのボーナス（2026-10-25）：毎朝メールから読んだ、いま有効で登録済みのポイントボーナス（campaigns.py の bonus_table）。
 // 宿泊日が期間内なら、1泊あたりのボーナス（倍率は基本ポイントへの上乗せ）×上限で割り引く率×1ptの円を足す
+// 2026-10-25 作り直し：1滞在ごと＝1回・1泊ごと＝×泊数・n泊ごと＝1泊あたり points/n・倍率＝基本ポイントへの上乗せ（ポイント泊は0）。
+// すでにある予約は上限を平均で割り引く（factor）、これから取る予約は上限の残り（room）まで。受付期間（booking_end）を過ぎたら新しい予約には付けない
+const TODAY_ = () => new Date().toLocaleDateString('sv-SE');
 const bonusOf = (h, pay, ci, nights, existing, award) => (CB() || []).reduce((a, c) => {
-  if (!ci || !c.hotels.includes(h) || ci < c.stay_start || ci > c.stay_end || (existing && c.new_only) || (award && !c.award_counts)) return a;
-  const base = PT_BACK[h] ? pay * PT_BACK[h][0] : 0;
-  return a + Math.round(((c.pts_night || 0) * (nights || 1) + base * (c.percent || 0) / 100) * c.factor * c.yen);
+  if (!ci || !c.hotels.includes(h) || ci < c.stay_start || ci > c.stay_end || (award && !c.award_counts)) return a;
+  if (existing ? c.new_only : (c.booking_end && TODAY_() > c.booking_end)) return a;
+  const n = nights || 1, base = award || !PT_BACK[h] ? 0 : pay * PT_BACK[h][0];
+  let pts = c.unit === 'night' ? c.points * n : c.unit === 'stay' ? c.points : c.unit === 'every_n_nights' ? c.points * n / (c.n || 1)
+    : c.unit === 'percent' ? base * c.percent / 100 : 0;
+  pts = existing ? pts * (c.factor == null ? 1 : c.factor) : (c.room == null ? pts : Math.min(pts, c.room));
+  return a + Math.round(pts * c.yen);
 }, 0);
 const backOf = (h, pay, ch, ci, nights, existing) => (!ch || ch === '公式') && PT_BACK[h] ? Math.round(pay * PT_BACK[h][0] * PT_BACK[h][1]) + bonusOf(h, pay, ci, nights, existing) : 0;
 const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -328,7 +335,7 @@ async function setNrDays(v){
 }
 
 // ハイアット振り替えの判断表（2026-10-17）：ハイアット以外の予約と、同じ日のハイアット（キング・会員料金・返金可）の料金・差額。
-// 毎朝7時台の照会（各日2日に1回）の結果。並べ替えと「あと何泊・追加いくら」
+// 毎朝7時台の照会（宿泊日までの日数で何日に1回）の結果。並べ替えと「あと何泊・追加いくら」
 let trSort = 'diff', trOpen = false;
 try { trSort = localStorage.getItem('yoiyado_tr_sort') || 'diff'; trOpen = localStorage.getItem('yoiyado_tr_open') === '1'; } catch(e) {}
 function setTrSort(v){ trSort = v; try { localStorage.setItem('yoiyado_tr_sort', v); } catch(e) {} render(); }
@@ -360,7 +367,7 @@ function transferTable(Y, today){
       <div>${esc(HN[t.hotel] || t.hotel)} <span class="num">${yen(t.booked_pay)}</span></div>
       <div class="r num">${t.pay != null ? `<a href="${esc(t.url || '#')}" target="_blank" rel="noopener">${yen(t.pay)}</a>` : `<small>${esc(t.reason || '未確認')}</small>`}</div>
       <div class="r num ${t.diff != null && t.diff <= Number(st.hyatt_margin || 5000) ? 'ok' : ''}">${t.diff != null ? sign(t.diff) : '—'}<small>${md(t.checked || today)}</small></div>`).join('')}</div>
-    <div class="trs" style="margin-top:6px">金額は税・サ・宿泊税込みの滞在合計。実質の差は、戻るポイントの価値（京王5%・ハイアット約5.9%・登録済みキャンペーンのボーナス）を引いて比べた差。ハイアットはキング・会員料金・返金可。各日を2日に1回調べています（右下は調べた日）。緑は+${yen(Number(st.hyatt_margin || 5000))}以内</div>
+    <div class="trs" style="margin-top:6px">金額は税・サ・宿泊税込みの滞在合計。実質の差は、戻るポイントの価値（京王5%・ハイアット約5.9%・登録済みキャンペーンのボーナス）を引いて比べた差。ハイアットはキング・会員料金・返金可。宿泊日まで${st.hyatt_near_days || 30}日以内は${st.hyatt_near_every || 2}日に1回、${st.hyatt_mid_days || 90}日以内は${st.hyatt_mid_every || 4}日に1回、それより先は${st.hyatt_far_every || 10}日に1回調べています（右下は調べた日）。緑は+${yen(Number(st.hyatt_margin || 5000))}以内</div>
   </details>`;
 }
 
