@@ -44,6 +44,8 @@ function cpDedupe(list) {
 // このキャンペーンの対象になりうる今後の予約（宿泊期間が重なる・ホテルと予約経路が合う）
 function cpMatches(c, rows) {
   if (!c.stay_start && !c.stay_end) return [];
+  // 特定のブランドだけが対象（例：Thompson Hotels だけ）なら、手元の予約はどれも対象外（2026-10-30 西村氏の指摘）
+  if ((c.bonus || {}).brand_ok === false) return [];
   const b = CP_BRAND_HOTELS[c.source] || {};
   const hotels = c.scope === 'hotels' && (c.hotels || []).length ? c.hotels : b.hotels;
   const today = cpToday();
