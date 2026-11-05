@@ -216,7 +216,7 @@ footer{max-width:720px;margin:0 auto;padding:0 16px 28px;text-align:center;font-
       <label class="switch"><input type="checkbox" id="showAlt" onchange="saveAlt();render()"><span class="knob"></span>返金不可の最安も表示</label>
     </div>
     <details class="cond"><summary>比較の条件</summary>
-      <p>各ホテル公式サイト（京王プラザ・ニューオータニはI Prefer経由も）の会員価格・早期割引を含む最安。金額は税・サービス料・宿泊税込みの滞在合計。素泊まり優先（素泊まりが無い部屋のみ朝食付き）。順位は返金可の最安で付け、返金不可の方が安い場合はスイッチで表示。ポイント還元は含みません。</p>
+      <p>各ホテル公式サイト（京王プラザ・ニューオータニはI Prefer経由も）の会員価格・早期割引を含む最安。金額は税・サービス料・宿泊税込みの滞在合計。素泊まり優先（素泊まりが無い部屋のみ朝食付き）。順位は返金可の実質の最安で付け（チェックインまで7日以内は返金不可も含む）、返金不可の方が安い場合はスイッチで表示。実質＝支払額から、戻るポイントの価値（京王5%・ハイアット約5.9%・登録済みキャンペーンのボーナス）を引いた額です。</p>
     </details>
   </section>
   <div id="out"></div>
@@ -578,6 +578,7 @@ function ruleCard(c, main){
   const hy = best('hyatt'), ke = best('keio'), gr = best('groove');
   if (hy == null && ke == null) return '';
   const sat = new Date(c.date + 'T00:00:00').getDay() === 6, per = v => v / nights;
+  const yv = ((BK && BK.hyatt && BK.hyatt.years) || []).find(v => String(v.year) === c.date.slice(0, 4)), done = !!yv && yv.mode === 'done';
   let pick = '', why = '';
   if (sat) {
     if (hy != null && (ke == null || hy <= ke)) { pick = 'hyatt'; why = ke != null ? `京王より実質${yen(ke - hy)}安い・14時イン` : '14時イン'; }
@@ -588,8 +589,9 @@ function ruleCard(c, main){
     const lo = Math.min(...[hy, ke].filter(v => v != null));
     if (gr != null && ((hy == null || per(hy) > 70000) && (ke == null || per(ke) > 70000) || lo - gr >= 15000 * nights)) { pick = 'groove'; why = `ハイアット・京王が高い日（グルーヴのキング ${yen(gr)}）`; }
     // 京王・ハイアットの差は実質で（京王5%・ハイアット約5.9%のポイントを引いた額）
-    else if (hy != null && (ke == null || hy - ke <= 3000 * nights)) { pick = 'hyatt'; why = ke == null ? '京王は満室' : hy <= ke ? `京王より実質${yen(ke - hy)}安い` : `京王との差 実質+${yen(hy - ke)}（3,000円以内）`; }
-    else { pick = 'keio'; why = hy == null ? 'ハイアットは満室' : `ハイアットとの差 実質${yen(hy - ke)}（3,000円超）`; }
+    // 2026-11-05 その年の目標泊数に届いていれば、ハイアットを3,000円高くても選ぶ理由はないので安い方を勧める
+    else if (hy != null && (ke == null || hy - ke <= (done ? 0 : 3000) * nights)) { pick = 'hyatt'; why = ke == null ? '京王は満室' : hy <= ke ? `京王より実質${yen(ke - hy)}安い` : `京王との差 実質+${yen(hy - ke)}（3,000円以内）`; }
+    else { pick = 'keio'; why = hy == null ? 'ハイアットは満室' : done ? `ハイアットより実質${yen(hy - ke)}安い（ハイアットは目標の${yv.target}泊に到達済み）` : `ハイアットとの差 実質${yen(hy - ke)}（3,000円超）`; }
   }
   return `<section class="card rule"><span class="lb">いつもの選び方では</span><b><span class="dot" style="background:${COLORS[pick]}"></span>${esc(NAMES[pick])}</b><span class="why">${esc(why)}</span></section>`;
 }

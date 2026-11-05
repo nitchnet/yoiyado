@@ -142,6 +142,8 @@ details.pm > summary{margin:10px 4px 6px;color:var(--sub)}
 .trt summary span:first-child::after{content:' ▸';color:var(--sub);font-size:11px}
 .trt[open] summary span:first-child::after{content:' ▾'}
 .trs{font-size:12px;color:var(--sub);margin-top:8px}
+.lu{float:right;text-align:right;font-weight:400}.lu-b{font:inherit;font-size:11.5px;padding:2px 10px;border-radius:999px;border:1px solid var(--line);background:var(--bg);color:var(--sub);cursor:pointer}.lu-b:disabled{opacity:.6}.lu-t{clear:both;font-size:11.5px;margin-top:3px;max-width:15em}.lu-t.err{color:#b4483c}
+.aw-old{margin-top:8px}.aw-old summary{font-size:12px;color:var(--sub);cursor:pointer}.aw-imp{margin-top:8px}.aw-imp textarea{width:100%;box-sizing:border-box;margin-top:6px;font:inherit;font-size:12px;padding:6px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:inherit}
 .trs b{color:var(--ink)}
 .trb{display:flex;gap:4px;margin:8px 0}
 .trb button{font:inherit;font-size:11.5px;padding:3px 10px;border-radius:999px;border:1px solid var(--line);background:var(--bg);color:var(--sub);cursor:pointer}
@@ -373,47 +375,167 @@ function transferTable(Y, today){
 
 // ポイント泊が得な日（2026-10-25）：毎朝7時台に調べたハイアットのポイント泊の必要ポイント数と、同じ日の現金（実質）を比べる。
 // 1ptあたりの価値が AW_GOOD 円以上の日に印を付ける。ポイント泊は税・サービス料込み（宿泊税だけ現地払いの可能性）
-const AW_GOOD = 3;
-function awardOf(key){
-  const a = ((data.hyatt || {}).award || []).find(a => a.k === key);
-  if (!a || !a.points || !a.cash) return null;
-  const n = Math.max(1, Math.round((new Date(a.checkout) - new Date(a.checkin)) / 864e5));
-  // ポイント泊にもキャンペーンのボーナスが付くなら、その分は現金との差に効かない
-  const eff = a.cash - backOf('hyatt', a.cash, '', a.checkin, n) + bonusOf('hyatt', a.cash, a.checkin, n, false, true);
-  // ハイアット以外の予約は、今の予約（実質）と比べた価値も出す（ポイント泊にすれば今の予約の分が浮く）
-  const r = (data.rows || []).find(r => r.key === key);
-  const cur = r && r.hotel !== 'hyatt' && r.pay ? r.pay - backOf(r.hotel, r.pay, r.channel, r.checkin, r.nights, true) : null;
-  return Object.assign({eff, yp: eff / a.points, cur, yp2: cur != null ? cur / a.points : null}, a);
+const AW_GOOD = 3, AW_GOOD_CUR = 2.5, AW_STALE_DAYS = 14;
+let awSort = 'cur', awImport = false, awPreview = null;
+try { awSort = localStorage.getItem('yoiyado_aw_sort') || 'cur'; } catch(e) {}
+function setAwSort(v){ awSort = v; try { localStorage.setItem('yoiyado_aw_sort', v); } catch(e) {} render(); }
+// ポイントカレンダーの手入力（2026-11-05）。1泊の予約だけに使う。{points:0}＝利用不可
+function calPts(ci){
+  const c = (data.award_cal || {})[ci.slice(0, 7)];
+  if (!c) return null;
+  const v = c.v.split(',')[Number(ci.slice(8, 10)) - 1];
+  return v == null || v === '' ? null : {points: Number(v) * 1000, checked: c.at, src: 'カレンダー'};
 }
+// 1ptの価値は2つ：yp＝同じ日のハイアットの現金（実質）÷必要pt（ハイアットに泊まる価値）、yp2＝今の予約（実質）÷必要pt（総コストの減り）。
+// 必要ポイントは、毎朝の調査とカレンダーの手入力のうち新しい方。同じ日に調べたなら毎朝の調査を使う
+function awardOf(key){
+  const r = (data.rows || []).find(r => r.key === key);
+  if (!r || !r.checkin || !r.pay) return null;  // ポイント泊の予約には出さない
+  const sv = ((data.hyatt || {}).award || []).find(a => a.k === key);
+  let p = sv && sv.checked ? {points: sv.points, checked: sv.checked.slice(0, 10), src: '調査'} : null;
+  const cal = Number(r.nights) === 1 ? calPts(r.checkin) : null;
+  if (cal && (!p || cal.checked > p.checked)) p = cal;
+  if (!p || !p.points) return null;
+  const hc = ((data.hyatt || {}).award_cash || []).find(c => c[0] === key);
+  const cash = hc ? hc[1] : sv && sv.cash ? sv.cash : null;
+  const n = Math.max(1, Number(r.nights) || 1);
+  // ポイント泊にもキャンペーンのボーナスが付くなら、その分は現金との差に効かない
+  const eff = cash ? cash - backOf('hyatt', cash, '', r.checkin, n) + bonusOf('hyatt', cash, r.checkin, n, false, true) : null;
+  const cur = r.pay - backOf(r.hotel, r.pay, r.channel, r.checkin, r.nights, true);
+  return {k: key, checkin: r.checkin, checkout: r.checkout, points: p.points, checked: p.checked, src: p.src, cash, cash_src: hc ? hc[2] : sv && sv.cash ? '調査時' : '', cash_checked: hc ? hc[3] : '',
+    eff, yp: eff != null ? eff / p.points : null, cur, yp2: cur / p.points};
+}
+const awAge = (a, today) => Math.round((new Date(today) - new Date(a.checked)) / 864e5);
+const awGood = a => awSort === 'hyatt' ? a.yp != null && a.yp >= AW_GOOD : awSort === 'cur' ? a.yp2 >= AW_GOOD_CUR : (a.yp != null && a.yp >= AW_GOOD) || a.yp2 >= AW_GOOD_CUR;
+function awardList(today){
+  const fresh = [], old = [];
+  (data.rows || []).filter(r => r.status === 'booked' && r.checkin > today).forEach(r => {
+    const a = awardOf(r.key);
+    if (a && awGood(a)) (awAge(a, today) > AW_STALE_DAYS ? old : fresh).push(a);
+  });
+  const by = awSort === 'date' ? (a, b) => a.checkin < b.checkin ? -1 : 1 : awSort === 'hyatt' ? (a, b) => (b.yp || 0) - (a.yp || 0) : (a, b) => b.yp2 - a.yp2;
+  return {fresh: fresh.sort(by), old: old.sort(by)};
+}
+// 残高は手入力とメールの日付の新しい方。同じ日なら本人が確かめた手入力を使う（会員ステータスの ptNow と同じ）
 function hyattBal(){
   const m = (data.points || {}).hyatt, t = ((data.manual || {}).tiers_auto || {}).hyatt;
-  const c = [m && m.pts != null ? m : null, t && t.pts != null ? {pts: t.pts, date: t.pts_date || ''} : null].filter(Boolean);
-  return c.sort((a, b) => (b.date || '') < (a.date || '') ? -1 : 1)[0] || null;
+  const hand = m && m.pts != null ? {pts: m.pts, date: m.date || '', src: m.src || '手入力'} : null, mail = t && t.pts != null ? {pts: t.pts, date: t.pts_date || '', src: 'メール'} : null;
+  return hand && mail ? (hand.date >= mail.date ? hand : mail) : hand || mail;
 }
 const awardUrl = a => `https://www.hyatt.com/ja-JP/shop/rooms/tyoty?checkinDate=${a.checkin}&checkoutDate=${a.checkout}&rooms=1&adults=2&kids=0&rateFilter=woh`;
+// ポイント＋現金の分かれ目：追加で払う現金÷残せるpt が、残したポイントを別の日に使う価値（今の予約比の中央値）より安ければ得
+function awMedian(){
+  const l = awardList(TODAY_()).fresh.map(a => a.yp2).sort((a, b) => a - b);
+  return l.length ? l[Math.floor(l.length / 2)] : null;
+}
 function awardLine(a){
-  const bal = hyattBal(), short = bal ? a.points - bal.pts : null;
-  return `ハイアットのポイント泊なら <b>${a.points.toLocaleString('ja-JP')}pt</b>（ハイアットの現金 実質${yen(a.eff)}と比べて1pt≈${a.yp.toFixed(1)}円`
-    + (a.yp2 != null ? `・今の予約 実質${yen(a.cur)}と比べて1pt≈${a.yp2.toFixed(1)}円` : '') + `）。`
+  const bal = hyattBal(), short = bal ? a.points - bal.pts : null, md2 = awMedian();
+  return `ハイアットのポイント泊なら <b>${a.points.toLocaleString('ja-JP')}pt</b>（`
+    + (a.yp != null ? `同じ日のハイアットの現金 実質${yen(a.eff)}${a.cash_src === '予約額' ? '（予約額）' : ''}と比べて1pt≈${a.yp.toFixed(1)}円・` : '')
+    + `今の予約 実質${yen(a.cur)}と比べて1pt≈${a.yp2.toFixed(1)}円）。`
     + (bal ? (short > 0 ? `残高 ${bal.pts.toLocaleString('ja-JP')}pt → <b>あと${short.toLocaleString('ja-JP')}pt</b>` : `残高 ${bal.pts.toLocaleString('ja-JP')}pt で足ります`)
-      + `<small>（${bal.date ? md(bal.date) + '時点' : '時点不明'}）</small>` : '残高は未入力')
-    + `<br><small>${md(a.checked)} 時点。税・サービス料込み（宿泊税は現地払いの可能性）</small>　<a href="${esc(awardUrl(a))}" target="_blank" rel="noopener">ハイアットで見る →</a>`;
+      + `<small>（${bal.date ? md(bal.date) + '時点・' : ''}${esc(bal.src)}）</small>` : '残高は未入力')
+    + (md2 != null ? `<br><small>ポイント＋現金は、現金÷残せるポイントが約${md2.toFixed(1)}円/pt（別の日に使う場合の目安）より安ければ得です。例：7,500pt残して21,000円なら2.8円/pt</small>` : '')
+    + `<br><small>必要ポイントは${md(a.checked)}時点（${a.src === 'カレンダー' ? 'カレンダーから' : '毎朝の調査'}）。税・サービス料込み（宿泊税は現地払いの可能性）</small>　<a href="${esc(awardUrl(a))}" target="_blank" rel="noopener">ハイアットで見る →</a>`;
+}
+function awRow(a, W, live){
+  const r = live.get(a.k), dow = s => W[new Date(s + 'T00:00:00+09:00').getDay()];
+  const main = awSort === 'hyatt' ? a.yp : a.yp2, other = awSort === 'hyatt' ? `今の予約比 ${a.yp2.toFixed(1)}円` : a.yp != null ? `ハイアット比 ${a.yp.toFixed(1)}円` : 'ハイアット比 —';
+  return `<div class="ok">${md(a.checkin)}<small>（${dow(a.checkin)}）</small></div>
+      <div>${esc(NAMES[r.hotel] || r.hotel_name)} <span class="num">${yen(r.pay)}</span></div>
+      <div class="r num"><a href="${esc(awardUrl(a))}" target="_blank" rel="noopener">${(a.points / 1000).toLocaleString('ja-JP')}k</a><small>${md(a.checked)}${a.src === 'カレンダー' ? '暦' : '調'}</small></div>
+      <div class="r num ok">${main != null ? main.toFixed(1) + '円' : '—'}<small>${other}</small></div>`;
 }
 function awardTable(today){
   const live = new Map((data.rows || []).filter(r => r.status === 'booked').map(r => [r.key, r]));
-  const list = ((data.hyatt || {}).award || []).filter(a => live.has(a.k) && a.checkin >= today).map(a => awardOf(a.k)).filter(a => a && a.yp >= AW_GOOD)
-    .sort((a, b) => b.yp - a.yp);
-  if (!list.length) return '';
-  const W = '日月火水木金土', dow = s => W[new Date(s + 'T00:00:00+09:00').getDay()];
-  const bal = hyattBal();
-  return `<details class="card trt"><summary><span>ポイント泊が得な日</span><span class="s">${list.length}日${bal ? `・残高 ${bal.pts.toLocaleString('ja-JP')}pt` : ''}</span></summary>
-    <div class="trg"><div class="th">日付</div><div class="th">今の予約</div><div class="th r">ポイント</div><div class="th r">1ptの価値</div>
-    ${list.map(a => { const r = live.get(a.k); return `<div class="ok">${md(a.checkin)}<small>（${dow(a.checkin)}）</small></div>
-      <div>${esc(NAMES[r.hotel] || r.hotel_name)} <span class="num">${yen(r.pay)}</span></div>
-      <div class="r num"><a href="${esc(awardUrl(a))}" target="_blank" rel="noopener">${(a.points / 1000).toLocaleString('ja-JP')}k</a></div>
-      <div class="r num ok">${a.yp.toFixed(1)}円<small>${a.yp2 != null ? `今の予約比 ${a.yp2.toFixed(1)}円` : md(a.checked)}</small></div>`; }).join('')}</div>
-    <div class="trs" style="margin-top:6px">1ptの価値＝同じ日のハイアット（会員料金・返金可）の実質÷必要ポイント。${AW_GOOD}円以上の日だけ。ほかのホテルの予約は、今の予約の実質と比べた価値も小さく添えています。毎朝5日分ずつ調べています</div>
+  const {fresh, old} = awardList(today);
+  const cal = data.award_cal || {};
+  if (!fresh.length && !old.length && !Object.keys(cal).length && !((data.hyatt || {}).award || []).length) return '';
+  const W = '日月火水木金土', bal = hyattBal(), head = `<div class="th">日付</div><div class="th">今の予約</div><div class="th r">ポイント</div><div class="th r">1ptの価値</div>`;
+  return `<details class="card trt"${awImport ? ' open' : ''}><summary><span>ポイント泊が得な日</span><span class="s">${fresh.length}日${bal ? `・残高 ${bal.pts.toLocaleString('ja-JP')}pt（${esc(bal.src)}）` : ''}</span></summary>
+    <div class="trb" role="group" aria-label="並べ替え">${[['cur', '今の予約比（総コスト）'], ['hyatt', '同日ハイアット比'], ['date', '日付順']].map(([v, l]) =>
+      `<button type="button" aria-pressed="${awSort === v}" onclick="setAwSort('${v}')">${l}</button>`).join('')}</div>
+    ${fresh.length ? `<div class="trg">${head}${fresh.map(a => awRow(a, W, live)).join('')}</div>` : '<div class="trs">この基準で得な日は、今のところありません</div>'}
+    ${old.length ? `<details class="aw-old"><summary>古い調査 ${old.length}日（${AW_STALE_DAYS}日より前・空きの再確認が必要）</summary><div class="trg" style="opacity:.6">${head}${old.map(a => awRow(a, W, live)).join('')}</div></details>` : ''}
+    <div class="trs" style="margin-top:6px"><b>今の予約比</b>＝今の予約の実質÷必要ポイント（${AW_GOOD_CUR}円以上）。総コストで選ぶならこちら。グルーヴなどへ安く移せる日は、その料金との差で考えてください。<b>同日ハイアット比</b>＝同じ日のハイアットの実質÷必要ポイント（${AW_GOOD}円以上）。ポイントの列の「調」は毎朝の調査（5日分ずつ）、「暦」はカレンダーからの取り込みで、数字は確認した日です。空きはその時点のものです。</div>
+    ${awImportHtml(cal)}
   </details>`;
+}
+// ポイントカレンダーの取り込み（2026-11-05）：公式のカレンダーのページを全選択してコピーし、貼り付ける。読めなければスクリーンショットをAIに渡してもよい
+function awImportHtml(cal){
+  const list = Object.keys(cal).sort().map(k => `${Number(k.slice(0, 4))}/${Number(k.slice(5))}（${md(cal[k].at)}）`).join('・');
+  if (!awImport) return `<div class="trb"><button type="button" onclick="awImport=true;awPreview=null;render()">ポイントカレンダーを取り込む</button></div>${list ? `<div class="trs">取り込み済み：${list}</div>` : ''}`;
+  const p = awPreview;
+  return `<div class="aw-imp"><div class="trs"><a href="https://www.hyatt.com/ja-JP/explore-hotels/rate-calendar?spiritCode=tyoty" target="_blank" rel="noopener">ポイントカレンダーを開く →</a>　月を表示して、ページ全体をコピー（Ctrl+A → Ctrl+C）し、下に貼り付けてください。1か月ずつです。</div>
+    <textarea id="aw-text" rows="4" placeholder="ここに貼り付け"></textarea>
+    <div class="trb"><button type="button" onclick="awParse()">読み取る</button>${p && !p.error ? `<button type="button" aria-pressed="true" onclick="awSave()">この内容で保存</button>` : ''}<button type="button" onclick="awImport=false;awPreview=null;render()">閉じる</button></div>
+    ${p ? `<div class="trs">${p.error ? esc(p.error) : `<b>${Number(p.ym.slice(0, 4))}年${Number(p.ym.slice(5))}月</b>：${esc(p.summary)}`}</div>` : ''}
+    ${list ? `<div class="trs">取り込み済み：${list}</div>` : ''}</div>`;
+}
+function parseAwardCal(text){
+  const t = String(text || '').replace(/\s+/g, ' ');
+  const h = t.match(/(\d{4})年\s*(\d{1,2})月/);
+  if (!h) return {error: '「2027年8月」のような月の見出しが見つかりません。ページ全体をコピーしてください'};
+  const y = Number(h[1]), mo = Number(h[2]), days = new Date(y, mo, 0).getDate(), vals = Array(days).fill(0);
+  const re = /(?:^|\s)(\d{1,2}) (\d{1,3},\d{3}|\d{4,6}) ?(?:ポイント|points?\b)/gi;
+  let m, n = 0;
+  while ((m = re.exec(t))) {
+    const d = Number(m[1]), v = Number(m[2].replace(/,/g, ''));
+    if (d >= 1 && d <= days && v >= 1000 && v % 1000 === 0) { vals[d - 1] = v / 1000; n++; }
+  }
+  if (n < 1) return {error: 'ポイントの数字を読み取れませんでした。読めないときは、画面の写真をAIに渡してください'};
+  const cnt = {};
+  vals.forEach(v => cnt[v] = (cnt[v] || 0) + 1);
+  const summary = Object.keys(cnt).map(Number).filter(Boolean).sort((a, b) => a - b).map(v => `${(v * 1000).toLocaleString('ja-JP')}pt ${cnt[v]}日`).concat(cnt[0] ? [`利用不可 ${cnt[0]}日`] : []).join('・');
+  return {ym: `${y}-${String(mo).padStart(2, '0')}`, v: vals.join(','), summary};
+}
+function awParse(){ awPreview = parseAwardCal(document.getElementById('aw-text').value); render(); }
+async function awSave(){
+  const p = awPreview, at = TODAY_();
+  if (!p || p.error) return;
+  try {
+    const r = await fetch(GAS + `?api=awardCalSet&ym=${p.ym}&v=${encodeURIComponent(p.v)}&at=${at}&k=` + encodeURIComponent(K), {credentials: 'omit', cache: 'no-store'});
+    const j = JSON.parse(await r.text());
+    if (!j.ok) throw new Error(j.error || 'failed');
+    data.award_cal = j.award_cal; awPreview = {error: `${Number(p.ym.slice(5))}月を保存しました。次の月を貼り付けられます`};
+    try { localStorage.setItem(LEDGER_MEMO, JSON.stringify(data)); } catch(e) {}
+    render();
+  } catch(e) { alert('保存できませんでした。少し時間をおいてもう一度お試しください。'); }
+}
+
+// メールから予約を更新（2026-11-05）：自宅PCが予約メールを読み直し、台帳とカレンダーを更新する。ハイアットへの照会はしない
+let LU = null;
+const luHtml = () => `<button type="button" class="lu-b" onclick="ledgerUpdate()"${LU && LU.busy ? ' disabled' : ''}>${LU && LU.busy ? '更新中…' : 'メールから更新'}</button>${LU && LU.text ? `<div class="lu-t${LU.err ? ' err' : ''}">${esc(LU.text)}</div>` : ''}`;
+function luSet(o){ LU = o; const el = document.getElementById('lu'); if (el) el.innerHTML = luHtml(); }
+async function luApi(name){
+  for (let i = 0; i < 4; i++) {
+    try {
+      const r = await fetch(GAS + `?api=${name}&k=` + encodeURIComponent(K), {credentials: 'omit', cache: 'no-store'});
+      const t = await r.text();
+      if (t.trim().startsWith('{')) return JSON.parse(t);
+    } catch(e) {}
+    await new Promise(res => setTimeout(res, 1000 * (i + 1)));
+  }
+  throw new Error('network');
+}
+async function ledgerUpdate(){
+  if (LU && LU.busy) return;
+  luSet({busy: true, text: '自宅PCに依頼しています…'});
+  try {
+    const o = await luApi('ledgerReq');
+    if (o.error) { luSet({text: o.error, err: true}); return; }
+    const t0 = Date.now();
+    while (Date.now() - t0 < 300000) {
+      await new Promise(res => setTimeout(res, 4000));
+      let s; try { s = await luApi('ledgerReqGet'); } catch(e) { continue; }
+      if (s.id !== o.id) continue;
+      if (s.state === 'done') { luSet({text: '更新しました：' + s.msg}); load(); return; }
+      if (s.state === 'failed') { luSet({text: '更新できませんでした：' + s.msg, err: true}); return; }
+      if (s.state === 'running') luSet({busy: true, text: 'メールを読んでいます…'});
+      else if (!s.pc_alive && Date.now() - t0 > 30000) { luSet({text: '自宅PCが応答していません。動いていれば後で反映され、止まっていれば明朝の更新で反映されます', err: true}); return; }
+    }
+    luSet({text: '時間がかかっています。少しあとで開き直してください', err: true});
+  } catch(e) { luSet({text: '依頼できませんでした。少し時間をおいてお試しください', err: true}); }
 }
 
 // 予約の詳細（2026-10-17）：どのホテルも同じ並びで、予約内容・支払い・キャンセル規定と、変更・キャンセルのリンクを出す。
@@ -727,7 +849,7 @@ function render(){
   const tonight = future.find(r => r.checkin <= today && today < r.checkout);
   const nowHM = new Date(Date.now() + 9 * 3600e3).toISOString().slice(11, 16);
   const shown = (tonight ? [] : todoL.filter(x => x.info)).concat(acts.slice(0, lim));
-  const todayBox = `<div class="today" role="region" aria-label="今日やること"><div class="td-h">今日やること${STALE ? '<span class="td-s">（保存済みのデータ）</span>' : ''}</div>
+  const todayBox = `<div class="today" role="region" aria-label="今日やること"><div class="td-h">今日やること${STALE ? '<span class="td-s">（保存済みのデータ）</span>' : ''}<span id="lu" class="lu">${luHtml()}</span></div>
     ${tonight ? tonightCard(tonight, future, today) : ''}
     ${shown.map(x => `<div class="td-i${x.info ? ' info' : ''}">${x.k ? `<a href="#" onclick="goBk(${esc(JSON.stringify(x.k))});return false">${x.t}</a>` : x.href ? `<a href="${esc(x.href)}">${x.t}</a>` : x.t}</div>`).join('')}
     ${acts.length ? (acts.length > 3 ? `<div class="td-m"><a href="#" onclick="todoAll=!todoAll;render();return false">${todoAll ? '3件だけ表示' : `ほか${acts.length - 3}件も表示`}</a></div>` : '') : '<div class="td-i none">今日の操作はありません</div>'}</div>
@@ -817,7 +939,7 @@ function render(){
         ${!cx && r.refundable && w && w.nr_ok ? `<div class="sv nr">返金不可にすると <b>${yen(w.nr_save)}安い</b>（${yen(w.nr_pay)}・${esc(w.nr_plan)}）。期限 ${md(w.free_cancel_until)}（${wd(w.free_cancel_until)}）まで（締切の時刻は「予約の詳細」のキャンセル規定で確認）<br>
           <small>返金不可は予約時に全額がかかり、返金されません。新しく予約 → 予約ページへの反映を確認 → いまの予約をキャンセル</small>
           <a href="${esc(w.nr_url)}" target="_blank" rel="noopener">ハイアットで見る →</a>${rbStart(r, 'nr', `返金不可 ${yen(w.nr_pay)}`)}</div>` : ''}
-        ${aw && aw.yp >= AW_GOOD ? `<div class="sv tr aw">${awardLine(aw)}</div>` : ''}
+        ${aw && awGood(aw) && awAge(aw, today) <= AW_STALE_DAYS ? `<div class="sv tr aw">${awardLine(aw)}</div>` : ''}
         ${tr ? `<div class="sv tr">ハイアットに振り替え可（実質<b>${tr.diff >= 0 ? '+' + yen(tr.diff) : '−' + yen(-tr.diff)}</b>・${yen(tr.pay)}）${tr.mode === 'rescue' ? '・救済モード' : ''}。元の予約の無料キャンセル期限 ${md(tr.free_cancel_until)}<br>
           <small>ハイアットを予約 → 予約ページへの反映を確認 → この予約をキャンセル（${md(tr.checked)} 時点の料金）</small>
           <a href="${esc(tr.url)}" target="_blank" rel="noopener">ハイアットで見る →</a>${rbStart(r, 'transfer', `ハイアット ${yen(tr.pay)}`)}</div>` : ''}

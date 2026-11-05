@@ -387,6 +387,13 @@ function ptNow(key){
   if (mail && hand) return hand.date >= mail.date ? hand : mail;
   return hand || mail;
 }
+// 2026-11-05 手入力とメールの両方があれば、使っていない方も小さく出す（どちらを見ているか分かるように）
+function ptOther(key, v){
+  if (!v) return '';
+  const a = (((D.manual || {}).tiers_auto) || {})[key] || {}, m = (D.points || {})[key];
+  const o = v.src === 'メール' ? (m ? {pts: m.pts, date: m.date, src: m.src || '手入力'} : null) : (a.pts != null ? {pts: a.pts, date: a.pts_date, src: 'メール'} : null);
+  return o && o.pts !== v.pts ? `・${o.src}は${o.pts.toLocaleString()}（${md(o.date)}）` : '';
+}
 function renderPoints(){
   const el = document.getElementById('pt-body'); if (!el || !D) return;
   const today = new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 10);
@@ -401,7 +408,7 @@ function renderPoints(){
       ${(D.points || {})[p.key] ? `<button type="button" class="del" onclick="ptSave('${p.key}',true)">手入力を消す</button>` : ''}</div></div>`;
     const old = v && age(v.date) > 30;
     const val = v ? (p.unit === 'D$' ? `D$${v.pts.toLocaleString()}` : `${v.pts.toLocaleString()}<small> pt</small>`) : '<small>未入力</small>';
-    const sub = v ? `${md(v.date)}時点・${v.src}${p.yen && v.pts ? `・${yen(v.pts * p.yen)}分` : ''}${v.exp ? `・${esc(v.exp)}` : ''}` : 'メールに残高が載らないので手入力';
+    const sub = v ? `${md(v.date)}時点・${v.src}${p.yen && v.pts ? `・${yen(v.pts * p.yen)}分` : ''}${v.exp ? `・${esc(v.exp)}` : ''}${ptOther(p.key, v)}` : 'メールに残高が載らないので手入力';
     return `<div class="pk"${old ? ' style="opacity:.55"' : ''}><div class="pk-m"><b>${esc(p.name)}</b><small>${sub}${old ? '（古い）' : ''}</small></div>
       <div class="pk-s num"><b>${val}</b></div>
       <span class="pt-b"><a class="pk-e" href="${p.url}" target="_blank" rel="noopener">開く</a><button type="button" class="pk-e" onclick="ptEdit='${p.key}';renderPoints()">入力</button></span></div>`;
