@@ -376,8 +376,10 @@ function transferTable(Y, today){
 // ポイント泊が得な日（2026-10-25）：毎朝7時台に調べたハイアットのポイント泊の必要ポイント数と、同じ日の現金（実質）を比べる。
 // 1ptあたりの価値が AW_GOOD 円以上の日に印を付ける。ポイント泊は税・サービス料込み（宿泊税だけ現地払いの可能性）
 const AW_GOOD = 3, AW_GOOD_CUR = 2.5, AW_STALE_DAYS = 14;
-let awSort = 'cur', awImport = false, awPreview = null;
-try { awSort = localStorage.getItem('yoiyado_aw_sort') || 'cur'; } catch(e) {}
+let awSort = 'cur', awImport = false, awPreview = null, awOpen = false, awOldOpen = false;
+try { awSort = localStorage.getItem('yoiyado_aw_sort') || 'cur'; awOpen = localStorage.getItem('yoiyado_aw_open') === '1'; } catch(e) {}
+// 並べ替えなどで表を作り直しても閉じないよう、開閉を覚えておく（2026-11-07）
+function awToggle(el){ awOpen = el.open; try { localStorage.setItem('yoiyado_aw_open', el.open ? '1' : '0'); } catch(e) {} }
 function setAwSort(v){ awSort = v; try { localStorage.setItem('yoiyado_aw_sort', v); } catch(e) {} render(); }
 // ポイントカレンダーの手入力（2026-11-05）。1泊の予約だけに使う。{points:0}＝利用不可
 function calPts(ci){
@@ -452,11 +454,11 @@ function awardTable(today){
   const cal = data.award_cal || {};
   if (!fresh.length && !old.length && !Object.keys(cal).length && !((data.hyatt || {}).award || []).length) return '';
   const W = '日月火水木金土', bal = hyattBal(), head = `<div class="th">日付</div><div class="th">今の予約</div><div class="th r">ポイント</div><div class="th r">1ptの価値</div>`;
-  return `<details class="card trt"${awImport ? ' open' : ''}><summary><span>ポイント泊が得な日</span><span class="s">${fresh.length}日${bal ? `・残高 ${bal.pts.toLocaleString('ja-JP')}pt（${esc(bal.src)}）` : ''}</span></summary>
+  return `<details class="card trt"${awOpen || awImport ? ' open' : ''} ontoggle="awToggle(this)"><summary><span>ポイント泊が得な日</span><span class="s">${fresh.length}日${bal ? `・残高 ${bal.pts.toLocaleString('ja-JP')}pt（${esc(bal.src)}）` : ''}</span></summary>
     <div class="trb" role="group" aria-label="並べ替え">${[['cur', '今の予約比（総コスト）'], ['hyatt', '同日ハイアット比'], ['date', '日付順']].map(([v, l]) =>
       `<button type="button" aria-pressed="${awSort === v}" onclick="setAwSort('${v}')">${l}</button>`).join('')}</div>
     ${fresh.length ? `<div class="trg">${head}${fresh.map(a => awRow(a, W, live)).join('')}</div>` : '<div class="trs">この基準で得な日は、今のところありません</div>'}
-    ${old.length ? `<details class="aw-old"><summary>古い調査 ${old.length}日（${AW_STALE_DAYS}日より前・空きの再確認が必要）</summary><div class="trg" style="opacity:.6">${head}${old.map(a => awRow(a, W, live)).join('')}</div></details>` : ''}
+    ${old.length ? `<details class="aw-old"${awOldOpen ? ' open' : ''} ontoggle="awOldOpen=this.open"><summary>古い調査 ${old.length}日（${AW_STALE_DAYS}日より前・空きの再確認が必要）</summary><div class="trg" style="opacity:.6">${head}${old.map(a => awRow(a, W, live)).join('')}</div></details>` : ''}
     <div class="trs" style="margin-top:6px"><b>今の予約比</b>＝今の予約の実質÷必要ポイント（${AW_GOOD_CUR}円以上）。総コストで選ぶならこちら。グルーヴなどへ安く移せる日は、その料金との差で考えてください。<b>同日ハイアット比</b>＝同じ日のハイアットの実質÷必要ポイント（${AW_GOOD}円以上）。ポイントの列の「調」は毎朝の調査（5日分ずつ）、「暦」はカレンダーからの取り込みで、数字は確認した日です。空きはその時点のものです。</div>
     ${awImportHtml(cal)}
   </details>`;
