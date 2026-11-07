@@ -132,7 +132,7 @@ details.pm > summary{margin:10px 4px 6px;color:var(--sub)}
 .today .td-h{font-size:12px;color:var(--sub);margin-bottom:4px;font-weight:600}.today .td-s{font-weight:400;margin-left:4px}
 .today .td-i{font-size:13.5px;line-height:1.5;padding:4px 0;border-top:1px dashed var(--line)}.today .td-i:first-of-type{border-top:0}
 .today .td-i a{color:inherit;text-decoration:none}.today .td-i.info{color:var(--sub)}.today .td-i.none{color:var(--sub)}
-.today .td-m{font-size:11.5px;color:var(--sub);margin-top:2px}
+.today .td-m{font-size:11.5px;color:var(--sub);margin-top:2px}.today .td-h2{margin-top:10px;clear:both}
 .bk.flash{outline:2px solid #d8b06a;outline-offset:2px;transition:outline-color .4s}
 .trt{padding:12px 14px}
 .trt summary{display:flex;justify-content:space-between;align-items:baseline;gap:8px;cursor:pointer;font-weight:700;list-style:none}
@@ -376,6 +376,7 @@ function transferTable(Y, today){
 // ポイント泊が得な日（2026-10-25）：毎朝7時台に調べたハイアットのポイント泊の必要ポイント数と、同じ日の現金（実質）を比べる。
 // 1ptあたりの価値が AW_GOOD 円以上の日に印を付ける。ポイント泊は税・サービス料込み（宿泊税だけ現地払いの可能性）
 const AW_GOOD = 3, AW_GOOD_CUR = 2.5, AW_STALE_DAYS = 14;
+let laterOpen = false;
 let awSort = 'cur', awImport = false, awPreview = null, awOpen = false, awOldOpen = false, awAll = false;
 const AW_TOP = 5;  // 価値の順に並べるときは上位5日だけ出す（2026-11-07）。日付順は全件
 try { awSort = localStorage.getItem('yoiyado_aw_sort') || 'cur'; awOpen = localStorage.getItem('yoiyado_aw_open') === '1'; } catch(e) {}
@@ -715,7 +716,7 @@ async function rbSet(key, v, kind, to){
     render();
   } catch(e) { alert('記録できませんでした。少し時間をおいてお試しください。'); }
 }
-// 今夜の宿（2026-10-24 改：時間に関係なく「今日やること」の先頭に出し、ここで動作が終わるようにする）
+// 今夜の宿（2026-10-24 改：時間に関係なく上部の枠の先頭に出し、ここで動作が終わるようにする）
 // 経路はGoogleマップの経路案内（今いる場所から）。タクシーはGoogleマップの経路の「タクシー」からGOを呼べる（行き先が引き継がれる）
 const route = (q, mode) => `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(q)}&travelmode=${mode}`;
 function tonightCard(r, future, today){
@@ -784,7 +785,7 @@ function handleHash(){
   history.replaceState(null, '', location.pathname);
   setTimeout(() => { goBk(k); setTimeout(() => showDetail(k), 500); }, 100);
 }
-// 「今日やること」から予約カードへ移る（その年に切り替えてから）
+// 上部の枠から予約カードへ移る（その年に切り替えてから）
 function goBk(key){
   const r = (data.rows || []).find(x => x.key === key); if (!r) return;
   if (hotelFilter && r.hotel !== hotelFilter) { hotelFilter = ''; render(); }
@@ -827,9 +828,11 @@ function render(){
   const hp = data.hyatt || {}, nrDays = Number((data.settings || {}).hyatt_nr_days || 7);
   const hStop = hp.stop_hold ? (hp.stop_until || '?') : '';  // 止めたら承認まで止まったまま（72時間で自動再開はしない）
   // ハイアットへの振り替え候補（毎朝7時台に調べた結果。元の予約＋上乗せ額以内のもの）
-  const TR = {}; (hp.transfer || []).forEach(t => { if (t.ok) TR[t.k] = t; });
+  // 目標の泊数に届いた年は、届く前の判定が残っていても振り替えを勧めない（2026-11-07）
+  const trDone = y => ((hp.years || []).find(v => String(v.year) === String(y)) || {}).mode === 'done';
+  const TR = {}; (hp.transfer || []).forEach(t => { if (t.ok && !trDone(t.year)) TR[t.k] = t; });
   const fmtT = s => { if (!s) return '—'; const d = new Date(s); return (d.getMonth() + 1) + '/' + d.getDate() + ' ' + String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0'); };
-  // 今日やること（2026-10-17）：毎朝ここだけ見れば足りるように、判断が要るものを期限の近い順に最大3件
+  // 期限が近いもの（2026-10-17。2026-11-07 改名）：判断が要るものを期限の近い順に最大3件。期限まで8日以上あるものは「急がない候補」にたたむ
   const addDays = n => new Date(Date.now() + 9 * 3600e3 + n * 864e5).toISOString().slice(0, 10);
   const soon = addDays(2), name = r => NAMES[r.hotel] || r.hotel_name || r.hotel;
   const todo = [];
@@ -855,14 +858,18 @@ function render(){
     if (n) todo.push({p: 2, d: '', t: `カレンダー（P予定）とのずれ ${n}件` }); }
   const seenK = new Set(), todoL = todo.sort((a, b) => a.p - b.p || String(a.d).localeCompare(String(b.d)))
     .filter(x => !x.k || x.info || (!seenK.has(x.k) && seenK.add(x.k)));
-  const acts = todoL.filter(x => !x.info), lim = todoAll ? acts.length : 3;
+  const urgent = x => x.p !== 3 || String(x.d) <= addDays(7);
+  const acts = todoL.filter(x => !x.info && urgent(x)), later = todoL.filter(x => !x.info && !urgent(x)), lim = todoAll ? acts.length : 3;
   const tonight = future.find(r => r.checkin <= today && today < r.checkout);
   const nowHM = new Date(Date.now() + 9 * 3600e3).toISOString().slice(11, 16);
-  const shown = (tonight ? [] : todoL.filter(x => x.info)).concat(acts.slice(0, lim));
-  const todayBox = `<div class="today" role="region" aria-label="今日やること"><div class="td-h">今日やること${STALE ? '<span class="td-s">（保存済みのデータ）</span>' : ''}<span id="lu" class="lu">${luHtml()}</span></div>
-    ${tonight ? tonightCard(tonight, future, today) : ''}
-    ${shown.map(x => `<div class="td-i${x.info ? ' info' : ''}">${x.k ? `<a href="#" onclick="goBk(${esc(JSON.stringify(x.k))});return false">${x.t}</a>` : x.href ? `<a href="${esc(x.href)}">${x.t}</a>` : x.t}</div>`).join('')}
-    ${acts.length ? (acts.length > 3 ? `<div class="td-m"><a href="#" onclick="todoAll=!todoAll;render();return false">${todoAll ? '3件だけ表示' : `ほか${acts.length - 3}件も表示`}</a></div>` : '') : '<div class="td-i none">今日の操作はありません</div>'}</div>
+  const shown = acts.slice(0, lim);
+  const tdRow = x => `<div class="td-i${x.info ? ' info' : ''}">${x.k ? `<a href="#" onclick="goBk(${esc(JSON.stringify(x.k))});return false">${x.t}</a>` : x.href ? `<a href="${esc(x.href)}">${x.t}</a>` : x.t}</div>`;
+  const todayBox = `<div class="today" role="region" aria-label="今日の宿泊先と期限が近いもの"><div class="td-h">今日の宿泊先${STALE ? '<span class="td-s">（保存済みのデータ）</span>' : ''}<span id="lu" class="lu">${luHtml()}</span></div>
+    ${tonight ? tonightCard(tonight, future, today) : '<div class="td-i none">今夜の宿泊予約はありません</div>'}
+    <div class="td-h td-h2">期限が近いもの</div>
+    ${shown.map(tdRow).join('')}
+    ${acts.length ? (acts.length > 3 ? `<div class="td-m"><a href="#" onclick="todoAll=!todoAll;render();return false">${todoAll ? '3件だけ表示' : `ほか${acts.length - 3}件も表示`}</a></div>` : '') : '<div class="td-i none">ありません</div>'}
+    ${later.length ? `<div class="td-m"><a href="#" onclick="laterOpen=!laterOpen;render();return false">急がない候補 ${later.length}件${laterOpen ? 'を閉じる' : ''}</a></div>${laterOpen ? later.map(tdRow).join('') : ''}` : ''}</div>
     ${strip14(future, today)}`;
   let h = (STALE ? `<div class="sum2 dup">⚠ <b>最新の予約データを取得できませんでした</b>。この端末に保存したデータ（台帳の更新 ${fmtT(data.built)}）を表示しています。料金や期限は古い可能性があります</div>` : '') + todayBox + `<div class="filters" role="group" aria-label="表示する年">
       ${years.map(v => `<button type="button" aria-pressed="${v === Y}" onclick="setYear('${v}')">${v}年</button>`).join('')}

@@ -426,7 +426,7 @@ async function ptSave(key, clear){
 }
 
 // 持っている特典（2026-10-24）：無料宿泊・アップグレード券など。種類・残り・期限を本人が入れる。
-// 期限の60日前から、予約ページの「今日やること」に出す
+// 期限の60日前から、予約ページの「期限が近いもの」に出す
 const PERK_PROG = ['ヒルトン', 'ハイアット', '京王プラザ', 'GHA', 'I Prefer', 'その他'];
 let perkEdit = -1;  // 編集中の行（-1：なし、PERKS.length：新規）
 function perkList(){ return (D && D.perks) || []; }
@@ -447,7 +447,7 @@ function renderPerks(){
   el.innerHTML = (list.length ? list.map(x => perkEdit === x.i ? form(x.i) : `<div class="pk${x.exp && days(x.exp) <= 60 && x.n > 0 ? ' near' : ''}">
       <div class="pk-m"><b>${esc(x.name)}</b><span class="pk-p">${esc(x.prog)}</span>${x.memo ? `<small>${esc(x.memo)}</small>` : ''}</div>
       <div class="pk-s num">残り <b>${Number(x.n) || 0}</b>${x.exp ? `<small>${md(x.exp)}まで${days(x.exp) >= 0 ? `（あと${days(x.exp)}日）` : '（期限切れ）'}</small>` : ''}</div>
-      <button type="button" class="pk-e" onclick="perkEdit=${x.i};renderPerks()">編集</button></div>`).join('') : '<div class="pg-empty">まだありません。無料宿泊やアップグレード券を持ったら追加してください。期限の60日前から予約ページの「今日やること」に出ます。</div>')
+      <button type="button" class="pk-e" onclick="perkEdit=${x.i};renderPerks()">編集</button></div>`).join('') : '<div class="pg-empty">まだありません。無料宿泊やアップグレード券を持ったら追加してください。期限の60日前から予約ページの「期限が近いもの」に出ます。</div>')
     + (perkEdit === perkList().length ? form(perkList().length) : `<button type="button" class="pk-add" onclick="perkEdit=${perkList().length};renderPerks()">＋ 特典を追加</button>`);
 }
 async function perkPut(list){
