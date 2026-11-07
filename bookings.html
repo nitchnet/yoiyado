@@ -338,7 +338,8 @@ async function setNrDays(v){
 
 // ハイアット振り替えの判断表（2026-10-17）：ハイアット以外の予約と、同じ日のハイアット（キング・会員料金・返金可）の料金・差額。
 // 毎朝7時台の照会（宿泊日までの日数で何日に1回）の結果。並べ替えと「あと何泊・追加いくら」
-let trSort = 'diff', trOpen = false;
+let trSort = 'diff', trOpen = false, trAll = false;
+const TR_TOP = 5;  // 差額順は上位5日（目標まであと6泊以上ならその泊数）だけ出す（2026-11-07）。日付順は全件
 try { trSort = localStorage.getItem('yoiyado_tr_sort') || 'diff'; trOpen = localStorage.getItem('yoiyado_tr_open') === '1'; } catch(e) {}
 function setTrSort(v){ trSort = v; try { localStorage.setItem('yoiyado_tr_sort', v); } catch(e) {} render(); }
 function trToggle(el){ trOpen = el.open; try { localStorage.setItem('yoiyado_tr_open', el.open ? '1' : '0'); } catch(e) {} }
@@ -358,6 +359,8 @@ function transferTable(Y, today){
   const list = trSort === 'date' ? [...rows].sort((a, b) => a.checkin < b.checkin ? -1 : 1)
     : [...priced, ...rows.filter(t => t.pay == null || t.diff == null)];
   const sign = n => n >= 0 ? '+' + yen(n) : '−' + yen(-n);
+  const top = Math.max(TR_TOP, rest), canCut = trSort !== 'date' && list.length > top, shown = canCut && !trAll ? list.slice(0, top) : list;
+  const more = !canCut ? '' : `<div class="trb"><button type="button" onclick="trAll=${!trAll};render()">${trAll ? `上位${top}日に戻す` : `ほか${list.length - top}日を見る`}</button></div>`;
   return `<details class="card trt"${trOpen ? ' open' : ''} ontoggle="trToggle(this)">
     <summary><span>ハイアット振り替えの判断表</span><span class="s">あと${rest}泊</span></summary>
     <div class="trs">${rest ? `差額の小さい順に<b>${Math.min(rest, by930.length)}泊</b>振り替えると <b>${sign(sumN(by930, rest))}</b>（平日だけなら ${sign(sumN(wd, rest))}）` : '<b>9/30までの目標に届いています</b>'}
@@ -365,10 +368,10 @@ function transferTable(Y, today){
     <div class="trb" role="group" aria-label="並べ替え">${[['diff', '差額順'], ['date', '日付順']].map(([v, l]) =>
       `<button type="button" aria-pressed="${trSort === v}" onclick="setTrSort('${v}')">${l}</button>`).join('')}</div>
     <div class="trg"><div class="th">日付</div><div class="th">今の予約</div><div class="th r">ハイアット</div><div class="th r">実質の差</div>
-    ${list.map(t => `<div class="${t.ok ? 'ok' : ''}">${md(t.checkin)}<small>（${dow(t.checkin)}）</small></div>
+    ${shown.map(t => `<div class="${t.ok ? 'ok' : ''}">${md(t.checkin)}<small>（${dow(t.checkin)}）</small></div>
       <div>${esc(HN[t.hotel] || t.hotel)} <span class="num">${yen(t.booked_pay)}</span></div>
       <div class="r num">${t.pay != null ? `<a href="${esc(t.url || '#')}" target="_blank" rel="noopener">${yen(t.pay)}</a>` : `<small>${esc(t.reason || '未確認')}</small>`}</div>
-      <div class="r num ${t.diff != null && t.diff <= Number(st.hyatt_margin || 5000) ? 'ok' : ''}">${t.diff != null ? sign(t.diff) : '—'}<small>${md(t.checked || today)}</small></div>`).join('')}</div>
+      <div class="r num ${t.diff != null && t.diff <= Number(st.hyatt_margin || 5000) ? 'ok' : ''}">${t.diff != null ? sign(t.diff) : '—'}<small>${md(t.checked || today)}</small></div>`).join('')}</div>${more}
     <div class="trs" style="margin-top:6px">金額は税・サ・宿泊税込みの滞在合計。実質の差は、戻るポイントの価値（京王5%・ハイアット約5.9%・登録済みキャンペーンのボーナス）を引いて比べた差。ハイアットはキング・会員料金・返金可。宿泊日まで${st.hyatt_near_days || 30}日以内は${st.hyatt_near_every || 2}日に1回、${st.hyatt_mid_days || 90}日以内は${st.hyatt_mid_every || 4}日に1回、それより先は${st.hyatt_far_every || 10}日に1回調べています（右下は調べた日）。緑は+${yen(Number(st.hyatt_margin || 5000))}以内</div>
   </details>`;
 }
