@@ -451,9 +451,13 @@ function awardLine(a){
 }
 function awRow(a, W, live){
   const r = live.get(a.k), dow = s => W[new Date(s + 'T00:00:00+09:00').getDay()];
-  const main = awSort === 'hyatt' ? a.yp : a.yp2, other = awSort === 'hyatt' ? `今の予約比 ${a.yp2.toFixed(1)}円` : a.yp != null ? `ハイアット比 ${a.yp.toFixed(1)}円` : 'ハイアット比 —';
+  const main = awSort === 'hyatt' ? a.yp : a.yp2, other = awSort === 'hyatt' ? `今の予約比 ${a.yp2.toFixed(1)}円` : a.yp != null ? `ハイアット内 ${a.yp.toFixed(1)}円` : 'ハイアット内 —';
+  // ハイアット内で比較（2026-11-07）：今どこを予約しているかに関わらず、その日のハイアットの現金料金を出す
+  const col2 = awSort === 'hyatt' && a.cash != null
+    ? `<div><span class="num">${yen(a.cash)}</span><small>${a.cash_src === '予約額' ? '予約額' : a.cash_checked ? md(a.cash_checked) + '時点' : a.cash_src}・今は${esc(NAMES[r.hotel] || r.hotel_name)}</small></div>`
+    : `<div>${esc(NAMES[r.hotel] || r.hotel_name)} <span class="num">${yen(r.pay)}</span></div>`;
   return `<div class="ok">${md(a.checkin)}<small>（${dow(a.checkin)}）</small></div>
-      <div>${esc(NAMES[r.hotel] || r.hotel_name)} <span class="num">${yen(r.pay)}</span></div>
+      ${col2}
       <div class="r num"><a href="${esc(awardUrl(a))}" target="_blank" rel="noopener">${(a.points / 1000).toLocaleString('ja-JP')}k</a><small>${md(a.checked)}${a.src === 'カレンダー' ? '暦' : '調'}</small></div>
       <div class="r num ok">${main != null ? main.toFixed(1) + '円' : '—'}<small>${other}</small></div>`;
 }
@@ -466,13 +470,13 @@ function awardTable(today){
   const last = canCut ? fresh[AW_TOP - 1] : null, tie = last ? fresh.slice(AW_TOP).filter(a => awRound(awVal(a)) === awRound(awVal(last))).length : 0;
   const more = !canCut ? '' : awAll ? `<div class="trb"><button type="button" onclick="awAll=false;render()">上位${AW_TOP}日に戻す</button></div>`
     : `<div class="trb"><button type="button" onclick="awAll=true;render()">ほか${fresh.length - AW_TOP}日を見る${tie ? `（${awVal(last).toFixed(1)}円はほか${tie}日）` : ''}</button></div>`;
-  const W = '日月火水木金土', bal = hyattBal(), head = `<div class="th">日付</div><div class="th">今の予約</div><div class="th r">ポイント</div><div class="th r">1ptの価値</div>`;
+  const W = '日月火水木金土', bal = hyattBal(), head = `<div class="th">日付</div><div class="th">${awSort === 'hyatt' ? 'ハイアットの現金' : '今の予約'}</div><div class="th r">ポイント</div><div class="th r">1ptの価値</div>`;
   return `<details class="card trt"${awOpen ? ' open' : ''} ontoggle="awToggle(this)"><summary><span>ポイント泊が得な日</span><span class="s">${fresh.length}日${bal ? `・残高 ${bal.pts.toLocaleString('ja-JP')}pt（${esc(bal.src)}）` : ''}</span></summary>
-    <div class="trb" role="group" aria-label="並べ替え">${[['cur', '今の予約比（総コスト）'], ['hyatt', '同日ハイアット比'], ['date', '日付順']].map(([v, l]) =>
+    <div class="trb" role="group" aria-label="並べ替え">${[['cur', '今の予約比（総コスト）'], ['hyatt', 'ハイアット内で比較'], ['date', '日付順']].map(([v, l]) =>
       `<button type="button" aria-pressed="${awSort === v}" onclick="setAwSort('${v}')">${l}</button>`).join('')}</div>
     ${fresh.length ? `<div class="trg">${head}${shown.map(a => awRow(a, W, live)).join('')}</div>${more}` : '<div class="trs">この基準で得な日は、今のところありません</div>'}
     ${old.length ? `<details class="aw-old"${awOldOpen ? ' open' : ''} ontoggle="awOldOpen=this.open"><summary>古い調査 ${old.length}日（${AW_STALE_DAYS}日より前・空きの再確認が必要）</summary><div class="trg" style="opacity:.6">${head}${old.map(a => awRow(a, W, live)).join('')}</div></details>` : ''}
-    <div class="trs" style="margin-top:6px"><b>今の予約比</b>＝今の予約の実質÷必要ポイント（${AW_GOOD_CUR}円以上）。総コストで選ぶならこちら。グルーヴなどへ安く移せる日は、その料金との差で考えてください。<b>同日ハイアット比</b>＝同じ日のハイアットの実質÷必要ポイント（${AW_GOOD}円以上）。ポイントの列の数字は確認した日で、「暦」は毎朝のカレンダー取得（スタンダードルーム）、「調」は以前の個別調査です。空きはその時点のものです。</div>
+    <div class="trs" style="margin-top:6px"><b>今の予約比</b>＝今の予約の実質÷必要ポイント（${AW_GOOD_CUR}円以上）。総コストで選ぶならこちら。グルーヴなどへ安く移せる日は、その料金との差で考えてください。<b>ハイアット内で比較</b>＝今どこを予約しているかに関わらず、その日のハイアットの現金（実質）÷必要ポイント（${AW_GOOD}円以上）。ハイアットの中でポイントを使うと得な日を見るものです。実際に浮く額は今の予約比で確かめてください。ポイントの列の数字は確認した日で、「暦」は毎朝のカレンダー取得（スタンダードルーム）、「調」は以前の個別調査です。空きはその時点のものです。</div>
     ${calErr ? `<div class="trs" style="color:var(--warn)">ポイントカレンダーの取得に失敗しました（${esc(calErr)}）</div>` : ''}
   </details>`;
 }
