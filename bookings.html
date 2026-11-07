@@ -475,7 +475,7 @@ function awardTable(today){
 }
 // メールから予約を更新（2026-11-05）：自宅PCが予約メールを読み直し、台帳とカレンダーを更新する。ハイアットへの照会はしない
 let LU = null;
-const luHtml = () => `<button type="button" class="lu-b" onclick="ledgerUpdate()"${LU && LU.busy ? ' disabled' : ''}>${LU && LU.busy ? '更新中…' : 'メールから更新'}</button>${LU && LU.text ? `<div class="lu-t${LU.err ? ' err' : ''}">${esc(LU.text)}</div>` : ''}`;
+const luHtml = () => `<button type="button" class="lu-b" onclick="ledgerUpdate()"${LU && LU.busy ? ' disabled' : ''}>${LU && LU.busy ? '更新中…' : '予約を更新'}</button>${LU && LU.text ? `<div class="lu-t${LU.err ? ' err' : ''}">${esc(LU.text)}</div>` : ''}`;
 function luSet(o){ LU = o; const el = document.getElementById('lu'); if (el) el.innerHTML = luHtml(); }
 async function luApi(name){
   for (let i = 0; i < 4; i++) {
