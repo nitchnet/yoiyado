@@ -576,10 +576,12 @@ async function showDetail(key){
   if (seq !== DSEQ) return;
   const L = (j && j.links) || {}, btn = [];
   const a = (u, t, cls) => !/^https:\/\//.test(String(u)) ? '' : `<a class="dt-b${cls ? ' ' + cls : ''}" href="${esc(u)}" target="_blank" rel="noopener noreferrer">${esc(t)} →</a>`;
-  const PP = {groove: ['PRGTK', 'PR'], bellustar: ['PPBTK', 'PP']};
+  const PP = {groove: ['PRGTK', 'PR', 'HOTEL GROOVE SHINJUKU'], bellustar: ['PPBTK', 'PP', 'BELLUSTAR TOKYO']};
   if (!cx) {
     if (L.manage && /^https:\/\//.test(L.manage.url)) btn.push(a(L.manage.url, '予約の確認・変更・キャンセル'));
-    else if (PP[r.hotel] && r.channel === '公式') btn.push(a(`https://www.panpacific.com/content/pphg-revamp/ja/booking/view.html?acc-confirmation=${encodeURIComponent(conf)}&ppcode=${PP[r.hotel][0]}&brand=${PP[r.hotel][1]}`, '予約の確認・変更・キャンセル'));
+    // グルーヴ・BELLUSTAR：メールの予約確認リンク（view.html）は実際の予約番号だと404になることがある（2026-11-11 西村氏）。
+    // 必ず開ける「予約の管理」フォームへ。施設を選び、確認番号（下のコピー）と姓を入れる。予約番号はURLに載せない
+    else if (PP[r.hotel] && r.channel === '公式') btn.push(a('https://www.panpacific.com/ja/booking/modify.html', `予約の確認・変更・キャンセル（施設「${PP[r.hotel][2]}」・確認番号・姓を入力）`));
     else {
       if (L.modify) btn.push(a(L.modify.url, '予約の確認・変更'));
       else if (L.view) btn.push(a(L.view.url, '予約の確認'));
