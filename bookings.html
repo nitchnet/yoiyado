@@ -293,7 +293,10 @@ const bonusOf = (h, pay, ci, nights, existing, award) => (CB() || []).reduce((a,
   pts = existing ? pts * (c.factor == null ? 1 : c.factor) : (c.room == null ? pts : Math.min(pts, c.room));
   return a + Math.round(pts * c.yen);
 }, 0);
-const backOf = (h, pay, ch, ci, nights, existing) => (!ch || ch === '公式') && PT_BACK[h] ? Math.round(pay * PT_BACK[h][0] * PT_BACK[h][1]) + bonusOf(h, pay, ci, nights, existing) : 0;
+// 館内利用券（2026-11-12 西村氏）：ニューオータニは I Prefer チタニウムで1泊2,000円の利用券が付く（どのプランでも・バーやルームサービスでも使える）→額面で引く
+const PERK_NIGHT = {newotani: 2000};
+const perkOf = (h, nights) => (PERK_NIGHT[h] || 0) * (nights || 1);
+const backOf = (h, pay, ch, ci, nights, existing) => ((!ch || ch === '公式') && PT_BACK[h] ? Math.round(pay * PT_BACK[h][0] * PT_BACK[h][1]) + bonusOf(h, pay, ci, nights, existing) : 0) + perkOf(h, nights);
 const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const wd = s => '日月火水木金土'[new Date(s + 'T00:00:00').getDay()];
 const md = s => Number(s.slice(5,7)) + '/' + Number(s.slice(8,10));
@@ -372,7 +375,7 @@ function transferTable(Y, today){
       <div>${esc(HN[t.hotel] || t.hotel)} <span class="num">${yen(t.booked_pay)}</span></div>
       <div class="r num">${t.pay != null ? `<a href="${esc(t.url || '#')}" target="_blank" rel="noopener">${yen(t.pay)}</a>` : `<small>${esc(t.reason || '未確認')}</small>`}</div>
       <div class="r num ${t.diff != null && t.diff <= Number(st.hyatt_margin || 5000) ? 'ok' : ''}">${t.diff != null ? sign(t.diff) : '—'}<small>${md(t.checked || today)}</small></div>`).join('')}</div>${more}
-    <div class="trs" style="margin-top:6px">金額は税・サ・宿泊税込みの滞在合計。実質の差は、戻るポイントの価値（京王5%・ハイアット約5.9%・登録済みキャンペーンのボーナス）を引いて比べた差。ハイアットはキング・会員料金・返金可。宿泊日まで${st.hyatt_near_days || 30}日以内は${st.hyatt_near_every || 2}日に1回、${st.hyatt_mid_days || 90}日以内は${st.hyatt_mid_every || 4}日に1回、それより先は${st.hyatt_far_every || 10}日に1回調べています（右下は調べた日）。緑は+${yen(Number(st.hyatt_margin || 5000))}以内</div>
+    <div class="trs" style="margin-top:6px">金額は税・サ・宿泊税込みの滞在合計。実質の差は、戻るポイントの価値（京王5%・ハイアット約5.9%・登録済みキャンペーンのボーナス）とニューオータニの館内利用券（1泊2,000円）を引いて比べた差。ハイアットはキング・会員料金・返金可。宿泊日まで${st.hyatt_near_days || 30}日以内は${st.hyatt_near_every || 2}日に1回、${st.hyatt_mid_days || 90}日以内は${st.hyatt_mid_every || 4}日に1回、それより先は${st.hyatt_far_every || 10}日に1回調べています（右下は調べた日）。緑は+${yen(Number(st.hyatt_margin || 5000))}以内</div>
   </details>`;
 }
 

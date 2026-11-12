@@ -273,7 +273,10 @@ const bonusOf = (h, pay, ci, nights, existing, award) => (CB() || []).reduce((a,
   pts = existing ? pts * (c.factor == null ? 1 : c.factor) : (c.room == null ? pts : Math.min(pts, c.room));
   return a + Math.round(pts * c.yen);
 }, 0);
-const backOf = (h, pay, ch, ci, nights, existing) => (!ch || ch === '公式') && PT_BACK[h] ? Math.round(pay * PT_BACK[h][0] * PT_BACK[h][1]) + bonusOf(h, pay, ci, nights, existing) : 0;
+// 館内利用券（2026-11-12 西村氏）：ニューオータニは I Prefer チタニウムで1泊2,000円の利用券が付く（どのプランでも・バーやルームサービスでも使える）→額面で引く
+const PERK_NIGHT = {newotani: 2000};
+const perkOf = (h, nights) => (PERK_NIGHT[h] || 0) * (nights || 1);
+const backOf = (h, pay, ch, ci, nights, existing) => ((!ch || ch === '公式') && PT_BACK[h] ? Math.round(pay * PT_BACK[h][0] * PT_BACK[h][1]) + bonusOf(h, pay, ci, nights, existing) : 0) + perkOf(h, nights);
 const effOf = (h, pay, ch, ci, nights, existing) => pay - backOf(h, pay, ch, ci, nights, existing);
 const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const BTN_IDLE = '<span class="moon">☾</span>空室と会員価格を探す';
@@ -553,7 +556,7 @@ function render(){
         <div class="rk serif num">${o.alt ? '↳' : rank}</div>
         <div class="hotel"><span class="dot" style="background:${COLORS[o.hotel]}"></span>${esc(NAMES[o.hotel])}</div>
         <div class="price"><div class="p serif num">${yen(o.pay)}</div>
-          ${o.back ? `<div class="per num">実質 ${yen(o.eff)}<small>（ポイント ${yen(o.back)}分${bonusOf(o.hotel, o.pay, cur.date, nights) ? '・キャンペーン込み' : ''}）</small></div>` : ''}
+          ${o.back ? `<div class="per num">実質 ${yen(o.eff)}<small>（${[o.back - perkOf(o.hotel, nights) ? `ポイント ${yen(o.back - perkOf(o.hotel, nights))}分` : '', perkOf(o.hotel, nights) ? `館内利用券 ${yen(perkOf(o.hotel, nights))}` : ''].filter(Boolean).join('・')}${bonusOf(o.hotel, o.pay, cur.date, nights) ? '・キャンペーン込み' : ''}）</small></div>` : ''}
           ${nights > 1 ? `<div class="per num">1泊 ${yen(Math.round(o.pay / nights))}</div>` : ''}
           ${sub ? `<div class="diff num">${sub}</div>` : ''}
           ${mb ? `<div class="vs num ${o.eff < mb.eff ? 'down' : ''}">${o.eff < mb.eff ? `いまの予約より実質${yen(mb.eff - o.eff)}安い` : o.eff > mb.eff ? `いまの予約より実質${yen(o.eff - mb.eff)}高い` : 'いまの予約と実質同額'}</div>` : ''}</div>
