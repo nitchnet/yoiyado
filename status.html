@@ -557,15 +557,15 @@ function hyattOutlook(today){
   let mode, modeTxt;
   if (HY_EXCLUDE.includes(y)) { mode = 'off'; modeTxt = '振り替えの対象外（年内に60泊へ届かないため）'; }
   else if (today > `${y}-12-31`) { mode = 'off'; modeTxt = '終了'; }
-  else if (today <= `${y}-09-30`) { mode = proj >= target ? 'done' : 'normal'; modeTxt = mode === 'done' ? '目標到達（振り替えの照会は止めて、監視に回す）' : '通常モード（京王・グルーヴの平日を、＋' + yen(st.hyatt_margin || 5000) + 'までならハイアットへ）'; }
-  else { mode = total >= 60 ? 'done' : 'rescue'; modeTxt = mode === 'done' ? '60泊到達' : '救済モード（10〜12月も候補・＋' + yen(st.hyatt_rescue_margin || 10000) + 'まで）'; }
+  else if (today <= `${y}-09-30`) { mode = proj >= target ? 'done' : 'normal'; modeTxt = mode === 'done' ? '目標到達（振り替え候補は引き続き調べる：京王・グルーヴの平日を、＋' + yen(st.hyatt_margin || 5000) + 'までならハイアットへ）' : '通常モード（京王・グルーヴの平日を、＋' + yen(st.hyatt_margin || 5000) + 'までならハイアットへ）'; }
+  else { mode = total >= 60 ? 'done' : 'rescue'; modeTxt = mode === 'done' ? '60泊到達（振り替え候補は引き続き調べる）' : '救済モード（10〜12月も候補・＋' + yen(st.hyatt_rescue_margin || 10000) + 'まで）'; }
   const cands = (hp.transfer || []).filter(t => t.year === y && t.ok).sort((a, b) => a.checkin < b.checkin ? -1 : 1);
   const checkedN = (hp.transfer || []).filter(t => t.year === y && t.checked).length;
   const HN = {keio: '京王', iprefer: '京王（I Prefer）', groove: 'グルーヴ'};
   const wd = s => WDJ[new Date(s + 'T00:00:00+09:00').getDay()];
   const autoOff = Number(hp.auto_max ?? st.hyatt_auto ?? 10) === 0;
   let h = `<div class="s hyo"><b>9/30までの見込み</b>：${proj}泊 ／ 目標${target}泊${mode === 'off' ? `（${esc(modeTxt)}）` : `${rest ? `・あと <b>${rest}泊</b>` : '・<b>目標に届く見込み</b>'}。${esc(modeTxt)}`}</div>`;
-  if (mode === 'normal' || mode === 'rescue') {
+  if (mode === 'normal' || mode === 'rescue' || mode === 'done') {
     h += `<div class="s" style="margin-top:6px"><b>振り替え候補 ${cands.length}件</b>${autoOff ? '（自動照会を止めているため、いまは調べていません）' : `（これまでに${checkedN}日分を確認）${cands.length ? '' : '。見つかったら一覧とメールでお知らせします'}`}</div>`;
     if (cands.length) h += `<div class="hyc">${cands.map(t => `<div><span class="num">${md(t.checkin)}（${wd(t.checkin)}）</span><span>${esc(HN[t.hotel] || t.hotel)} ${yen(t.booked_pay)} → ハイアット ${yen(t.pay)}（<b>${t.diff >= 0 ? '+' + yen(t.diff) : '−' + yen(-t.diff)}</b>）<small>期限 ${md(t.free_cancel_until)}・${md(t.checked)}確認${t.mode === 'rescue' ? '・救済' : ''}</small></span></div>`).join('')}</div>`;
   }

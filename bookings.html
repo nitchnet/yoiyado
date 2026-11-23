@@ -813,9 +813,8 @@ function render(){
   const hp = data.hyatt || {}, nrDays = Number((data.settings || {}).hyatt_nr_days || 7);
   const hStop = hp.stop_hold ? (hp.stop_until || '?') : '';  // 止めたら承認まで止まったまま（72時間で自動再開はしない）
   // ハイアットへの振り替え候補（毎朝7時台に調べた結果。元の予約＋上乗せ額以内のもの）
-  // 目標の泊数に届いた年は、届く前の判定が残っていても振り替えを勧めない（2026-11-07）
-  const trDone = y => ((hp.years || []).find(v => String(v.year) === String(y)) || {}).mode === 'done';
-  const TR = {}; (hp.transfer || []).forEach(t => { if (t.ok && !trDone(t.year)) TR[t.k] = t; });
+  // 2026-11-24 西村氏：目標到達の年も振り替え候補を出す
+  const TR = {}; (hp.transfer || []).forEach(t => { if (t.ok) TR[t.k] = t; });
   const fmtT = s => { if (!s) return '—'; const d = new Date(s); return (d.getMonth() + 1) + '/' + d.getDate() + ' ' + String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0'); };
   // 期限が近いもの（2026-10-17。2026-11-07 改名）：判断が要るものを期限の近い順に最大3件。期限まで8日以上あるものは「急がない候補」にたたむ
   const addDays = n => new Date(Date.now() + 9 * 3600e3 + n * 864e5).toISOString().slice(0, 10);
