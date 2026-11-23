@@ -235,8 +235,8 @@ footer{max-width:720px;margin:0 auto;padding:0 16px 28px;text-align:center;font-
   <h2>泊まり方のルール</h2>
   <div class="srl">
     <div class="sr"><div class="d">平日</div><div><div class="h"><span class="sd hy"></span> ハイアット／<span class="sd ke"></span> 京王プラザ</div><div class="x">京王との差が3,000円くらいまでなら、ステータスのためにハイアット リージェンシー（公式・返金可）。グローバリスト（年60泊）と将来の永年資格を取りにいく。差がそれより大きければ京王へ。ただし、ハイアット・京王がどちらも1泊7万円を超える日や、安い方でもホテルグルーヴ新宿のキングより1.5万円以上高い日は、<span class="sd gh"></span> グルーヴ新宿へ</div></div></div>
-    <div class="sr"><div class="d">土曜</div><div><div class="h"><span class="sd hy"></span> ハイアット／<span class="sd ke"></span> 京王プラザ（14:00にチェックインできる方）</div><div class="x">土曜は14時から部屋に入れるホテルを優先。ハイアット リージェンシー（公式）か京王プラザの安い方へ。ほかの月より宿泊料が高くなる土曜は、<span class="sd hl"></span> ヒルトン東京の無料宿泊（カード特典・金土日に使える）を使う。年4回くらいは、<span class="sd no"></span> ホテルニューオータニ（I Prefer・新江戸スタンダード→新江戸デラックスにほぼ確約でアップグレード）にも泊まる</div></div></div>
-    <div class="sr"><div class="d">特別な日</div><div><div class="h"><span class="sd hy"></span> パーク ハイアット／グランド ハイアット／<span class="sd bs"></span> BELLUSTAR／<span class="sd kp"></span> キンプトン新宿／<span class="sd cp"></span> キャピトルホテル東急</div><div class="x">ハイアットはグローバリストのスイート確約特典（年5回〜）を使う。キャピトル東急は2027年4月からGHAの対象になる想定（チタニウムの3ブランド目）</div></div></div>
+    <div class="sr"><div class="d">土曜</div><div><div class="h"><span class="sd hy"></span> ハイアットを中心に／<span class="sd hl"></span> ヒルトン東京／<span class="sd no"></span> ニューオータニ／<span class="sd gh"></span> グルーヴ新宿</div><div class="x">14時チェックインにこだわらない（2026-11-24〜）。基本はハイアット リージェンシー（公式）。ほかの3つの方が3,000円くらいより安ければ、その中のいちばん安いホテルへ。ほかの月より宿泊料が高くなる土曜は、ヒルトン東京の無料宿泊（カード特典・金土日に使える）を使う。ニューオータニは I Prefer で新江戸スタンダード→新江戸デラックスにほぼ確約でアップグレード</div></div></div>
+    <div class="sr"><div class="d">特別な日</div><div><div class="h"><span class="sd hy"></span> パーク ハイアット／グランド ハイアット／ハイアット リージェンシー（スイート）／<span class="sd ke"></span> 京王プラザ プレミアグラン／<span class="sd bs"></span> BELLUSTAR／<span class="sd kp"></span> キンプトン新宿／<span class="sd cp"></span> キャピトルホテル東急</div><div class="x">ハイアットはグローバリストのスイート確約特典（年5回〜）を使い、ハイアット リージェンシーのスイートへのアップグレードも選択肢に。京王プラザはプレミアグランの客室も候補。キャピトル東急は2027年4月からGHAの対象になる想定（チタニウムの3ブランド目）</div></div></div>
     <div class="sr"><div class="d">予約前</div><div><div class="h">料金比較で一度確認する</div><div class="x">ポイントや資格を貯めるのは公式予約だけ（一休などは対象外）</div></div></div>
   </div>
   </section>
@@ -594,17 +594,19 @@ function render(){
 
 // 泊まり方のルール（会員ステータスの「泊まり方のルール」と同じ。2026-10-24）で、どこに泊まるかを1行で添える
 // 平日：ハイアットと京王の差が3,000円くらいまでならハイアット、それより大きければ京王。ただし両方1泊7万円超、
-//       または安い方でもグルーヴのキングより1.5万円以上高ければグルーヴ。土曜：14時インのハイアットか京王の安い方
+//       または安い方でもグルーヴのキングより1.5万円以上高ければグルーヴ。
+// 土曜（2026-11-24〜）：ハイアット中心。ヒルトン・ニューオータニ・グルーヴのいちばん安い方が3,000円超安ければそちら
 function ruleCard(c, main){
   const nights = c.nights || 1, best = h => { const o = main.filter(o => o.hotel === h && !o.other).sort((a, b) => a.eff - b.eff)[0]; return o ? o.eff : null; };
   const hy = best('hyatt'), ke = best('keio'), gr = best('groove');
-  if (hy == null && ke == null) return '';
   const sat = new Date(c.date + 'T00:00:00').getDay() === 6, per = v => v / nights;
+  if (sat ? [hy, gr, best('hilton'), best('newotani')].every(v => v == null) : hy == null && ke == null) return '';
   const yv = ((BK && BK.hyatt && BK.hyatt.years) || []).find(v => String(v.year) === c.date.slice(0, 4)), done = !!yv && yv.mode === 'done';
   let pick = '', why = '';
   if (sat) {
-    if (hy != null && (ke == null || hy <= ke)) { pick = 'hyatt'; why = ke != null ? `京王より実質${yen(ke - hy)}安い・14時イン` : '14時イン'; }
-    else { pick = 'keio'; why = hy != null ? `ハイアットより実質${yen(hy - ke)}安い・14時イン` : '14時イン'; }
+    const alt = ['hilton', 'newotani', 'groove'].map(h => [h, best(h)]).filter(x => x[1] != null).sort((a, b) => a[1] - b[1])[0];
+    if (hy != null && (!alt || hy - alt[1] <= 3000 * nights)) { pick = 'hyatt'; why = !alt ? 'ほかは満室' : hy <= alt[1] ? `${SHORT[alt[0]]}より実質${yen(alt[1] - hy)}安い` : `${SHORT[alt[0]]}との差 実質+${yen(hy - alt[1])}（3,000円以内）`; }
+    else { pick = alt[0]; why = hy == null ? 'ハイアットは満室' : `ハイアットより実質${yen(hy - alt[1])}安い`; }
     why += '（料金の高い土曜はヒルトンの無料宿泊も）';
   } else {
     // 金額は実質（ポイントの価値を引いた額）
