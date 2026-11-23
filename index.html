@@ -154,6 +154,15 @@ details.cond p{margin:6px 0 0;line-height:1.7}
 .offer .price .vs.down{color:var(--ok);font-weight:700}
 
 /* ---------- 検索履歴 ---------- */
+.stayrules h2{font-size:13px;letter-spacing:.08em;color:var(--sub);margin:0 0 8px;font-weight:700}
+.srl{display:grid;gap:8px}
+.sr{display:grid;grid-template-columns:62px minmax(0,1fr);gap:8px;align-items:start;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.sr .d{font-weight:700;font-size:13px;color:var(--gold)}
+.sr .h{font-weight:700}
+.sr .x{font-size:12.5px;color:var(--sub);margin-top:2px}
+.sd{width:9px;height:9px;border-radius:50%;flex:none;display:inline-block}
+.sd.hl{background:#1d4f91}.sd.hy{background:#7a4a2a}.sd.ke{background:#2f7d5b}.sd.gh{background:#d0603c}.sd.ip{background:#a07cc5}.sd.kp{background:#3f8a5f}.sd.bs{background:#8a7a3a}.sd.no{background:#9b6b3f}.sd.cp{background:#8c8c8c}
+@media (prefers-color-scheme: dark){.sd.hl{background:#7fb0f0}.sd.hy{background:#e0a77c}.sd.ke{background:#6cc79c}}
 .hist h2{font-size:13px;letter-spacing:.08em;color:var(--sub);margin:0 0 8px;font-weight:700}
 .hist ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
 .hist button.h{width:100%;font:inherit;color:var(--ink);text-align:left;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:9px 12px;cursor:pointer;
@@ -221,6 +230,16 @@ footer{max-width:720px;margin:0 auto;padding:0 16px 28px;text-align:center;font-
   </section>
   <div id="out"></div>
   <section class="card hist" id="hist" hidden aria-label="最近の検索"></section>
+  <!-- 2026-11-24 西村氏：泊まり方のルールを会員ステータスから料金比較の「最近の検索」の下へ移設 -->
+  <section class="card stayrules" aria-label="泊まり方のルール">
+  <h2>泊まり方のルール</h2>
+  <div class="srl">
+    <div class="sr"><div class="d">平日</div><div><div class="h"><span class="sd hy"></span> ハイアット／<span class="sd ke"></span> 京王プラザ</div><div class="x">京王との差が3,000円くらいまでなら、ステータスのためにハイアット リージェンシー（公式・返金可）。グローバリスト（年60泊）と将来の永年資格を取りにいく。差がそれより大きければ京王へ。ただし、ハイアット・京王がどちらも1泊7万円を超える日や、安い方でもホテルグルーヴ新宿のキングより1.5万円以上高い日は、<span class="sd gh"></span> グルーヴ新宿へ</div></div></div>
+    <div class="sr"><div class="d">土曜</div><div><div class="h"><span class="sd hy"></span> ハイアット／<span class="sd ke"></span> 京王プラザ（14:00にチェックインできる方）</div><div class="x">土曜は14時から部屋に入れるホテルを優先。ハイアット リージェンシー（公式）か京王プラザの安い方へ。ほかの月より宿泊料が高くなる土曜は、<span class="sd hl"></span> ヒルトン東京の無料宿泊（カード特典・金土日に使える）を使う。年4回くらいは、<span class="sd no"></span> ホテルニューオータニ（I Prefer・新江戸スタンダード→新江戸デラックスにほぼ確約でアップグレード）にも泊まる</div></div></div>
+    <div class="sr"><div class="d">特別な日</div><div><div class="h"><span class="sd hy"></span> パーク ハイアット／グランド ハイアット／<span class="sd bs"></span> BELLUSTAR／<span class="sd kp"></span> キンプトン新宿／<span class="sd cp"></span> キャピトルホテル東急</div><div class="x">ハイアットはグローバリストのスイート確約特典（年5回〜）を使う。キャピトル東急は2027年4月からGHAの対象になる想定（チタニウムの3ブランド目）</div></div></div>
+    <div class="sr"><div class="d">予約前</div><div><div class="h">料金比較で一度確認する</div><div class="x">ポイントや資格を貯めるのは公式予約だけ（一休などは対象外）</div></div></div>
+  </div>
+  </section>
 </main>
 <footer>YOIYADO · 自宅PCで取得・各ホテル公式の価格 · <a href="#" onclick="showSetup();return false" style="color:inherit">合言葉</a></footer>
 
