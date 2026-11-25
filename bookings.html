@@ -374,8 +374,8 @@ function transferTable(Y, today){
     ${shown.map(t => `<div class="${t.ok ? 'ok' : ''}">${md(t.checkin)}<small>（${dow(t.checkin)}）</small></div>
       <div>${esc(HN[t.hotel] || t.hotel)} <span class="num">${yen(t.booked_pay)}</span></div>
       <div class="r num">${t.pay != null ? `<a href="${esc(t.url || '#')}" target="_blank" rel="noopener">${yen(t.pay)}</a>` : `<small>${esc(t.reason || '未確認')}</small>`}</div>
-      <div class="r num ${t.diff != null && t.diff <= Number(st.hyatt_margin || 5000) ? 'ok' : ''}">${t.diff != null ? sign(t.diff) : '—'}<small>${md(t.checked || today)}</small></div>`).join('')}</div>${more}
-    <div class="trs" style="margin-top:6px">金額は税・サ・宿泊税込みの滞在合計。実質の差は、戻るポイントの価値（京王5%・ハイアット約5.9%・登録済みキャンペーンのボーナス）とニューオータニの館内利用券（1泊2,000円）を引いて比べた差。ハイアットはキング・会員料金・返金可。宿泊日まで${st.hyatt_near_days || 30}日以内は${st.hyatt_near_every || 2}日に1回、${st.hyatt_mid_days || 90}日以内は${st.hyatt_mid_every || 4}日に1回、それより先は${st.hyatt_far_every || 10}日に1回調べています（右下は調べた日）。緑は+${yen(Number(st.hyatt_margin || 5000))}以内</div>
+      <div class="r num ${t.cheap || (t.diff != null && t.diff <= Number(st.hyatt_margin || 5000)) ? 'ok' : ''}">${t.diff != null ? sign(t.diff) : '—'}<small>${md(t.checked || today)}</small></div>`).join('')}</div>${more}
+    <div class="trs" style="margin-top:6px">金額は税・サ・宿泊税込みの滞在合計。実質の差は、戻るポイントの価値（京王5%・ハイアット約5.9%・登録済みキャンペーンのボーナス）とニューオータニの館内利用券（1泊2,000円）を引いて比べた差。ハイアットはキング・会員料金・返金可。宿泊日まで${st.hyatt_near_days || 30}日以内は${st.hyatt_near_every || 2}日に1回、${st.hyatt_mid_days || 90}日以内は${st.hyatt_mid_every || 4}日に1回、それより先は${st.hyatt_far_every || 10}日に1回調べています（右下は調べた日）。緑は+${yen(Number(st.hyatt_margin || 5000))}以内、またはハイアットが1泊 税サ込5万円以下（差額によらず振り替え候補）</div>
   </details>`;
 }
 
